@@ -10,7 +10,7 @@
 # Config section
 # (All variables in this secition can be set in a separated config file)
 #
-DIR_LIST="/etc /var"
+DIR_LIST="/etc /var /home/just22/Documents /home/just22/prj /home/just22/notes"
 DAYS_BEFORE_DELETION="7"
 
 # Default values for the following variables shouldn't be changed
@@ -54,8 +54,8 @@ echo "$$" > ${TMP_DIR}/sys-backup.pid
 
 for SRC_DIR in $DIR_LIST; do
 	if [ -d "$SRC_DIR" ]; then
-		if [ -d "$PREV_BACKUP_DIR${SRC_DIR}" ]; then
-			rsync -azHx --link-dest="${PREV_BACKUP_DIR}${SRC_DIR}" "$SRC_DIR/" "${BACKUP_DIR}${SRC_DIR}"
+		if [ -d "$PREV_BACKUP_DIR/$(basename ${SRC_DIR})" ]; then
+			rsync -azHx --link-dest="${PREV_BACKUP_DIR}/$(basename ${SRC_DIR})" "$SRC_DIR/" "${BACKUP_DIR}"
 		else
 			rsync -azHx "$SRC_DIR" "$BACKUP_DIR"
 		fi
