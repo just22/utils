@@ -16,7 +16,7 @@ DAYS_BEFORE_DELETION="7"
 # Default values for the following variables shouldn't be changed
 TSTAMP="%Y%m%d_%R"
 TMP_DIR="/tmp"
-BACKUP_REPO="/mnt/sys_backup/$(hostname)"
+BACKUP_REPO="/mnt/sys_backup/$(hostname -s)"
 # ----------------------------------------------------------------------
 
 
