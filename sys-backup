@@ -55,7 +55,7 @@ echo "$$" > ${TMP_DIR}/sys-backup.pid
 for SRC_DIR in $DIR_LIST; do
 	if [ -d "$SRC_DIR" ]; then
 		if [ -d "$PREV_BACKUP_DIR/$(basename ${SRC_DIR})" ]; then
-			rsync -azHx --link-dest="${PREV_BACKUP_DIR}/$(basename ${SRC_DIR})" "$SRC_DIR/" "${BACKUP_DIR}"
+			rsync -azHx --link-dest="${PREV_BACKUP_DIR}" "$SRC_DIR" "${BACKUP_DIR}"
 		else
 			rsync -azHx "$SRC_DIR" "$BACKUP_DIR"
 		fi
