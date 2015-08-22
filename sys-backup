@@ -1,16 +1,17 @@
 #!/bin/sh
 
 # File:		sys-backup
-# Usage:	sys-backup [<configFineName>]
+# Usage:	sys-backup [<configFile>]
+#		when no config file is specified, the default one
+#		(/etc/sys-backup.conf) is used; this is simply a
+#		list of all files that should be included
 # Purpose:	system files' backup usign rsync --link-dest
 # Author:	A. DE LAURENZIS
 
 
 # ----------------------------------------------------------------------
 # Config section
-# (All variables in this secition can be set in a separated config file)
 #
-DIR_LIST="/etc /var /home/just22/Documents /home/just22/prj /home/just22/notes"
 DAYS_BEFORE_DELETION="7"
 
 # Default values for the following variables shouldn't be changed
@@ -19,15 +20,6 @@ TMP_DIR="/tmp"
 BACKUP_REPO="/mnt/sys_backup/$(hostname -s)"
 # ----------------------------------------------------------------------
 
-
-if [ $# != 0 ]; then
-	if [ -f "$1" ]; then
-		. "$1"
-	else
-		echo "sys-backup: file $1 not fount; continuing with default config" >&2
-		logger -t sys-backup "file $1 not fount; continuing with default config"
-	fi
-fi
 
 if ! [ -d "$BACKUP_REPO" ]; then
 	echo "sys-backup: Cannot find back-up repo $BACKUP_REPO (not mounted?)" >&2
@@ -50,43 +42,32 @@ if ! mkdir "$BACKUP_DIR" 2>/dev/null; then
 	exit 3
 fi
 
+FILE_LIST=${1-/etc/sys-backup.conf}
+if ! [ -f "$FILE_LIST" ]; then
+	echo "sys-backup: Include file list $FILE_LIST not found" >&2
+	logger -t sys-backup "Include file list $FILE_LIST not found"
+	exit 4
+fi
+
 echo "$$" > ${TMP_DIR}/sys-backup.pid
 
-for SRC_DIR in $DIR_LIST; do
-	if [ -d "$SRC_DIR" ]; then
-		if [ -d "$PREV_BACKUP_DIR/$(basename ${SRC_DIR})" ]; then
-			rsync -azHx --link-dest="${PREV_BACKUP_DIR}" "$SRC_DIR" "${BACKUP_DIR}"
-		else
-			rsync -azHx "$SRC_DIR" "$BACKUP_DIR"
-		fi
-		if [ "$?" != 0 ]; then
-			echo "sys-backup: Back-up of $SRC_DIR: rsync exited with error code $?" >&2
-			logger -t sys-backup "Back-up of $SRC_DIR: rsync exited with error code $?"
-			RSYNC_FAIL=1
-		else
-			echo "sys-backup: Back-up of $SRC_DIR done"
-			logger -t sys-backup "Back-up of $SRC_DIR done"
-		fi
-	else
-		echo "sys-backup: $SRC_DIR not found; script will continue..." >&2
-		logger -t sys-backup "$SRC_DIR not found"
-		SRC_DIR_FAIL=1
-	fi
-done
+rsync -arzHx --files-from="$FILE_LIST" --link-dest="${PREV_BACKUP_DIR}" / "${BACKUP_DIR}"
 
-find "$BACKUP_REPO" -maxdepth 1 -type d -mtime $DAYS_BEFORE_DELETION -exec rm -rf {} \;
+if [ "$?" != 0 ]; then
+	echo "sys-backup: rsync exited with error code $?" >&2
+	logger -t sys-backup "rsync exited with error code $?"
+	RSYNC_FAIL=1
+fi
 
 rm -rf ${TMP_DIR}/sys-backup.pid
 
 if [ "$RSYNC_FAIL" == 1 ]; then
 	echo "sys-backup: Script completed with rsync failures"
 	logger -t sys-backup "Script completed with rsync failures"
-	exit 4
-elif [ "$SRC_DIR_FAIL" == 1 ]; then
-	echo "sys-backup: Script completed with src dir failures"
-	logger -t sys-backup "Script completed with src dir failures"
 	exit 5
 fi
+
+find "$BACKUP_REPO" -maxdepth 1 -type d -mtime $DAYS_BEFORE_DELETION -exec rm -rf {} \;
 
 echo "sys-backup: Script completed successfully"
 logger -t sys-backup "Script completed successfully"
