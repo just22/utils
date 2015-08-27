@@ -5,8 +5,6 @@
 #		and/or title)
 # Dependencies:	dmenu, wmctrl
 # Author:	A. DE LAURENZIS
-# Version:	1.0
-# Date:		20150618
 
 get_win_ids() {
 	xprop -root |
@@ -21,7 +19,7 @@ search_win() {
 		WIN_TITLE="$(xprop -id $WIN_ID | grep "^WM_NAME(STRING)" | awk 'BEGIN{FS=" = "} {print $2}')"
 		echo "$WIN_ID" "$WIN_CLASS" "$WIN_TITLE"
 	done |
-	dmenu -fn "-xos4-terminus-medium-*-*-*-14-*-*-*-*-*-iso10646-1" -nf "#EAEBEC" -nb "#073642" -sb "#657B83" -i -l 5 |
+	dmenu -fn "-xos4-terminus-medium-*-*-*-14-*-*-*-*-*-iso10646-1" -nf "#93A1A1" -nb "#073642" -sb "#657B83" -i -l 5 |
 	awk '{print $1}'
 }
 

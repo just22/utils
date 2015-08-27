@@ -4,8 +4,6 @@
 # Purpose:	Switch to selected tmux pane
 # Dependencies:	tmux(!), dmenu, wmctrl
 # Author:	A. DE LAURENZIS
-# Version:	2.0
-# Date:		20150706
 
 get_win_ids() {
 	xprop -root |
@@ -25,7 +23,7 @@ get_tmux_win_id() {
 
 search_pane() {
 	tmux list-panes -s -a -F '#{session_name} / #{window_index}:#{window_name} / #{pane_index}:#{pane_title}' |
-		dmenu -fn "-xos4-terminus-medium-*-*-*-14-*-*-*-*-*-iso10646-1" -nf "#EAEBEC" -nb "#073642" -sb "#657B83" -i -l 5
+		dmenu -fn "-xos4-terminus-medium-*-*-*-14-*-*-*-*-*-iso10646-1" -nf "#93A1A1" -nb "#073642" -sb "#657B83" -i -l 5
 }
 
 SELECTED_ITEM=$(search_pane)
