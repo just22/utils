@@ -1,0 +1,297 @@
+#!/bin/sh
+
+# File:     gtile (Generic TILE)
+# Purpose:  Poor man's tiling
+# Author:   A. DE LAURENZIS
+# Version:  1.0
+# Date:     20150219
+
+
+if [ "$#" != "1" ]; then
+    echo "Usage: gtile <tileh|tilev|tl|tc|tr|bl|bc|br|lc|rc>"
+    exit 1
+fi
+
+
+# ----------------------------------------------------------------------
+#  Customization
+# ----------------------------------------------------------------------
+WS_LEFT_MARGIN=0
+WS_RIGHT_MARGIN=0
+WS_UPPER_MARGIN=0
+WS_LOWER_MARGIN=20
+WIN_LEFT_BORDER=3
+WIN_RIGTH_BORDER=3
+WIN_UPPER_BORDER=15
+WIN_LOWER_BORDER=3
+TILE_BORDER=5
+
+
+# ----------------------------------------------------------------------
+#  Utils
+# ----------------------------------------------------------------------
+
+get_screen_size () {
+    COORD="$1"
+    case "$COORD" in
+        x)
+            xrandr -q | egrep "^\*" | awk '{print $2}'
+            ;;
+        y)
+            xrandr -q | egrep "^\*" | awk '{print $4}'
+            ;;
+        *)
+            echo "Usage: get_screen_size <x|y>"
+            ;;
+    esac
+}
+
+get_win_ids () {
+    xprop -root |
+    grep "^_NET_CLIENT_LIST(WINDOW)" | grep -o "0x[0-9a-fA-F]\+"
+}
+
+get_current_ws () {
+    xprop -root |
+    grep "^_NET_CURRENT_DESKTOP(CARDINAL)" |
+    grep -o "[0-9]\+"
+}
+
+get_active_window () {
+    xprop -root |
+    grep "^_NET_ACTIVE_WINDOW(WINDOW)" |
+    egrep -o "0x[0-9a-fA-F]{2,}"
+}
+
+get_not_active_visible_windows () {
+    for winId in $(get_win_ids); do
+        XPROP="$(xprop -id $winId)"
+        [ "$winId" != "$(get_active_window)" ] &&
+        ! (echo "$XPROP" | grep "_NET_WM_WINDOW_TYPE_DOCK" > /dev/null 2>&1) &&
+        [ "$(echo "$XPROP" | grep "^_NET_WM_DESKTOP(CARDINAL)" | grep -o "[0-9]\+")" = $(get_current_ws) ] &&
+        (echo "$XPROP" | grep "window state: Normal" > /dev/null 2>&1 ) &&
+            echo $winId
+    done
+}
+
+
+# ----------------------------------------------------------------------
+#  Visible windows tiling
+# ----------------------------------------------------------------------
+
+horiz_tiling () {
+
+    #Y_DIM=$(expr \( $(get_screen_size y) - $WS_UPPER_MARGIN - $WS_LOWER_MARGIN - $WIN_UPPER_BORDER - $WIN_LOWER_BORDER \) \* 2 / 3)
+    Y_DIM=$(expr $(get_screen_size y) \* 2 / 3 - $WS_UPPER_MARGIN - $WS_LOWER_MARGIN - $WIN_UPPER_BORDER - $WIN_LOWER_BORDER)
+    Y_ORIG=$WS_UPPER_MARGIN
+    wmctrl -r :ACTIVE: -b remove,maximized_vert
+    wmctrl -r :ACTIVE: -b add,maximized_horz
+    wmctrl -r :ACTIVE: -e 0,-1,$Y_ORIG,-1,$Y_DIM
+
+    X_DIM=$(expr \( $(get_screen_size x) - $WS_LEFT_MARGIN - $WS_RIGHT_MARGIN - $WIN_LEFT_BORDER - $WIN_RIGTH_BORDER - $TILE_BORDER \* \( $WIN_NO - 1 \) \) / $WIN_NO)
+    X_ORIG=$(expr $WS_LEFT_MARGIN + $WIN_LEFT_BORDER)
+    Y_DIM=$(expr $(get_screen_size y) / 3 - $WS_UPPER_MARGIN - $WS_LOWER_MARGIN - $WIN_UPPER_BORDER - $WIN_LOWER_BORDER - $TILE_BORDER)
+    Y_ORIG=$(expr $(get_screen_size y) - 2 \* \( $WS_UPPER_MARGIN + $WS_LOWER_MARGIN - $TILE_BORDER \) - $WIN_UPPER_BORDER - $WIN_LOWER_BORDER - $Y_DIM )
+    for notActiveWinId in $(get_not_active_visible_windows); do
+        wmctrl -i -r $notActiveWinId -b remove,maximized_vert,maximized_horz
+        wmctrl -i -r $notActiveWinId -e 0,$X_ORIG,$Y_ORIG,$X_DIM,$Y_DIM
+        #wmctrl -i -R $notActiveWinId
+        X_ORIG=$(expr $X_ORIG + $X_DIM + $TILE_BORDER)
+    done
+
+}
+
+
+vert_tiling () {
+
+    X_DIM=$(expr \( $(get_screen_size x) - $WS_LEFT_MARGIN - $WS_RIGHT_MARGIN - $WIN_LEFT_BORDER - $WIN_RIGTH_BORDER \) / 3 \* 2)
+    X_ORIG=$(expr $WS_LEFT_MARGIN + $WIN_LEFT_BORDER)
+    wmctrl -r :ACTIVE: -b remove,maximized_horz
+    wmctrl -r :ACTIVE: -b add,maximized_vert
+    wmctrl -r :ACTIVE: -e 0,$X_ORIG,-1,$X_DIM,-1
+
+    X_DIM=$(expr \( $(get_screen_size x) - $WS_LEFT_MARGIN - $WS_RIGHT_MARGIN - $WIN_LEFT_BORDER - $WIN_RIGTH_BORDER \) / 3 - $TILE_BORDER)
+    X_ORIG=$(expr $(get_screen_size x) - $WS_LEFT_MARGIN - $WS_RIGHT_MARGIN - $WIN_LEFT_BORDER - $WIN_RIGTH_BORDER - $X_DIM)
+    Y_DIM=$(expr \( $(get_screen_size y) - $WS_UPPER_MARGIN - $WS_LOWER_MARGIN - $WIN_UPPER_BORDER - $WIN_LOWER_BORDER - $TILE_BORDER \* \( $WIN_NO - 1 \) \) / $WIN_NO)
+    Y_ORIG=$WS_UPPER_MARGIN
+    for notActiveWinId in $(get_not_active_visible_windows); do
+        echo $notActiveWinId
+        wmctrl -i -r $notActiveWinId -b remove,maximized_vert,maximized_horz
+        wmctrl -i -r $notActiveWinId -e 0,$X_ORIG,$Y_ORIG,$X_DIM,$Y_DIM
+        #wmctrl -i -R $notActiveWinId
+        Y_ORIG=$(expr $Y_ORIG + $Y_DIM + $TILE_BORDER)
+    done
+
+}
+
+
+# ----------------------------------------------------------------------
+#  Main
+# ----------------------------------------------------------------------
+
+ACTION="$1"
+
+WIN_NO=$(get_not_active_visible_windows | wc -l)
+
+case "$ACTION" in
+    tileh)
+        horiz_tiling
+        ;;
+    tilev)
+        vert_tiling
+        ;;
+    tl)
+        X_DIM=$(expr \( $(get_screen_size x) - $WS_LEFT_MARGIN - $WS_RIGHT_MARGIN - $WIN_LEFT_BORDER - $WIN_RIGTH_BORDER \) / 2)
+        X_ORIG=$(expr $WS_LEFT_MARGIN + $WIN_LEFT_BORDER)
+        Y_DIM=$(expr \( $(get_screen_size y) - $WS_UPPER_MARGIN - $WS_LOWER_MARGIN - $WIN_UPPER_BORDER - $WIN_LOWER_BORDER \) / 2)
+        Y_ORIG=$WS_UPPER_MARGIN
+        wmctrl -r :ACTIVE: -b remove,maximized_vert,maximized_horz
+        wmctrl -r :ACTIVE: -e 0,$X_ORIG,$Y_ORIG,$X_DIM,$Y_DIM
+        ;;
+    tc)
+        if [ ! -f /tmp/move_resize_win.last ]; then
+            Y_DIM_FACTOR_NUM=2
+            Y_DIM_FACTOR_DEN=3
+            echo "tc_23" > /tmp/move_resize_win.last
+        else
+            case "$(cat /tmp/move_resize_win.last)" in
+                tc_23)
+                    Y_DIM_FACTOR_NUM=1
+                    Y_DIM_FACTOR_DEN=2
+                    echo "tc_12" > /tmp/move_resize_win.last
+                    ;;
+                tc_12)
+                    Y_DIM_FACTOR_NUM=1
+                    Y_DIM_FACTOR_DEN=3
+                    echo "tc_13" > /tmp/move_resize_win.last
+                    ;;
+                *)
+                    Y_DIM_FACTOR_NUM=2
+                    Y_DIM_FACTOR_DEN=3
+                    echo "tc_23" > /tmp/move_resize_win.last
+                    ;;
+            esac
+        fi
+        Y_DIM=$(expr \( $(get_screen_size y) - $WS_UPPER_MARGIN - $WS_LOWER_MARGIN - $WIN_UPPER_BORDER - $WIN_LOWER_BORDER \) \* $Y_DIM_FACTOR_NUM / $Y_DIM_FACTOR_DEN)
+        Y_ORIG=$WS_UPPER_MARGIN
+        wmctrl -r :ACTIVE: -b remove,maximized_vert
+        wmctrl -r :ACTIVE: -b add,maximized_horz
+        wmctrl -r :ACTIVE: -e 0,-1,$Y_ORIG,-1,$Y_DIM
+        ;;
+    tr)
+        X_DIM=$(expr \( $(get_screen_size x) - $WS_LEFT_MARGIN - $WS_RIGHT_MARGIN - $WIN_LEFT_BORDER - $WIN_RIGTH_BORDER \) / 2)
+        X_ORIG=$(expr $(get_screen_size x) - $WS_LEFT_MARGIN - $WS_RIGHT_MARGIN - $WIN_LEFT_BORDER - $WIN_RIGTH_BORDER - $X_DIM)
+        Y_DIM=$(expr \( $(get_screen_size y) - $WS_UPPER_MARGIN - $WS_LOWER_MARGIN - $WIN_UPPER_BORDER - $WIN_UPPER_BORDER \) / 2)
+        Y_ORIG=$WS_UPPER_MARGIN
+        wmctrl -r :ACTIVE: -b remove,maximized_vert,maximized_horz
+        wmctrl -r :ACTIVE: -e 0,$X_ORIG,$Y_ORIG,$X_DIM,$Y_DIM
+        ;;
+    bl)
+        X_DIM=$(expr \( $(get_screen_size x) - $WS_LEFT_MARGIN - $WS_RIGHT_MARGIN - $WIN_LEFT_BORDER - $WIN_RIGTH_BORDER \) / 2)
+        X_ORIG=$(expr $WS_LEFT_MARGIN + $WIN_LEFT_BORDER)
+        Y_DIM=$(expr \( $(get_screen_size y) - $WS_UPPER_MARGIN - $WS_LOWER_MARGIN - $WIN_UPPER_BORDER - $WIN_LOWER_BORDER \) / 2)
+        Y_ORIG=$(expr $(get_screen_size y) - $WS_UPPER_MARGIN - $WS_LOWER_MARGIN - $WIN_UPPER_BORDER - $WIN_LOWER_BORDER - $Y_DIM)
+        wmctrl -r :ACTIVE: -b remove,maximized_vert,maximized_horz
+        wmctrl -r :ACTIVE: -e 0,$X_ORIG,$Y_ORIG,$X_DIM,$Y_DIM
+        ;;
+    bc)
+        if [ ! -f /tmp/move_resize_win.last ]; then
+            Y_DIM_FACTOR=$(expr 2 / 3)
+            echo "bc_23" > /tmp/move_resize_win.last
+        else
+            case "$(cat /tmp/move_resize_win.last)" in
+                bc_23)
+                    Y_DIM_FACTOR_NUM=1
+                    Y_DIM_FACTOR_DEN=2
+                    echo "bc_12" > /tmp/move_resize_win.last
+                    ;;
+                bc_12)
+                    Y_DIM_FACTOR_NUM=1
+                    Y_DIM_FACTOR_DEN=3
+                    echo "bc_13" > /tmp/move_resize_win.last
+                    ;;
+                *)
+                    Y_DIM_FACTOR_NUM=2
+                    Y_DIM_FACTOR_DEN=3
+                    echo "bc_23" > /tmp/move_resize_win.last
+                    ;;
+            esac
+        fi
+        Y_DIM=$(expr \( $(get_screen_size y) - $WS_UPPER_MARGIN - $WS_LOWER_MARGIN - $WIN_UPPER_BORDER - $WIN_LOWER_BORDER \) \* $Y_DIM_FACTOR_NUM / $Y_DIM_FACTOR_DEN)
+        Y_ORIG=$(expr $(get_screen_size y) - $WS_UPPER_MARGIN - $WS_LOWER_MARGIN - $WIN_UPPER_BORDER - $WIN_LOWER_BORDER - $Y_DIM)
+        wmctrl -r :ACTIVE: -b remove,maximized_vert
+        wmctrl -r :ACTIVE: -b add,maximized_horz
+        wmctrl -r :ACTIVE: -e 0,-1,$Y_ORIG,-1,$Y_DIM
+        ;;
+    br)
+        X_DIM=$(expr \( $(get_screen_size x) - $WS_LEFT_MARGIN - $WS_RIGHT_MARGIN - $WIN_LEFT_BORDER - $WIN_RIGTH_BORDER \) / 2)
+        X_ORIG=$(expr $(get_screen_size x) - $WS_LEFT_MARGIN - $WS_RIGHT_MARGIN - $WIN_LEFT_BORDER - $WIN_RIGTH_BORDER - $X_DIM)
+        Y_DIM=$(expr \( $(get_screen_size y) - $WS_UPPER_MARGIN - $WS_LOWER_MARGIN - $WIN_UPPER_BORDER - $WIN_UPPER_BORDER \) / 2)
+        Y_ORIG=$(expr $(get_screen_size y) - $WS_UPPER_MARGIN - $WS_LOWER_MARGIN - $WIN_UPPER_BORDER - $WIN_LOWER_BORDER - $Y_DIM)
+        wmctrl -r :ACTIVE: -b remove,maximized_vert,maximized_horz
+        wmctrl -r :ACTIVE: -e 0,$X_ORIG,$Y_ORIG,$X_DIM,$Y_DIM
+        ;;
+    lc)
+        if [ ! -f /tmp/move_resize_win.last ]; then
+            X_DIM_FACTOR=$(expr 2 / 3)
+            echo "lc_23" > /tmp/move_resize_win.last
+        else
+            case "$(cat /tmp/move_resize_win.last)" in
+                lc_23)
+                    X_DIM_FACTOR_NUM=1
+                    X_DIM_FACTOR_DEN=2
+                    echo "lc_12" > /tmp/move_resize_win.last
+                    ;;
+                lc_12)
+                    X_DIM_FACTOR_NUM=1
+                    X_DIM_FACTOR_DEN=3
+                    echo "lc_13" > /tmp/move_resize_win.last
+                    ;;
+                *)
+                    X_DIM_FACTOR_NUM=2
+                    X_DIM_FACTOR_DEN=3
+                    echo "lc_23" > /tmp/move_resize_win.last
+                    ;;
+            esac
+        fi
+        X_DIM=$(expr \( $(get_screen_size x) - $WS_LEFT_MARGIN - $WS_RIGHT_MARGIN - $WIN_LEFT_BORDER - $WIN_RIGTH_BORDER \) \* $X_DIM_FACTOR_NUM / $X_DIM_FACTOR_DEN)
+        X_ORIG=$(expr $WS_LEFT_MARGIN + $WIN_LEFT_BORDER)
+        wmctrl -r :ACTIVE: -b remove,maximized_horz
+        wmctrl -r :ACTIVE: -b add,maximized_vert
+        wmctrl -r :ACTIVE: -e 0,$X_ORIG,-1,$X_DIM,-1
+        ;;
+    rc)
+        if [ ! -f /tmp/move_resize_win.last ]; then
+            X_DIM_FACTOR=$(expr 2 / 3)
+            echo "rc_23" > /tmp/move_resize_win.last
+        else
+            case "$(cat /tmp/move_resize_win.last)" in
+                rc_23)
+                    X_DIM_FACTOR_NUM=1
+                    X_DIM_FACTOR_DEN=2
+                    echo "rc_12" > /tmp/move_resize_win.last
+                    ;;
+                rc_12)
+                    X_DIM_FACTOR_NUM=1
+                    X_DIM_FACTOR_DEN=3
+                    echo "rc_13" > /tmp/move_resize_win.last
+                    ;;
+                *)
+                    X_DIM_FACTOR_NUM=2
+                    X_DIM_FACTOR_DEN=3
+                    echo "rc_23" > /tmp/move_resize_win.last
+                    ;;
+            esac
+        fi
+        X_DIM=$(expr \( $(get_screen_size x) - $WS_LEFT_MARGIN - $WS_RIGHT_MARGIN - $WIN_LEFT_BORDER - $WIN_RIGTH_BORDER \) \* $X_DIM_FACTOR_NUM / $X_DIM_FACTOR_DEN)
+        X_ORIG=$(expr $(get_screen_size x) - $WS_LEFT_MARGIN - $WS_RIGHT_MARGIN - $WIN_LEFT_BORDER - $WIN_RIGTH_BORDER - $X_DIM)
+        wmctrl -r :ACTIVE: -b remove,maximized_horz
+        wmctrl -r :ACTIVE: -b add,maximized_vert
+        wmctrl -r :ACTIVE: -e 0,$X_ORIG,-1,$X_DIM,-1
+        ;;
+    *)
+        echo "Usage: gtile <tileh|tilev|tl|tc|tr|bl|bc|br|lc|rc>"
+        exit 1
+        ;;
+esac
+

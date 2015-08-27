@@ -1,0 +1,191 @@
+#!/bin/sh
+
+# File:       move_resize_win
+# Purpose:    Poor man tiling
+# Author:     A. DE LAURENZIS
+# Version:    2.0
+# Date:       20150116
+
+get_screen_size () {
+    COORD="$1"
+    case "$COORD" in
+        x)
+            xrandr -q | egrep "^\*" | awk '{print $2}'
+            ;;
+        y)
+            xrandr -q | egrep "^\*" | awk '{print $4}'
+            ;;
+        *)
+            echo "Usage: get_screen_size <x|y>"
+            ;;
+    esac
+}
+
+
+WS_LEFT_MARGIN=0
+WS_RIGHT_MARGIN=0
+WS_UPPER_MARGIN=0
+WS_LOWER_MARGIN=20
+WIN_LEFT_BORDER=2
+WIN_RIGTH_BORDER=2
+WIN_UPPER_BORDER=2
+WIN_LOWER_BORDER=2
+
+WIN_POS="$1"
+
+case "$WIN_POS" in
+    tl)
+        X_DIM=$(expr \( $(get_screen_size x) - $WS_LEFT_MARGIN - $WS_RIGHT_MARGIN - $WIN_LEFT_BORDER - $WIN_RIGTH_BORDER \) / 2)
+        X_ORIG=$(expr $WS_LEFT_MARGIN + $WIN_LEFT_BORDER)
+        Y_DIM=$(expr \( $(get_screen_size y) - $WS_UPPER_MARGIN - $WS_LOWER_MARGIN - $WIN_UPPER_BORDER - $WIN_LOWER_BORDER \) / 2)
+        Y_ORIG=$WS_UPPER_MARGIN
+        wmctrl -r :ACTIVE: -b remove,maximized_vert,maximized_horz
+        wmctrl -r :ACTIVE: -e 0,$X_ORIG,$Y_ORIG,$X_DIM,$Y_DIM
+        ;;
+    tc)
+        if [ ! -f /tmp/move_resize_win.last ]; then
+            Y_DIM_FACTOR_NUM=2
+            Y_DIM_FACTOR_DEN=3
+            echo "tc_23" > /tmp/move_resize_win.last
+        else
+            case "$(cat /tmp/move_resize_win.last)" in
+                tc_23)
+                    Y_DIM_FACTOR_NUM=1
+                    Y_DIM_FACTOR_DEN=2
+                    echo "tc_12" > /tmp/move_resize_win.last
+                    ;;
+                tc_12)
+                    Y_DIM_FACTOR_NUM=1
+                    Y_DIM_FACTOR_DEN=3
+                    echo "tc_13" > /tmp/move_resize_win.last
+                    ;;
+                *)
+                    Y_DIM_FACTOR_NUM=2
+                    Y_DIM_FACTOR_DEN=3
+                    echo "tc_23" > /tmp/move_resize_win.last
+                    ;;
+            esac
+        fi
+        Y_DIM=$(expr \( $(get_screen_size y) - $WS_UPPER_MARGIN - $WS_LOWER_MARGIN - $WIN_UPPER_BORDER - $WIN_LOWER_BORDER \) \* $Y_DIM_FACTOR_NUM / $Y_DIM_FACTOR_DEN)
+        Y_ORIG=$WS_UPPER_MARGIN
+        wmctrl -r :ACTIVE: -b remove,maximized_vert
+        wmctrl -r :ACTIVE: -b add,maximized_horz
+        wmctrl -r :ACTIVE: -e 0,-1,$Y_ORIG,-1,$Y_DIM
+        ;;
+    tr)
+        X_DIM=$(expr \( $(get_screen_size x) - $WS_LEFT_MARGIN - $WS_RIGHT_MARGIN - $WIN_LEFT_BORDER - $WIN_RIGTH_BORDER \) / 2)
+        X_ORIG=$(expr $(get_screen_size x) - $WS_LEFT_MARGIN - $WS_RIGHT_MARGIN - $WIN_LEFT_BORDER - $WIN_RIGTH_BORDER - $X_DIM)
+        Y_DIM=$(expr \( $(get_screen_size y) - $WS_UPPER_MARGIN - $WS_LOWER_MARGIN - $WIN_UPPER_BORDER - $WIN_UPPER_BORDER \) / 2)
+        Y_ORIG=$WS_UPPER_MARGIN
+        wmctrl -r :ACTIVE: -b remove,maximized_vert,maximized_horz
+        wmctrl -r :ACTIVE: -e 0,$X_ORIG,$Y_ORIG,$X_DIM,$Y_DIM
+        ;;
+    bl)
+        X_DIM=$(expr \( $(get_screen_size x) - $WS_LEFT_MARGIN - $WS_RIGHT_MARGIN - $WIN_LEFT_BORDER - $WIN_RIGTH_BORDER \) / 2)
+        X_ORIG=$(expr $WS_LEFT_MARGIN + $WIN_LEFT_BORDER)
+        Y_DIM=$(expr \( $(get_screen_size y) - $WS_UPPER_MARGIN - $WS_LOWER_MARGIN - $WIN_UPPER_BORDER - $WIN_LOWER_BORDER \) / 2)
+        Y_ORIG=$(expr $(get_screen_size y) - $WS_UPPER_MARGIN - $WS_LOWER_MARGIN - $WIN_UPPER_BORDER - $WIN_LOWER_BORDER - $Y_DIM)
+        wmctrl -r :ACTIVE: -b remove,maximized_vert,maximized_horz
+        wmctrl -r :ACTIVE: -e 0,$X_ORIG,$Y_ORIG,$X_DIM,$Y_DIM
+        ;;
+    bc)
+        if [ ! -f /tmp/move_resize_win.last ]; then
+            Y_DIM_FACTOR=$(expr 2 / 3)
+            echo "bc_23" > /tmp/move_resize_win.last
+        else
+            case "$(cat /tmp/move_resize_win.last)" in
+                bc_23)
+                    Y_DIM_FACTOR_NUM=1
+                    Y_DIM_FACTOR_DEN=2
+                    echo "bc_12" > /tmp/move_resize_win.last
+                    ;;
+                bc_12)
+                    Y_DIM_FACTOR_NUM=1
+                    Y_DIM_FACTOR_DEN=3
+                    echo "bc_13" > /tmp/move_resize_win.last
+                    ;;
+                *)
+                    Y_DIM_FACTOR_NUM=2
+                    Y_DIM_FACTOR_DEN=3
+                    echo "bc_23" > /tmp/move_resize_win.last
+                    ;;
+            esac
+        fi
+        Y_DIM=$(expr \( $(get_screen_size y) - $WS_UPPER_MARGIN - $WS_LOWER_MARGIN - $WIN_UPPER_BORDER - $WIN_LOWER_BORDER \) \* $Y_DIM_FACTOR_NUM / $Y_DIM_FACTOR_DEN)
+        Y_ORIG=$(expr $(get_screen_size y) - $WS_UPPER_MARGIN - $WS_LOWER_MARGIN - $WIN_UPPER_BORDER - $WIN_LOWER_BORDER - $Y_DIM)
+        wmctrl -r :ACTIVE: -b remove,maximized_vert
+        wmctrl -r :ACTIVE: -b add,maximized_horz
+        wmctrl -r :ACTIVE: -e 0,-1,$Y_ORIG,-1,$Y_DIM
+        ;;
+    br)
+        X_DIM=$(expr \( $(get_screen_size x) - $WS_LEFT_MARGIN - $WS_RIGHT_MARGIN - $WIN_LEFT_BORDER - $WIN_RIGTH_BORDER \) / 2)
+        X_ORIG=$(expr $(get_screen_size x) - $WS_LEFT_MARGIN - $WS_RIGHT_MARGIN - $WIN_LEFT_BORDER - $WIN_RIGTH_BORDER - $X_DIM)
+        Y_DIM=$(expr \( $(get_screen_size y) - $WS_UPPER_MARGIN - $WS_LOWER_MARGIN - $WIN_UPPER_BORDER - $WIN_UPPER_BORDER \) / 2)
+        Y_ORIG=$(expr $(get_screen_size y) - $WS_UPPER_MARGIN - $WS_LOWER_MARGIN - $WIN_UPPER_BORDER - $WIN_LOWER_BORDER - $Y_DIM)
+        wmctrl -r :ACTIVE: -b remove,maximized_vert,maximized_horz
+        wmctrl -r :ACTIVE: -e 0,$X_ORIG,$Y_ORIG,$X_DIM,$Y_DIM
+        ;;
+    lc)
+        if [ ! -f /tmp/move_resize_win.last ]; then
+            X_DIM_FACTOR=$(expr 2 / 3)
+            echo "lc_23" > /tmp/move_resize_win.last
+        else
+            case "$(cat /tmp/move_resize_win.last)" in
+                lc_23)
+                    X_DIM_FACTOR_NUM=1
+                    X_DIM_FACTOR_DEN=2
+                    echo "lc_12" > /tmp/move_resize_win.last
+                    ;;
+                lc_12)
+                    X_DIM_FACTOR_NUM=1
+                    X_DIM_FACTOR_DEN=3
+                    echo "lc_13" > /tmp/move_resize_win.last
+                    ;;
+                *)
+                    X_DIM_FACTOR_NUM=2
+                    X_DIM_FACTOR_DEN=3
+                    echo "lc_23" > /tmp/move_resize_win.last
+                    ;;
+            esac
+        fi
+        X_DIM=$(expr \( $(get_screen_size x) - $WS_LEFT_MARGIN - $WS_RIGHT_MARGIN - $WIN_LEFT_BORDER - $WIN_RIGTH_BORDER \) \* $X_DIM_FACTOR_NUM / $X_DIM_FACTOR_DEN)
+        X_ORIG=$(expr $WS_LEFT_MARGIN + $WIN_LEFT_BORDER)
+        wmctrl -r :ACTIVE: -b remove,maximized_horz
+        wmctrl -r :ACTIVE: -b add,maximized_vert
+        wmctrl -r :ACTIVE: -e 0,$X_ORIG,-1,$X_DIM,-1
+        ;;
+    rc)
+        if [ ! -f /tmp/move_resize_win.last ]; then
+            X_DIM_FACTOR=$(expr 2 / 3)
+            echo "rc_23" > /tmp/move_resize_win.last
+        else
+            case "$(cat /tmp/move_resize_win.last)" in
+                rc_23)
+                    X_DIM_FACTOR_NUM=1
+                    X_DIM_FACTOR_DEN=2
+                    echo "rc_12" > /tmp/move_resize_win.last
+                    ;;
+                rc_12)
+                    X_DIM_FACTOR_NUM=1
+                    X_DIM_FACTOR_DEN=3
+                    echo "rc_13" > /tmp/move_resize_win.last
+                    ;;
+                *)
+                    X_DIM_FACTOR_NUM=2
+                    X_DIM_FACTOR_DEN=3
+                    echo "rc_23" > /tmp/move_resize_win.last
+                    ;;
+            esac
+        fi
+        X_DIM=$(expr \( $(get_screen_size x) - $WS_LEFT_MARGIN - $WS_RIGHT_MARGIN - $WIN_LEFT_BORDER - $WIN_RIGTH_BORDER \) \* $X_DIM_FACTOR_NUM / $X_DIM_FACTOR_DEN)
+        X_ORIG=$(expr $(get_screen_size x) - $WS_LEFT_MARGIN - $WS_RIGHT_MARGIN - $WIN_LEFT_BORDER - $WIN_RIGTH_BORDER - $X_DIM)
+        wmctrl -r :ACTIVE: -b remove,maximized_horz
+        wmctrl -r :ACTIVE: -b add,maximized_vert
+        wmctrl -r :ACTIVE: -e 0,$X_ORIG,-1,$X_DIM,-1
+        ;;
+    *)
+        echo "Usage: move_resize_win <tl|tc|tr|bl|bc|br|lc|rc>"
+        exit 1
+        ;;
+esac
+
