@@ -14,7 +14,7 @@ get_win_ids() {
 
 get_tmux_win_id() {
 	for WIN_ID in $(get_win_ids); do
-		if $(xprop -id "$WIN_ID" | grep "^_NET_WM_NAME(UTF8_STRING)" | grep "$1" > /dev/null 2>&1); then
+		if $(xprop -id "$WIN_ID" | grep "^WM_NAME(STRING)" | grep "$1" > /dev/null 2>&1); then
 			echo "$WIN_ID"
 			break
 		fi
