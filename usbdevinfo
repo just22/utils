@@ -1,0 +1,37 @@
+#!/bin/sh
+
+# File:    usbdevinfo
+# Purpose: Return USB controller, port and addr associated with device name
+# Author:  A. DE LAURENZIS
+# Version: 1.0
+# Date:    06 May 2014
+
+if [ $# != 1 ]; then
+    echo "Usage: usbdevinfo <deviceName>"
+    exit 1
+fi
+
+usbdevs -dv | awk -v deviceName=$1 '
+    BEGIN {
+        found=0;
+        pattern="^[\t ]+"deviceName"$"
+    }
+    found==1 {
+        printf "Device name: %s\nController: %s\n%s\n", deviceName, controller, portAddr;
+        exit
+    }
+    /Controller/ {
+        controller=$2;
+        sub(":$", "", controller)
+    }
+    /port [0-9]+ addr [0-9]+: / {
+        portAddr=$0;
+        sub("^[\t ]+", "", portAddr)
+    }
+    $0 ~ pattern {
+        found=1
+    }
+    END {
+        if (found==0) {print "Not found"}
+    }
+'
