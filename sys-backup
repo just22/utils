@@ -12,7 +12,7 @@
 # ----------------------------------------------------------------------
 # Config section
 #
-DAYS_BEFORE_DELETION="7"
+DAYS_BEFORE_DELETION="8"
 
 # Default values for the following variables shouldn't be changed
 TSTAMP="%Y%m%d_%R"
