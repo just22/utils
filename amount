@@ -75,8 +75,8 @@ if [ ${#PART[*]} -eq 0 ]; then
 	Xdialog \
 		--buttons-style text \
 		--screen-center \
-		--title "Removable volumes manager" \
-		--msgbox "No tractable partitions" 6 45
+		--title "Removable volume manager" \
+		--msgbox "No removable devices or\nno usable partitions" 6 45
 	exit 1
 fi
 
@@ -86,7 +86,7 @@ SEL=$(Xdialog \
 	--no-tags \
 	--screen-center \
 	--stdout \
-	--title "Removable volumes manager" \
+	--title "Removable volume manager" \
 	--menubox "Select an action on available partitions" 15 90 1 "${ITEM[@]}")
 
 if [ -n "$SEL" ]; then
@@ -103,7 +103,7 @@ if [ -n "$SEL" ]; then
 				--buttons-style text \
 				--screen-center \
 				--left \
-				--title "Removable volumes manager" \
+				--title "Removable volume manager" \
 				--msgbox "Cannot create ${MOUNT_ROOT}/${MOUNT_DIR}/{$PART_NAME}\nInsufficient permissions or\ndir already exists?" 7 45
 			exit 2
 		fi
