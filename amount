@@ -31,7 +31,8 @@ NPART=0
 for DISKNAME in $(sysctl -n hw.disknames | tr "," " "); do
         DEV=${DISKNAME%:*}
         if [ "${EXCLUDED_DEV#*$DEV}" == "$EXCLUDED_DEV" ]; then
-                while read line; do
+                disklabel "$DEV" 2>/dev/null |&
+                while read -p line; do
                         case "$line" in
                         disk:*)
                                 # Mind: this way, there will be a leading space,
@@ -65,9 +66,7 @@ for DISKNAME in $(sysctl -n hw.disknames | tr "," " "); do
                                 ITEM[2*$NPART]="$MOUNT_DIR ($DEV) - Partition $PART_NAME ($PART_TYPE): $PART_ACTION"
                                 ;;
                         esac
-                done <<- EOT
-                        $(disklabel "$DEV" 2>/dev/null)
-                EOT
+                done
         fi
 done
 
