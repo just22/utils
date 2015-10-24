@@ -29,9 +29,10 @@ get_cpu_data() {
 }
 
 fmt_fan_monitor() {
+        FAN_SPEED=$(sysctl -n hw.sensors.acpithinkpad0.fan0 2>/dev/null)
         printf "%s %s" \
                 "$FAN_ICON" \
-                "$(sysctl -n hw.sensors.acpithinkpad0.fan0)"
+                "${FAN_SPEED:-N/A}"
 }
 
 fmt_battery_monitor() {
@@ -180,4 +181,4 @@ while [ "$LOOP" == 1 ]; do
         # Add missing fields to statusline
         echo "^pa(186) $(fmt_cpu_monitor)  $(fmt_mem_monitor)  $(fmt_io_monitor)  $(fmt_net_monitor)  $TMP_STR  $(fmt_weather_monitor)"
 
-done | dzen2 -dock -title-name "statusbar" -fg "#EAEBEC" -bg "#073642" -ta l -h 18 -w 1094 -fn -xos4-terminus-medium-*-*-*-12-*-*-*-*-*-iso10646-1
+done | dzen2 -dock -title-name "statusbar" -fg "#002B36" -bg "#93A1A1" -ta l -h 18 -fn -xos4-terminus-medium-*-*-*-12-*-*-*-*-*-iso10646-1
