@@ -5,20 +5,25 @@ case "$(sysctl -n hw.sensors.acpibat0.raw0 | awk '{print $1}')" in
     1)
         BATT_LIFE_TIME=$(apm -m | awk '{printf "%1d:%02d", int($1/60), $1%60}')
         if [ "$BATT_LIFE_PERC" -ge 65 ]; then
-                BATT_ICON="<img>/home/just22/.local/share/icons/stlarch_icons/batt5full.xbm</img>"
+                #BATT_ICON="<img>/home/just22/.local/share/icons/stlarch_icons/batt5full.xbm</img>"
+                BATT_ICON="<img>/home/just22/.local/share/icons/stlarch_icons/png-transparent_bg/batt5full.png</img>"
         elif [ "$BATT_LIFE_PERC" -le 15 ]; then
-                BATT_ICON="<img>/home/just22/.local/share/icons/stlarch_icons/batt5empty.xbm</img>"
+                #BATT_ICON="<img>/home/just22/.local/share/icons/stlarch_icons/batt5empty.xbm</img>"
+                BATT_ICON="<img>/home/just22/.local/share/icons/stlarch_icons/png-transparent_bg/batt5empty.png</img>"
         else
-                BATT_ICON="<img>/home/just22/.local/share/icons/stlarch_icons/batt5half.xbm</img>"
+                #BATT_ICON="<img>/home/just22/.local/share/icons/stlarch_icons/batt5half.xbm</img>"
+                BATT_ICON="<img>/home/just22/.local/share/icons/stlarch_icons/png-transparent_bg/batt5half.png</img>"
         fi
         ;;
     2)
         BATT_LIFE_TIME="-:--"
-        BATT_ICON="<img>/home/just22/.local/share/icons/stlarch_icons/ac15.xbm</img>"
+        #BATT_ICON="<img>/home/just22/.local/share/icons/stlarch_icons/ac15.xbm</img>"
+        BATT_ICON="<img>/home/just22/.local/share/icons/stlarch_icons/png-transparent_bg/ac15.png</img>"
         ;;
     *)
         BATT_LIFE_TIME="-:--"
-        BATT_ICON="<img>/home/just22/.local/share/icons/stlarch_icons/ac15.xbm</img>"
+        #BATT_ICON="<img>/home/just22/.local/share/icons/stlarch_icons/ac15.xbm</img>"
+        BATT_ICON="<img>/home/just22/.local/share/icons/stlarch_icons/png-transparent_bg/ac15.png</img>"
         # Temporary (waiting for a "nobatt" icon...)
         #BATT_ICON="<img>/home/just22/.local/share/icons/stlarch_icons/error1.xbm</img>"
         ;;

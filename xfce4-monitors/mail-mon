@@ -1,6 +1,7 @@
 #!/bin/sh
 
-MAIL_ICON="<img>/home/just22/.local/share/icons/sm4tik-icon-pack/xbm/mail.xbm</img>"
+#MAIL_ICON="<img>/home/just22/.local/share/icons/sm4tik-icon-pack/xbm/mail.xbm</img>"
+MAIL_ICON="<img>/home/just22/.local/share/icons/sm4tik-icon-pack/png-transparent_bg/mail.png</img>"
 
 printf "%s<txt> %-1d/%-1d/%-1d</txt><tool></tool>" \
         "$MAIL_ICON" \

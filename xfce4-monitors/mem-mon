@@ -1,6 +1,7 @@
 #!/bin/sh
 
-MEM_ICON="<img>/home/just22/.local/share/icons/sm4tik-icon-pack/xbm/mem.xbm</img>"
+#MEM_ICON="<img>/home/just22/.local/share/icons/sm4tik-icon-pack/xbm/mem.xbm</img>"
+MEM_ICON="<img>/home/just22/.local/share/icons/sm4tik-icon-pack/png-transparent_bg/mem.png</img>"
 
 MEM_LINE=$(top -u -b -1 -d2 -s1 |
                 grep "Memory" |

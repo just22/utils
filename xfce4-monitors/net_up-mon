@@ -1,6 +1,7 @@
 #!/bin/sh
 
-NET_UP_ICON="<img>/home/just22/.local/share/icons/sm4tik-icon-pack/xbm/net_up_02.xbm</img>"
+#NET_UP_ICON="<img>/home/just22/.local/share/icons/sm4tik-icon-pack/xbm/net_up_02.xbm</img>"
+NET_UP_ICON="<img>/home/just22/.local/share/icons/sm4tik-icon-pack/png-transparent_bg/net_up_02.png</img>"
 
 NET_UP_ACTIVITY=$(ifstat -n -i trunk0 0.25 2 |
         tail -n1 |
