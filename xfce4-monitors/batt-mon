@@ -42,7 +42,7 @@ case "$(sysctl -n hw.sensors.acpibat0.raw0 | awk '{print $1}')" in
                 sudo /usr/sbin/ZZZ
         fi
 
-        echo $BATT_LEVEL > /tmp/batt-mon-prevcheck
+        echo "$BATT_LEVEL" > /tmp/batt-mon-prevcheck
 
         ;;
 
