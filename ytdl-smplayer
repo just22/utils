@@ -1,0 +1,13 @@
+#!/bin/sh
+
+# File:     yt-smplayer
+# Purpose:  play yt (or similar) video whom url is into the clipboard
+# Author:   A. DE LAURENZIS
+# Date:     20140627
+
+URL=$1
+
+# curl supports htpps
+smplayer $(youtube-dl -f best -g $URL)
+
+#cat /dev/null | xclip

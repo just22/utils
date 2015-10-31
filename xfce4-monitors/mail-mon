@@ -1,0 +1,10 @@
+#!/bin/sh
+
+#MAIL_ICON="<img>/home/just22/.local/share/icons/sm4tik-icon-pack/xbm/mail.xbm</img>"
+MAIL_ICON="<img>/home/just22/.local/share/icons/sm4tik-icon-pack/png-transparent_bg/mail.png</img>"
+
+printf "%s<txt> %-1d/%-1d/%-1d</txt><tool></tool>" \
+        "$MAIL_ICON" \
+        "$(ls -l ~/mail/sandro.delaurenzis@gmail.com/INBOX/new/* 2>/dev/null | wc -l)" \
+        "$(ls -l ~/mail/just22.adl@gmail.com/INBOX/new/* 2>/dev/null | wc -l)" \
+        "$(ls -l ~/mail/local/INBOX/new/* 2>/dev/null | wc -l)"

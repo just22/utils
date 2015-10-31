@@ -1,0 +1,9 @@
+#!/bin/sh
+
+#FAN_ICON="<img>/home/just22/.local/share/icons/sm4tik-icon-pack/xbm/fs_01.xbm</img>"
+FAN_ICON="<img>/home/just22/.local/share/icons/sm4tik-icon-pack/png-transparent_bg/fs_01.png</img>"
+
+FAN_SPEED=$(sysctl -n hw.sensors.acpithinkpad0.fan0 2>/dev/null)
+printf "%s<txt> %s </txt><tool></tool>" \
+        "$FAN_ICON" \
+        "${FAN_SPEED:-N/A}"
