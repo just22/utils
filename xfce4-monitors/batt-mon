@@ -6,6 +6,7 @@ BATT_LEVEL=$(apm -l)
 # safely assume that it was plugged in
 if [ ! -e /tmp/batt-mon-prevcheck ]; then
         echo "100" > /tmp/batt-mon-prevcheck
+        chmod 777 /tmp(batt-mon-prevcheck
 fi
 
 case "$(sysctl -n hw.sensors.acpibat0.raw0 | awk '{print $1}')" in
