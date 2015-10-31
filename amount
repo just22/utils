@@ -90,8 +90,8 @@ SEL=$(Xdialog \
 
 if [ -n "$SEL" ]; then
         IFS="," read DEV MOUNT_DIR PART_NAME PART_TYPE PART_ACTION <<- EOT
-                $(echo ${PART[$SEL]})
-        EOT
+		$(echo ${PART[$SEL]})
+	EOT
         case "$PART_ACTION" in
         mount)
                 [ -d "${MOUNT_ROOT}/${MOUNT_DIR}/${PART_NAME}" ] || \
