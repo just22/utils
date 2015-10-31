@@ -4,7 +4,7 @@ BATT_LEVEL=$(apm -l)
 
 # If no previous battery level measure exists,
 # safely assume that it was plugged in
-if [ ! -e /tmp/batt-mon-prevcheck ]; then
+if [ ! -e ${HOME}/tmp/batt-mon-prevcheck ]; then
         echo "100" > ${HOME}/tmp/batt-mon-prevcheck
         chmod 777 ${HOME}/tmp/batt-mon-prevcheck
 fi
