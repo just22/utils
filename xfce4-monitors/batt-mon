@@ -32,7 +32,7 @@ case "$(sysctl -n hw.sensors.acpibat0.raw0 | awk '{print $1}')" in
         if [ "$WARN_MSG" == 1 ]; then
                 notify-send \
                         --urgency=normal \
-                        --expire-time=10000 \
+                        --expire-time=15000 \
                         --icon=xfce4-battery-low \
                         "Low battery level" \
                         "This computer is running on low battery level.\n\nPlug-in the AC adapter or it will be forced to go to sleep in a few minutes."
