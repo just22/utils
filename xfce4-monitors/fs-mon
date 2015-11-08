@@ -1,0 +1,5 @@
+#!/bin/sh
+
+HOME_ICON="<img>/home/just22/.local/share/icons/stlarch_icons/png-transparent_bg/home1.png</img>"
+
+printf "%s<txt> %s </txt><tool></tool>" "$HOME_ICON" "$(df -l | grep home | awk '{print $5}')"
