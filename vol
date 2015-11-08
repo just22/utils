@@ -9,7 +9,7 @@
 package require Tk
 
 wm overrideredirect . 1
-wm geometry . -312-24
+wm geometry . -330-24
 #wm title . "Volume level"
 
 grid [ttk::frame .frame -padding "2 2 2 2"] -column 0 -row 0 -sticky nwes
