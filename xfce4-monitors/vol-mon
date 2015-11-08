@@ -6,7 +6,7 @@ VOL_LEVEL=$(mixerctl -n outputs.master |
 
 if [ "$VOL_LEVEL" -eq 0 ]; then
         VOL_ICON="<img>/home/just22/.local/share/icons/stlarch_icons/png-transparent_bg/vol3.png</img>"
-elif [ "$VOL_LEVEL" -gt 75 ]; then
+elif [ "$VOL_LEVEL" -gt 50 ]; then
         VOL_ICON="<img>/home/just22/.local/share/icons/stlarch_icons/png-transparent_bg/vol1.png</img>"
 else
         VOL_ICON="<img>/home/just22/.local/share/icons/stlarch_icons/png-transparent_bg/vol2.png</img>"
