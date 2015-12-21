@@ -154,3 +154,31 @@ tile2 () {
                 ;;
         esac
 }
+
+
+# Main
+if [ $# -eq 0 ]; then
+        echo "Usage: $(basename $0) <command> [options...]"
+        exit 1
+fi
+
+ACTION="$1"
+
+case "$ACTION" in
+tile2)
+        if [ $# -ne 4 ]; then
+                echo "$ACTION: wrong number of params"
+                exit 2
+        fi
+        TILE_DIR="$2"
+        DIM_FACTOR="$3"
+        TILE_GAP="$4"
+        tile2 "$TILE_DIR" "$DIM_FACTOR" "$TILE_GAP"
+        ;;
+*)
+        echo "$ACTION: unknown action"
+        exit 3
+        ;;
+esac
+
+exit 0
