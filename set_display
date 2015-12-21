@@ -1,0 +1,48 @@
+#!/bin/sh
+
+# File:         set_display
+# Purpose:      External monitors management
+# Author:       Alessandro DE LAURENZIS <just22.adl@gmail.com>
+# Version:      1.0
+# Date:         Somewhere in time...
+
+if [ "$#" != 3 ]; then
+        echo "Usage: $0 <disp1> <disp2> <pos|only|restore>"
+        exit 1
+fi
+
+DISPLAY_1=$1
+DISPLAY_2=$2
+ACTION=$3
+
+if [ "$ACTION" == only ]; then
+        xrandr --output $DISPLAY_1 --off --output $DISPLAY_2 --auto
+elif [ "$ACTION" == restore ]; then
+        sudo wsconsctl display.focus=4; xrandr --output $DISPLAY_1 --auto --output $DISPLAY_2 --off
+else
+        xrandr --output $DISPLAY_1 --auto --primary --output $DISPLAY_2 --auto --$ACTION $DISPLAY_1
+fi
+
+hsetroot -add '#073642' -add '#586E75' -gradient 0
+
+if pgrep -x openbox > /dev/null 2>&1 == 0; then
+        openbox --restart
+fi
+
+if pgrep -x netwmpager > /dev/null 2>&1 == 0; then
+        pkill netwmpager > /dev/null 2>&1 && netwmpager > /dev/null 2>&1 &
+fi
+
+if pgrep -x tint2 > /dev/null 2>&1 == 0; then
+        pkill tint2 > /dev/null 2>&1
+        case "$ACTION" in
+        above|below):
+                tint2 -c ~/.config/tint2/dual_aboveBelow.tint2rc > /dev/null 2>&1 &
+                ;;
+        *):
+                tint2 -c ~/.config/tint2/default.tint2rc > /dev/null 2>&1 &
+                ;;
+        esac
+fi
+
+#restart-wm

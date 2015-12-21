@@ -1,0 +1,13 @@
+#!/bin/sh
+
+#CPU_ICON="<img>/home/just22/.local/share/icons/sm4tik-icon-pack/xbm/cpu.xbm</img>"
+CPU_ICON="<img>/home/just22/.local/share/icons/sm4tik-icon-pack/png-transparent_bg/cpu.png</img>"
+CPU_TEMP=$(sysctl -n hw.sensors.cpu0.temp0 | awk '{printf "%2d°C", $1}')
+PERF_POLICY=$(sysctl -n hw.perfpolicy | cut -c -1 | tr \[a-z\] \[A-Z\])
+
+#printf "<txt><span font=\"-wuncon-siji-medium-r-normal-*-10-100-75-75-c-80-iso10646-1\">\\uE04D</span></txt>"
+top -u -b -1 -d2 -s1 |
+        grep "CPUs:" |
+        tail -n1 |
+        awk -v icon="$CPU_ICON" -v perf="$PERF_POLICY" -v temp="$CPU_TEMP" \
+                '{printf "%s<txt> %1s %4s %-4s</txt><tool></tool>", icon, perf, temp, int(100-$11)"%"}'

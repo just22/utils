@@ -1,0 +1,7 @@
+#!/bin/sh
+
+# File:         vol-launcher
+# Purpose:      Simple launcher for vol
+# Author:       A. DE LAURENZIS
+
+if ! pkill -KILL -f "tclsh.*vol"; then ${HOME}/bin/vol; fi

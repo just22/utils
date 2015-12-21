@@ -1,0 +1,25 @@
+#!/bin/sh
+
+# Kill daemon on exit
+trap "LOOP=0" HUP INT QUIT ABRT KILL TERM
+
+LOOP=1
+while [ "$LOOP" == 1 ]; do
+    if [ "$(apm -a)" == "0" ]; then
+        if [ "$(apm -l)" -le "10" ]; then
+            #logger -t "check-bat-status" "Critical low battery level: suspending..."
+            #apm -z
+            logger -t "check-bat-status" "Critical low battery level: hibernating..."
+            apm -Z
+        elif [ "$(apm -l)" -le "20" ]; then
+            #echo -e "Battery level is getting critically low.\nPlug-in the AC adapter or suspend the system!" | \
+            #xmessage -title "Low battery" -buttons "Suspend now":1,"OK":0 -timeout 30 -file -
+            #[ "$?" -eq "1" ] && apm -z
+            echo -e "This computer is running on low battery level.\nPlug-in the AC adapter or hibernate the system!" | \
+            xmessage -title "Low battery" -buttons "Hibernate now":1,"OK":0 -timeout 60 -file -
+            [ "$?" -eq "1" ] && apm -Z
+        fi
+    fi
+    # Check every 3 min
+    sleep 180
+done
