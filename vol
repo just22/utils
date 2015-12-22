@@ -9,7 +9,6 @@
 package require Tk
 
 wm overrideredirect . 1
-wm geometry . -330-24
 #wm title . "Volume level"
 
 grid [ttk::frame .frame -padding "2 2 2 2"] -column 0 -row 0 -sticky nwes
@@ -45,10 +44,10 @@ foreach w [winfo children .frame] {
         grid configure $w -padx 2 -pady 2
 }
 
-#tkwait visibility .
-#grab set -global .
+update
+wm geometry . +[expr [winfo pointerx .]-[winfo reqwidth .]/2]-24
 
-# Only working with a normal window, not with an overridden one
-#bind . <Escape> {destroy .}
-#bind . <Return> {.frame.mute invoke}
-#bind . <space>  {.frame.mute invoke}
+# Keybindings don't work with overrideredirect...
+bind . <Escape> {destroy .}
+bind . <Return> {.frame.mute invoke}
+bind . <space>  {.frame.mute invoke}
