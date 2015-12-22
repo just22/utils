@@ -18,12 +18,13 @@
 #
 #
 MOUNT_ROOT=/vol                 # It must exist and have the proper permissions
-RUN_FSCK=1                      # If enabled, fsck is run on all filesystem in
+RUN_FSCK=1                      # If enabled, fsck is run on all filesystems in
                                 # preen mode with "-y" option
 GROUP="diskmount"
 MODE=0775
 EXCLUDED_DEV="sd0"              # Do not manage these devices
-FILEMGR="/usr/local/bin/xfe"    # Leave it empty if you don't want to open a
+FILEMGR="exo-open --launch FileManager"
+                                # Leave it empty if you don't want to open a
                                 # file manager window after mount
 # ----------------------------------------------------------------------
 
@@ -75,7 +76,7 @@ if [ ${#PART[*]} -eq 0 ]; then
                 --buttons-style text \
                 --screen-center \
                 --title "Removable volume manager" \
-                --msgbox "No removable devices or\nno usable partitions" 6 45
+                --msgbox "No removable devices \n(or no usable partitions)" 6 45
         exit 1
 fi
 
