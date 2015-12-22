@@ -1,0 +1,21 @@
+#!/bin/sh
+
+# File:         reminder
+# Purpose:      Simple reminder (using at and xmessage)
+# Authoer:      A. DE LAURENZIS
+
+echo -n "Time [see at(1)]? "; read TIME
+echo -n "Message? "; read MSG
+
+SHELL=/bin/sh DISPLAY=$DISPLAY at "$TIME" >/dev/null 2>&1 <<- EOT
+echo -e "$MSG\n(This alert won't be repeated)" |
+DISPLAY=:0.0 xmessage -title "Reminder" -buttons "Got it!" -file -
+EOT
+
+if [ $? -ne 0 ]; then
+        echo "$(basename $0): Wrong time format"
+        exit 1
+else
+        echo "Reminder scheduled at $TIME"
+        exit 0
+fi
