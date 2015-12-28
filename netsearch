@@ -1,0 +1,83 @@
+#!/bin/sh
+
+# File:         netsearch
+# Purpose:      Return a valid search uri starting from a string containing
+#               an id for the search engine and the query string
+# Author:       A. DE LAURENZIS
+
+# Search history config
+HIST_FILE="$HOME/.surf/search_history"
+HIST_MAXLINE="100"
+[ ! -f "$HIST_FILE" ] && touch "$HIST_FILE"
+
+# Query string input
+XCLIP="$(xclip -o)"
+QUERY="$(([ -n "$XCLIP" ] && echo "$XCLIP"; cat "$HIST_FILE") | dmenu -i -l 10)"
+[ -z "$QUERY" ] && exit 0
+
+# Update history (except if the new query starts with a space)
+if [ $(echo "$QUERY" | cut -c 1) != " " ]; then
+        (echo "$QUERY"; cat "$HIST_FILE") > "${HIST_FILE}.tmp"
+        sort -mu "${HIST_FILE}.tmp" | head -n "$HIST_MAXLINE" > "$HIST_FILE"
+fi
+
+ENGINE_ID=$(echo "$QUERY" | awk '{print $NF}')
+
+case "$ENGINE_ID" in
+ddg)
+        SEARCH_STR="https://www.duckduckgo.com/?q=%s"
+        ;;
+w)
+        SEARCH_STR="https://secure.wikimedia.org/wikipedia/en/w/index.php?title=Special%3ASearch&search=%s"
+        ;;
+wit)
+        SEARCH_STR="https://secure.wikimedia.org/wikipedia/it/w/index.php?title=Special%3ASearch&search=%s"
+        ;;
+yt)
+        SEARCH_STR="https://www.youtube.com/results?search_query=%s"
+        ;;
+en)
+        SEARCH_STR="http://www.wordreference.com/definition/%s"
+        ;;
+ent)
+        SEARCH_STR="http://www.wordreference.com/thesaurus/%s"
+        ;;
+it)
+        SEARCH_STR="http://www.wordreference.com/definizione/%s"
+        ;;
+iten)
+        SEARCH_STR="http://www.wordreference.com/iten/%s"
+        ;;
+enit)
+        SEARCH_STR="http://www.wordreference.com/enit/%s"
+        ;;
+maps)
+        SEARCH_STR="http://maps.google.com/maps?q=%s"
+        ;;
+pkg)
+        SEARCH_STR="http://openports.se/search.php?so=%s"
+        ;;
+misc)
+        SEARCH_STR="http://marc.info/?l=openbsd-misc&w=2&r=1&s=%s&q=b"
+        ;;
+tech)
+        SEARCH_STR="http://marc.info/?l=openbsd-tech&w=2&r=1&s=%s&q=b"
+        ;;
+ports)
+        SEARCH_STR="http://marc.info/?l=openbsd-ports&w=2&r=1&s=%s&q=b"
+        ;;
+bugs)
+        SEARCH_STR="http://marc.info/?l=openbsd-bugs&w=2&r=1&s=%s&q=b"
+        ;;
+*)
+        DEFAULT_ENGINE=1
+        SEARCH_STR="http://www.google.com/search?q=%s"
+        ;;
+esac
+
+[ -z "$DEFAULT_ENGINE" ] && QUERY="$(echo "$QUERY" | awk '{$NF=""; print $0}')"
+QUERY=$(echo "$QUERY" | sed "s/ /%20/g")
+
+echo "$SEARCH_STR" | sed "s/%s/$QUERY/"
+
+exit 0
