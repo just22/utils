@@ -44,8 +44,14 @@ foreach w [winfo children .frame] {
         grid configure $w -padx 2 -pady 2
 }
 
+set rootwin_ydim  [exec xprop -root _NET_WORKAREA | cut -d "," -f 4]
+set rootwin_yorig [exec xprop -root _NET_WORKAREA | cut -d "," -f 2]
+
 update
-wm geometry . +[expr [winfo pointerx .]-[winfo reqwidth .]/2]-24
+set x_pos [expr [winfo pointerx .] - [winfo reqwidth .]/2]
+set y_pos [expr $rootwin_ydim + $rootwin_yorig - [winfo reqheight .] - 1]
+
+wm geometry . +${x_pos}+${y_pos}
 
 # Keybindings don't work with overrideredirect...
 bind . <Escape> {destroy .}
