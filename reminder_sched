@@ -1,0 +1,31 @@
+#!/bin/sh
+
+# File:         reminder_sched
+# Purpose:      Scheduler for simple reminder (using at and xmessage)
+# Authoer:      A. DE LAURENZIS
+
+if [ $# -ne 2 ]; then
+        echo "Usage: $(basename $0) <time> <msg>"
+        exit 1
+fi
+
+TIME="$1"
+MSG="$2"
+
+RPT_TIME="+5min"
+
+SHELL=/bin/sh DISPLAY=$DISPLAY at "$TIME" >/dev/null 2>&1 <<- EOT
+echo -e "$MSG" |
+DISPLAY="$DISPLAY" xmessage -title "Reminder" \
+			-buttons "Got it!":0,"Postpone 5'":1 -file -; \
+if [ "$?" -ne 0 ]; then
+	reminder_sched "$RPT_TIME" "$MSG"
+fi
+EOT
+
+if [ $? -ne 0 ]; then
+        echo "$(basename $0): Wrong time format"
+        exit 2
+fi
+
+exit 0
