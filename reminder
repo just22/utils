@@ -9,7 +9,7 @@ echo -n "Message? "; read MSG
 
 SHELL=/bin/sh DISPLAY=$DISPLAY at "$TIME" >/dev/null 2>&1 <<- EOT
 echo -e "$MSG\n(This alert won't be repeated)" |
-DISPLAY=:0.0 xmessage -title "Reminder" -buttons "Got it!" -file -
+DISPLAY="$DISPLAY" xmessage -title "Reminder" -buttons "Got it!" -file -
 EOT
 
 if [ $? -ne 0 ]; then
