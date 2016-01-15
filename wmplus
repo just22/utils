@@ -316,13 +316,16 @@ tile_visible() {
 
 # Main
 if [ $# -eq 0 ]; then
-        echo "Usage: $(basename $0) <command> [options...]"
+        echo "Usage: $(basename $0) <command> [options...] | help"
         exit 1
 fi
 
 ACTION="$1"
 
 case "$ACTION" in
+help)
+        echo "$(basename $0) <tile_active|tile_visible|raise_and_max|move_win_to_ws_and_activate> [options...]"
+        ;;
 tile_*)
         if [ $# -ne 4 ]; then
                 [ "$ACTION" == tile_active ] &&
