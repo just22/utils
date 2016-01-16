@@ -13,7 +13,7 @@ echo -n "Snooze time: [300] "; read SNOOZE_TIME
 [ -z "$SNOOZE_TIME" ] && SNOOZE_TIME=300
 
 SHELL=/bin/sh at "$TIME" >/dev/null <<-EOT
-	while /bin/true; do
+	while true; do
 		echo "$MSG" |
 		DISPLAY="$DISPLAY" xmessage -title "Reminder" -center \
 					-buttons "Got it":0,"Snooze":2 \
