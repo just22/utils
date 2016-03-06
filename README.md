@@ -11,9 +11,10 @@ of course, I like my apps behaving coherently wherever I run them.
 
 ## Installation
 
-git clone https://github.com/just22/dotfiles.git
+git clone https://github.com/just22/utils.git
 
-then, just link each relevant file in the appropriate location.
+then, add your local repository to PATH variable (or just link some files in
+a directory in your executable path).
 
 
 # License
