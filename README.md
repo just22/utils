@@ -15,3 +15,7 @@ git clone https://github.com/just22/dotfiles.git
 
 then, just link each relevant file in the appropriate location.
 
+
+# License
+All files released under the BSD 2-clause “Simplified” License
+See LICENSE for details
