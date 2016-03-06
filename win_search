@@ -7,19 +7,23 @@
 # Author:       A. DE LAURENZIS
 
 get_win_ids() {
-        xprop -root |
-                grep "^_NET_CLIENT_LIST(WINDOW)" |
+        xprop -root _NET_CLIENT_LIST |
                 awk 'BEGIN{FS="#"} {print $2}' |
                 tr -d ","
 }
 
 search_win() {
         for WIN_ID in $(get_win_ids); do
-                WIN_CLASS="$(xprop -id $WIN_ID | grep "^WM_CLASS(STRING)" | awk '{print $4}')"
-                WIN_TITLE="$(xprop -id $WIN_ID | grep "^WM_NAME(STRING)" | awk 'BEGIN{FS=" = "} {print $2}')"
-                echo "$WIN_ID" "$WIN_CLASS" "$WIN_TITLE"
+                if ! echo $(xprop -id $WIN_ID _NET_WM_WINDOW_TYPE) |
+                     egrep "DOCK|DESKTOP" >/dev/null 2>&1; then
+                        WIN_CLASS="$(xprop -id $WIN_ID WM_CLASS |
+                                        awk '{print $3}')"
+                        WIN_TITLE="$(xprop -id $WIN_ID WM_NAME |
+                                        awk 'BEGIN{FS=" = "} {print $2}')"
+                        echo "$WIN_ID" "$WIN_CLASS" "$WIN_TITLE"
+                fi
         done |
-        dmenu -fn "-xos4-terminus-medium-*-*-*-14-*-*-*-*-*-iso10646-1" -nf "#93A1A1" -nb "#073642" -sb "#657B83" -i -l 5 |
+        dmenu -fn "Terminus:size=10" -nf "#eee8d5" -nb "#073642" -sf "#eee8d5" -sb "#657B83" -i -l 5 |
         awk '{print $1}'
 }
 
