@@ -23,6 +23,7 @@ set EXPR "1.0 * $argv"
 
 if { [catch {puts [eng_fmt [expr $EXPR] 3]}] } {
         puts stderr "tcl-calc: Expression evaluation error"
+        puts 0
         exit 2
 }
 exit 0
