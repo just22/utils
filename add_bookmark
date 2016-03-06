@@ -20,6 +20,12 @@ URI="$(xprop -id "$1" _SURF_URI |
                 awk -F " = " '{print $2}' |
                 tr -d \")"
 
-echo "$URI, $TITLE, " | dmenu -l 1 >>"$BOOKMARK_FILE"
+NEW_BM=$(echo "$URI, $TITLE, " | dmenu -l 1)
+if [ -n "$NEW_BM" ]; then
+        grep -v -F "$(echo "$NEW_BM" | cut -d "," -f 1), " "${BOOKMARK_FILE}" \
+                >"${BOOKMARK_FILE}.tmp"
+        (cat "${BOOKMARK_FILE}.tmp"; echo "$NEW_BM") >"${BOOKMARK_FILE}"
+        rm -f "${BOOKMARK_FILE}.tmp"
+fi
 
 exit 0
