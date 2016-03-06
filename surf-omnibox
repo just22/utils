@@ -6,7 +6,7 @@
 # Author:       A. DE LAURENZIS
 
 # Search history config
-HIST_FILE="$HOME/.surf/search_history"
+HIST_FILE="$HOME/.surf/omnibox_history"
 HIST_MAXLINE="100"
 [ ! -f "$HIST_FILE" ] && touch "$HIST_FILE"
 
@@ -64,7 +64,7 @@ bugs)
         SEARCH_STR="http://marc.info/?l=openbsd-bugs&w=2&r=1&s=%s&q=b"
         ;;
 *)
-        URL_RE="^(https?://)?([\da-z\.-]+)\.([a-z\.]{2,6})([/\w \.-]*)*/?$"
+        URL_RE="^[[:blank:]]*(https?://)?([\da-z\.-]+)\.([a-z\.]{2,6})([/\w \.-]*)*/?$"
         VALID_URL=$(echo "$QUERY" | sed -E -e "s#$URL_RE##")
         if [ -z "$VALID_URL" ]; then
                 NO_SEARCH=1
@@ -80,8 +80,8 @@ esac
 
 # Update history (except if input string starts with a space)
 if [ "$(echo "$QUERY" | cut -c 1)" != " " ]; then
-        (echo "$QUERY"; cat "$HIST_FILE") > "${HIST_FILE}.tmp"
-        uniq "${HIST_FILE}.tmp" | head -n "$HIST_MAXLINE" > "$HIST_FILE"
+        (echo "$QUERY"; grep -v -F "$QUERY" "$HIST_FILE") > "${HIST_FILE}.tmp"
+        head -n "$HIST_MAXLINE" "${HIST_FILE}.tmp" > "$HIST_FILE"
         rm "${HIST_FILE}.tmp"
 fi
 
@@ -89,7 +89,7 @@ if [ -z "$NO_SEARCH" ]; then
         QUERY=$(echo "$QUERY" | sed "s/ /%20/g")
         echo "$SEARCH_STR" | sed "s/%s/$QUERY/"
 else
-        echo "$QUERY"
+        echo "$QUERY" | sed 's/^[[:blank:]]*//'
 fi
 
 exit 0
