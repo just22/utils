@@ -20,7 +20,8 @@ ACTION=$3
 if [ "$ACTION" == only ]; then
         xrandr --output $DISPLAY_1 --off --output $DISPLAY_2 --auto
 elif [ "$ACTION" == restore ]; then
-        sudo wsconsctl display.focus=4; xrandr --output $DISPLAY_1 --auto --output $DISPLAY_2 --off
+        #sudo wsconsctl display.focus=4; xrandr --output $DISPLAY_1 --auto --output $DISPLAY_2 --off
+        xrandr --auto
 else
         xrandr --output $DISPLAY_1 --auto --primary --output $DISPLAY_2 --auto --$ACTION $DISPLAY_1
 fi
