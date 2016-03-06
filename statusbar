@@ -179,8 +179,10 @@ while [ "$LOOP" == 1 ]; do
         wait $TOP_DUMP_PID $IOSTAT_DUMP_PID $IFSTAT_DUMP_PID
 
         # Add missing fields to statusline
-        echo "^pa(186) $(fmt_cpu_monitor)  $(fmt_mem_monitor)  $(fmt_io_monitor)  $(fmt_net_monitor)  $TMP_STR  $(fmt_weather_monitor)"
+        echo " $(fmt_cpu_monitor)  $(fmt_mem_monitor)  $(fmt_io_monitor)  $(fmt_net_monitor)  $TMP_STR  $(fmt_weather_monitor) "
+        #echo "^pa(186) $(fmt_cpu_monitor)  $(fmt_mem_monitor)  $(fmt_io_monitor)  $(fmt_net_monitor)  $TMP_STR  $(fmt_weather_monitor)"
         #echo "$(fmt_cpu_monitor)  $(fmt_mem_monitor)  $(fmt_io_monitor)  $(fmt_net_monitor)  $TMP_STR  $(fmt_weather_monitor) "
 
-done | dzen2 -dock -title-name "statusbar" -fg "#002B36" -bg "#93A1A1" -ta l -h 18 -fn -xos4-terminus-medium-*-*-*-12-*-*-*-*-*-iso10646-1
+done | dzen2 -dock -title-name "statusbar" -fg "#93a1a1" -bg "#073642" -ta l -expand right -h 18 -fn -xos4-terminus-medium-*-*-*-12-*-*-*-*-*-iso10646-1
+#done | dzen2 -title-name "statusbar" -fg "#002B36" -bg "#93A1A1" -ta l -h 18 -fn -xos4-terminus-medium-*-*-*-12-*-*-*-*-*-iso10646-1
 #done | dzen2 -title-name "statusbar" -fg "#002B36" -bg "#93A1A1" -x 200 -ta r -w 700 -h 18 -fn -xos4-terminus-medium-*-*-*-12-*-*-*-*-*-iso10646-1
