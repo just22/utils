@@ -11,6 +11,8 @@ if [ "$#" != 3 ]; then
         exit 1
 fi
 
+exec >/dev/null 2>&1
+
 DISPLAY_1=$1
 DISPLAY_2=$2
 ACTION=$3
@@ -25,24 +27,26 @@ fi
 
 hsetroot -add '#073642' -add '#586E75' -gradient 0
 
-if pgrep -x openbox > /dev/null 2>&1 == 0; then
+if pgrep -x openbox; then
         openbox --restart
+        feh --bg-scale ~/Images/Wallpapers/apple_keyboard.jpg
 fi
 
-if pgrep -x netwmpager > /dev/null 2>&1 == 0; then
-        pkill netwmpager > /dev/null 2>&1 && netwmpager > /dev/null 2>&1 &
+if pgrep -x bbpager; then
+        pkill bbpager; bbpager&
 fi
 
-if pgrep -x tint2 > /dev/null 2>&1 == 0; then
-        pkill tint2 > /dev/null 2>&1
+if pgrep -x tint2; then
+        pkill tint2
         case "$ACTION" in
         above|below):
-                tint2 -c ~/.config/tint2/dual_aboveBelow.tint2rc > /dev/null 2>&1 &
+                tint2 -c ~/.config/tint2/dual_aboveBelow.tint2rc&
                 ;;
         *):
-                tint2 -c ~/.config/tint2/default.tint2rc > /dev/null 2>&1 &
+                tint2&
                 ;;
         esac
 fi
 
-#restart-wm
+sleep 2
+pkill conky; conky-statusbar&
