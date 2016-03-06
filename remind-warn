@@ -1,0 +1,25 @@
+#!/bin/sh
+
+if [ "$#" -ne 1 ]; then
+        echo "usage: $(basename $0) <msg>"
+        exit 1
+fi
+
+MSG="$1"
+
+while true; do
+        ANS=$(Xdialog --title "Reminder" \
+                --backtitle "$MSG" \
+                --wrap \
+                --stdout \
+                --ok-label "Snooze" \
+                --cancel-label "Close" \
+                --3spinsbox "" 350x0 0 10 0 days 0 23 0 hours 0 59 5 mins)
+        if [ -z "$ANS" ]; then
+                break
+        else
+                SLEEP_TIME=$(echo "$ANS" | 
+                                awk -F "/" '{print $1*24*60*60+$2*60*60+$3*60}')
+        fi
+        sleep "$SLEEP_TIME"
+done

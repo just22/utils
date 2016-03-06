@@ -1,0 +1,10 @@
+#/bin/sh
+
+echo "<img>/usr/local/share/icons/Tango/24x24/mimetypes/vcalendar.png</img>"
+echo "<txt>$(date "+%a %d %b (%V) - %R")</txt>"
+echo "<click>sh -c \"if pgrep -x wyrd; then \
+                        pkill -x wyrd; \
+                     else \
+                        xterm -geometry 125x40-0-0 -e wyrd; \
+                     fi\"</click>"
+echo "<tool></tool>"
