@@ -19,7 +19,8 @@ if { $argc != 1 } {
         exit 1
 }
 
-set EXPR "1.0 * $argv"
+# Always floating point division, please!
+set EXPR [string map {/ *1.0/} $argv]
 
 if { [catch {puts [eng_fmt [expr $EXPR] 3]}] } {
         puts stderr "tcl-calc: Expression evaluation error"
