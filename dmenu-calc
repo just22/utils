@@ -7,7 +7,9 @@
 __calc()
 {
         printf '%s\n' "$result" | xclip -i
-        result=$(tcl-calc $(xclip -o | dmenu -p Calc | tr -d " ") 2>/dev/null)
+        result=$(tcl-calc $(xclip -o |
+                dmenu -nf "#eee8d5" -nb "#073642" -sf "#eee8d5" -sb "#657B83" -p Calc |
+                tr -d " ") 2>/dev/null)
 }
 
 result=0
