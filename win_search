@@ -23,7 +23,7 @@ search_win() {
                         echo "$WIN_ID" "$WIN_CLASS" "$WIN_TITLE"
                 fi
         done |
-        dmenu -fn "Terminus:size=10" -nf "#eee8d5" -nb "#073642" -sf "#eee8d5" -sb "#657B83" -i -l 5 |
+        dmenu -nf "#eee8d5" -nb "#073642" -sf "#eee8d5" -sb "#657B83" -i -l 5 |
         awk '{print $1}'
 }
 
