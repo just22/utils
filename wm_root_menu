@@ -1,0 +1,6 @@
+#!/bin/sh
+
+X_POS=0
+Y_POS=$(xprop -root _NET_WORKAREA | awk -F "," '{print $2+$4}')
+
+xdotool mousemove $X_POS $Y_POS key Super_L+space

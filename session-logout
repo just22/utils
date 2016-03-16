@@ -1,0 +1,35 @@
+#!/bin/sh
+DIALOG=Xdialog
+
+$DIALOG --title "Session logout" \
+        --radiolist "Please select a logout action:" 18 46 0 \
+                "Logout"        "Logout from current X session" ON  \
+                "Suspend"       "Suspend to RAM"                off \
+                "Hibernate"     "Suspend to disk"               off \
+                "Reboot"        "Reboot the system"             off \
+                "Poweroff"      "Power down the machine"        off \
+        2>/tmp/checklist.tmp.$$
+
+RETVAL=$?
+CHOICE=`cat /tmp/checklist.tmp.$$`
+rm -f /tmp/checklist.tmp.$$
+
+if [ $RETVAL -eq 0 ]; then
+        case "$CHOICE" in
+        Logout)
+                openbox --exit
+                ;;
+        Suspend)
+                /usr/sbin/zzz
+                ;;
+        Hibernate)
+                /usr/sbin/ZZZ
+                ;;
+        Reboot)
+                sudo /sbin/reboot
+                ;;
+        Poweroff)
+                sudo /sbin/shutdown -p now
+                ;;
+        esac
+fi
