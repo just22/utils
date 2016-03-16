@@ -6,7 +6,7 @@ DIM=$(expr \
                 awk -F "x" '{print $1}') \
         - 168)
 
-echo "minimum_size $DIM 14" > /tmp/conkyrc
+echo "minimum_size $DIM 13" > /tmp/conkyrc
 
 sed -e "/minimum_size/d; /maximum_size/d" \
         ~/.config/conky/conkyrc-statusline-dock \
