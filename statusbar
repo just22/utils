@@ -1,0 +1,213 @@
+#!/bin/sh
+
+# File:         statusbar
+# Purpose:      Draw a basic statusbar on the top of primary monitor
+#               (using only base tools and dzen2)
+# Author:       A. DE LAURENZIS
+# Version:      2.0
+# Date:         201506
+
+# Kill daemon on exit
+trap "LOOP=0" HUP INT QUIT ABRT KILL TERM
+
+#get_screen_xdim() {
+#        xrandr |
+#        egrep -o "[0-9]+x[0-9]+\+0\+0" |
+#        cut -d "x" -f 1
+#}
+
+get_very_slow_data() {
+        if [ ! -s /tmp/weather.dump ] || [ "$(expr \( $(date +%s) - $(stat -f "%m" /tmp/weather.dump) \))" -ge 900 ]; then
+                wget --no-cache -q "http://weather.yahooapis.com/forecastrss?w=718345&u=c" -O /tmp/weather.dump&
+        fi
+}
+
+get_slow_data() {
+        top -u -b -1 -d2 -s1            > /tmp/top.dump&        TOP_DUMP_PID=$!
+        iostat -c2 -d sd0               > /tmp/iostat.dump&     IOSTAT_DUMP_PID=$!
+        ifstat -n -i trunk0 0.25 2      > /tmp/ifstat.dump&     IFSTAT_DUMP_PID=$!
+}
+
+get_cpu_data() {
+        #CPU_TEMP=$(sysctl -n hw.sensors.acpitz0.temp0 | awk '{printf "%2d°C", $1}')
+        CPU_TEMP=$(sysctl -n hw.sensors.cpu0.temp0 | awk '{printf "%2d°C", $1}')
+        PERF_POLICY=$(sysctl -n hw.perfpolicy | cut -c -1 | tr \[a-z\] \[A-Z\])
+}
+
+fmt_fan_monitor() {
+        FAN_SPEED=$(sysctl -n hw.sensors.acpithinkpad0.fan0 2>/dev/null)
+        printf "%s %s" \
+                "$FAN_ICON" \
+                "${FAN_SPEED:-N/A}"
+}
+
+fmt_battery_monitor() {
+        BATT_LIFE_PERC=$(apm -l)
+        case "$(sysctl -n hw.sensors.acpibat0.raw0 | awk '{print $1}')" in
+            1)
+                BATT_LIFE_TIME=$(apm -m | awk '{printf "%1d:%02d", int($1/60), $1%60}')
+                if [ "$BATT_LIFE_PERC" -ge 65 ]; then
+                        BATT_ICON="^i(/home/just22/.local/share/icons/stlarch_icons/batt5full.xbm)"
+                elif [ "$BATT_LIFE_PERC" -le 15 ]; then
+                        BATT_ICON="^i(/home/just22/.local/share/icons/stlarch_icons/batt5empty.xbm)"
+                else
+                        BATT_ICON="^i(/home/just22/.local/share/icons/stlarch_icons/batt5half.xbm)"
+                fi
+                ;;
+            2)
+                BATT_LIFE_TIME="-:--"
+                BATT_ICON="^i(/home/just22/.local/share/icons/stlarch_icons/ac15.xbm)"
+                ;;
+            *)
+                BATT_LIFE_TIME="-:--"
+                BATT_ICON="^i(/home/just22/.local/share/icons/stlarch_icons/ac15.xbm)"
+                # Temporary (waiting for a "nobatt" icon...)
+                #BATT_ICON="^i(/home/just22/.local/share/icons/stlarch_icons/error1.xbm)"
+                ;;
+        esac
+        printf "%s %d%% (%4s)" "$BATT_ICON" "$BATT_LIFE_PERC" "$BATT_LIFE_TIME"
+}
+
+fmt_mailbox_monitor() {
+        printf "%s %-1d/%-1d/%-1d" \
+        "$MAIL_ICON" \
+        "$(ls -l ~/mail/sandro.delaurenzis@gmail.com/INBOX/new/* 2>/dev/null | wc -l)" \
+        "$(ls -l ~/mail/just22.adl@gmail.com/INBOX/new/* 2>/dev/null | wc -l)" \
+        "$(ls -l ~/mail/local/INBOX/new/* 2>/dev/null | wc -l)"
+}
+
+fmt_cpu_monitor() {
+        cat /tmp/top.dump |
+                grep "CPUs:" |
+                tail -n1 |
+                awk -v icon="$CPU_ICON" -v perf="$PERF_POLICY" -v temp="$CPU_TEMP" \
+                        '{printf "%s %1s %4s %-4s", icon, perf, temp, int(100-$11)"%"}'
+}
+
+fmt_mem_monitor() {
+        MEM_LINE=$(cat /tmp/top.dump |
+                        grep "Memory" |
+                        tail -n 1)
+        REAL_MEM=$(echo $MEM_LINE |
+                        awk '{print $3}' |
+                        awk 'BEGIN{FS="/"} {print $2}' |
+                        sed "s/K//;s/M/*1024/;s/G/*1024*1024/")
+        FREE_MEM=$(echo $MEM_LINE |
+                        awk '{print $6}' |
+                        sed "s/K//;s/M/*1024/;s/G/*1024*1024/")
+        #SWAP_USAGE=$(echo $MEM_LINE |
+        #               awk '{print $10}' |
+        #               awk 'BEGIN{FS="/"} {gsub(/K/, "");
+        #                       gsub(/M/, "*1024");
+        #                       gsub(/G/, "*1024*1024");
+        #                       printf "%3d%%", $1/$2*100}')
+        MEM_USAGE=$(printf "%.0f%%" \
+                        $(echo "scale=3; 100-$FREE_MEM/($REAL_MEM+$FREE_MEM)*100" |
+                        bc))
+        printf "%s %-4s" "$MEM_ICON" "$MEM_USAGE"
+}
+
+fmt_io_monitor() {
+        IO_ACTIVITY=$(cat /tmp/iostat.dump |
+                        tail -n1 |
+                        awk '{printf "%.2f MB/s", $3}')
+        printf "%s %-10s" "$DISK_ICON" "$IO_ACTIVITY"
+}
+
+fmt_fs_usage() {
+        printf "%s %s" \
+                "$HOME_ICON" \
+                "$(df -l | grep home | awk '{print $5}')"
+}
+
+fmt_net_monitor() {
+        NET_DOWN_ACTIVITY=$(cat /tmp/ifstat.dump |
+                tail -n1 |
+                awk '{printf "%.2f MB/s", $1/1000}')
+        NET_UP_ACTIVITY=$(cat /tmp/ifstat.dump |
+                tail -n1 |
+                awk '{printf "%.2f MB/s", $2/1000}')
+        printf "%s %-10s  %s %-10s" \
+                "$NET_DOWN_ICON" \
+                "$NET_DOWN_ACTIVITY" \
+                "$NET_UP_ICON" \
+                "$NET_UP_ACTIVITY"
+}
+
+fmt_weather_monitor() {
+        printf "%s %s°C" "$TEMP_ICON" \
+                "$(cat /tmp/weather.dump |
+                        grep "yweather:condition" |
+                        egrep -o "temp=\"[0-9]+\"" |
+                        tr -dC [0-9])"
+}
+
+fmt_datetime_monitor() {
+        printf "%s %s" \
+                "$CLOCK_ICON" \
+                "$(date +"%a %d %b (%V) - %R")"
+}
+
+fmt_volume_monitor() {
+        VOL_LEVEL=$(mixerctl -n outputs.master |
+                        cut -d"," -f1 |
+                        awk '{printf "%d", $1/255*100}')
+        if [ "$VOL_LEVEL" -eq 0 ]; then
+                VOL_ICON="^i(/home/just22/.local/share/icons/sm4tik-icon-pack/xbm/spkr_02.xbm)"
+        else
+                VOL_ICON="^i(/home/just22/.local/share/icons/sm4tik-icon-pack/xbm/spkr_01.xbm)"
+        fi
+        printf "%s %s%%" "$VOL_ICON" "$VOL_LEVEL"
+}
+
+fmt_kbd_monitor() {
+        KBD_LAYOUT=$(setxkbmap -query | grep layout | awk '{print $2}')
+        printf "%s %s" "$KBD_ICON" "$KBD_LAYOUT"
+}
+
+# Static icons
+MAIL_ICON="^i(/home/just22/.local/share/icons/sm4tik-icon-pack/xbm/mail.xbm)"
+CPU_ICON="^i(/home/just22/.local/share/icons/sm4tik-icon-pack/xbm/cpu.xbm)"
+FAN_ICON="^i(/home/just22/.local/share/icons/sm4tik-icon-pack/xbm/fs_01.xbm)"
+MEM_ICON="^i(/home/just22/.local/share/icons/sm4tik-icon-pack/xbm/mem.xbm)"
+DISK_ICON="^i(/home/just22/.local/share/icons/sm4tik-icon-pack/xbm/diskette.xbm)"
+HOME_ICON="^i(/home/just22/.local/share/icons/stlarch_icons/home1.xbm)"
+NET_UP_ICON="^i(/home/just22/.local/share/icons/sm4tik-icon-pack/xbm/net_up_02.xbm)"
+NET_DOWN_ICON="^i(/home/just22/.local/share/icons/sm4tik-icon-pack/xbm/net_down_02.xbm)"
+NET_CONN_ICON="^i(/home/just22/.local/share/icons/sm4tik-icon-pack/xbm/net_wired.xbm)"
+TEMP_ICON="^i(/home/just22/.local/share/icons/sm4tik-icon-pack/xbm/temp.xbm)"
+CLOCK_ICON="^i(/home/just22/.local/share/icons/sm4tik-icon-pack/xbm/clock.xbm)"
+KBD_ICON="^i(/home/just22/.local/share/icons/kbd.xbm)"
+
+# Init
+touch /tmp/weather.dump
+
+LOOP=1
+while [ "$LOOP" == 1 ]; do
+
+        # Slow data acquisition
+        get_slow_data
+
+        # Some preliminary acquisitions and formats
+        # that can be done in parallel
+        get_very_slow_data      # Do not wait for task completion!
+        get_cpu_data
+        #TMP_STR="$(fmt_fan_monitor)  $(fmt_battery_monitor)  $(fmt_mailbox_monitor)  $(fmt_volume_monitor)  $(fmt_fs_usage)"
+        TMP_STR="$(fmt_fan_monitor)  $(fmt_battery_monitor)  $(fmt_volume_monitor)  $(fmt_kbd_monitor)  [$USER]"
+
+        # Wait for slow data acquisition completion
+        wait $TOP_DUMP_PID $IOSTAT_DUMP_PID $IFSTAT_DUMP_PID
+
+        # Add other fields to statusline
+        echo " $(fmt_cpu_monitor)  $(fmt_mem_monitor)  $(fmt_io_monitor)  $(fmt_net_monitor)  $TMP_STR "
+        #echo " $(fmt_cpu_monitor)  $(fmt_mem_monitor)  $(fmt_io_monitor)  $(fmt_net_monitor)  $TMP_STR  $(fmt_datetime_monitor) "
+        #echo "^pa(186) $(fmt_cpu_monitor)  $(fmt_mem_monitor)  $(fmt_io_monitor)  $(fmt_net_monitor)  $TMP_STR  $(fmt_weather_monitor)"
+        #echo "$(fmt_cpu_monitor)  $(fmt_mem_monitor)  $(fmt_io_monitor)  $(fmt_net_monitor)  $TMP_STR  $(fmt_weather_monitor) "
+
+done | dzen2 -title-name "dzen2 statusbar" \
+             -fn "-xos4-terminus-medium-*-*-*-12-*-*-*-*-*-iso10646-1" \
+             -fg "#073642" \
+             -bg "#EEE8D5" \
+             -ta l \
+             -h 16 \
+             -xs 1

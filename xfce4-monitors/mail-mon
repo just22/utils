@@ -1,0 +1,18 @@
+#!/bin/sh
+
+MAIL_ICON="<img>/home/just22/.local/share/icons/sm4tik-icon-pack/png-transparent_bg/mail.png</img>"
+
+printf "%s<txt> %-1d/%-1d/%-1d </txt><tool></tool>" \
+        "$MAIL_ICON" \
+        "$(expr \
+                $(ls -1 ~/mail/sandro-gmail/INBOX/new/* 2>/dev/null | wc -l) + \
+                $(ls -1 ~/mail/sandro-gmail/INBOX/cur/* 2>/dev/null | grep -cv ":2,.*S.*"))" \
+        "$(expr \
+                $(ls -1 ~/mail/just22-gmail/INBOX/new/* 2>/dev/null | wc -l) + \
+                $(ls -1 ~/mail/just22-gmail/INBOX/cur/* 2>/dev/null | grep -cv ":2,.*S.*"))" \
+        "$(expr \
+                $(ls -1 ~/mail/just22-poseidon/INBOX/new/* 2>/dev/null | wc -l) + \
+                $(ls -1 ~/mail/just22-poseidon/INBOX/cur/* 2>/dev/null | grep -cv ":2,.*S.*"))"
+
+#"$(~/utils/gmail_new_msg_cnt sandro.delaurenzis@gmail.com)" \
+#"$(~/utils/gmail_new_msg_cnt just22.adl@gmail.com)" \

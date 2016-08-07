@@ -1,0 +1,59 @@
+#!/usr/bin/env tclsh8.5
+
+# File:         vol
+# Purpose:      Simple volume level manager
+#               (specific for OpenBSD)
+# Dependencies: tcl8.5, tk8.5
+# Author:       A. DE LAURENZIS
+
+package require Tk
+
+wm overrideredirect . 1
+#wm title . "Volume level"
+
+grid [ttk::frame .frame -padding "2 2 2 2"] -column 0 -row 0 -sticky nwes
+grid columnconfigure . 0 -weight 1
+grid rowconfigure . 0 -weight 1
+
+proc setVol {level} {
+        exec mixerctl outputs.master=[expr round($level)]
+}
+
+grid \
+        [ttk::scale .frame.volLevel \
+                -orient vertical \
+                -length 175 \
+                -from 255 -to 0 \
+                -command setVol] \
+        -row 1 -column 1
+
+.frame.volLevel set [exec mixerctl -n outputs.master | cut -d "," -f 1]
+
+grid \
+        [ttk::checkbutton .frame.mute \
+                -text "Mute" \
+                -command "exec mixerctl -t outputs.master.mute"] \
+        -row 2 -column 1 \
+        -sticky w
+
+if {[exec mixerctl -n outputs.master.mute] == on} {
+        .frame.mute state selected
+}
+
+foreach w [winfo children .frame] {
+        grid configure $w -padx 2 -pady 2
+}
+
+set rootwin_ydim  [exec xprop -root _NET_WORKAREA | cut -d "," -f 4]
+set rootwin_yorig [exec xprop -root _NET_WORKAREA | cut -d "," -f 2]
+
+update
+set x_pos [expr [winfo pointerx .] - [winfo reqwidth .]/2]
+set y_pos [expr $rootwin_ydim + $rootwin_yorig - [winfo reqheight .] - 1]
+
+wm geometry . +${x_pos}+${y_pos}
+
+# Keybindings don't work with overrideredirect...
+bind . <Escape> {destroy .}
+bind . <Return> {.frame.mute invoke}
+bind . <space>  {.frame.mute invoke}

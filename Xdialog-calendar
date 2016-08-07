@@ -1,0 +1,9 @@
+#!/bin/sh
+
+Xdialog \
+        --title "Xdialog Calendar" \
+        --buttons-style text \
+        --ok-label "Open Osmo" \
+        --cancel-label "Close" \
+        --stdout \
+        --calendar "Calendar" 0 0 0 0 0

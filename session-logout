@@ -1,0 +1,36 @@
+#!/bin/sh
+DIALOG=Xdialog
+
+$DIALOG --title "System logout" \
+        --radiolist "Please select a logout action:" 18 46 0 \
+                "Logout"        "Logout from current X session" off \
+                "Suspend"       "Suspend to RAM"                off \
+                "Hibernate"     "Suspend to disk"               ON  \
+                "Reboot"        "Reboot the system"             off \
+                "Poweroff"      "Power down the machine"        off \
+        2>/tmp/checklist.tmp.$$
+
+RETVAL=$?
+CHOICE=`cat /tmp/checklist.tmp.$$`
+rm -f /tmp/checklist.tmp.$$
+
+if [ $RETVAL -eq 0 ]; then
+        case "$CHOICE" in
+        Logout)
+                xfce4-session-logout --logout --fast
+                #openbox --exit
+                ;;
+        Suspend)
+                /usr/sbin/zzz
+                ;;
+        Hibernate)
+                /usr/sbin/ZZZ
+                ;;
+        Reboot)
+                sudo /sbin/reboot
+                ;;
+        Poweroff)
+                sudo /sbin/shutdown -p now
+                ;;
+        esac
+fi

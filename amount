@@ -1,0 +1,140 @@
+#!/bin/sh
+
+# Usage:        amount
+# Purpose:      Mount partitions of removable devices through a menu,
+#               then (optionally) open a filemanager window
+#               Notes:
+#               - specific for OpenBSD;
+#               - special permissions are needed for some commands
+#                 (mount, fsck, chgrp, chmod), so it should be run
+#                 using sudo/doas in order to gain root identity;
+#                 on the other hand, $FILEMGR must be executed as
+#                 normal user, so env should be preserved (sudo -E)
+#                 in order to access the correct $USER value
+# Author:       A. DE LAURENZIS
+
+# ----------------------------------------------------------------------
+# Config section
+#
+#
+MOUNT_ROOT=/vol                 # It must exist and have the proper permissions
+RUN_FSCK=1                      # If enabled, fsck is run on all filesystems in
+                                # preen mode with "-y" option
+GROUP="diskmount"
+MODE=0775
+EXCLUDED_DEV="sd0"              # Do not manage these devices
+FILEMGR="exo-open --launch FileManager"
+                                # Leave it empty if you don't want to open a
+                                # file manager window after mount
+# ----------------------------------------------------------------------
+
+NPART=0
+for DISKNAME in $(sysctl -n hw.disknames | tr "," " "); do
+        DEV=${DISKNAME%:*}
+        if [ "${EXCLUDED_DEV#*$DEV}" == "$EXCLUDED_DEV" ]; then
+                disklabel "$DEV" 2>/dev/null |&
+                while read -p line; do
+                        case "$line" in
+                        disk:*)
+                                # Mind: this way, there will be a leading space,
+                                # but we need to preserve matching even when property
+                                # is not defined (no chars after ":")
+                                DISK="${line#disk:}"
+                                ;;
+                        label:*)
+                                # Same as above
+                                LABEL="${line#label:}"
+                                ;;
+                        a:*|d:*|e:*|f:*|g:*|h:*|i:*|j:*|k:*|l:*|m:*|n:*|o:*|p:*)
+                                let ++NPART
+
+                                # Mount dir is the dev's label (or disk name if the former is unset)
+                                # (get rid of the leading space!)
+                                MOUNT_DIR[$DEV]=${LABEL[$DEV]:-${DISK[$DEV]}}
+                                MOUNT_DIR[$DEV]=${MOUNT_DIR[$DEV]# }
+
+                                PART_NAME=${line%:*}
+                                PART_TYPE="$(echo $line | awk '{print $4}')"
+
+                                if mount | grep -q "${DEV}${PART_NAME}"; then
+                                        PART_ACTION="unmount"
+                                else
+                                        PART_ACTION="mount"
+                                fi
+
+                                PART[$NPART]="$DEV,$MOUNT_DIR,$PART_NAME,$PART_TYPE,$PART_ACTION"
+                                ITEM[2*$NPART-1]="$NPART"
+                                ITEM[2*$NPART]="$MOUNT_DIR ($DEV) - Partition $PART_NAME ($PART_TYPE): $PART_ACTION"
+                                ;;
+                        esac
+                done
+        fi
+done
+
+if [ ${#PART[*]} -eq 0 ]; then
+        Xdialog \
+                --buttons-style text \
+                --screen-center \
+                --title "Removable volume manager" \
+                --msgbox "No removable devices \n(or no usable partitions)" 6 45
+        exit 1
+fi
+
+SEL=$(Xdialog \
+        --buttons-style text \
+        --rc-file ${HOME}/.Xdialog-fixedFont.rc \
+        --no-tags \
+        --screen-center \
+        --stdout \
+        --title "Removable volume manager" \
+        --menubox "Select an action on available partitions" 15 90 1 "${ITEM[@]}")
+
+if [ -n "$SEL" ]; then
+        IFS="," read DEV MOUNT_DIR PART_NAME PART_TYPE PART_ACTION <<- EOT
+		$(echo ${PART[$SEL]})
+	EOT
+        case "$PART_ACTION" in
+        mount)
+                [ -d "${MOUNT_ROOT}/${MOUNT_DIR}/${PART_NAME}" ] || \
+                        mkdir -m "$MODE" -p "${MOUNT_ROOT}/${MOUNT_DIR}/${PART_NAME}" 2>/dev/null
+                        chgrp "$GROUP" "${MOUNT_ROOT}/${MOUNT_DIR}/${PART_NAME}" 2>/dev/null
+                if [ $? -ne 0 ]; then
+                        Xdialog \
+                                --buttons-style text \
+                                --screen-center \
+                                --left \
+                                --title "Removable volume manager" \
+                                --msgbox "Cannot create ${MOUNT_ROOT}/${MOUNT_DIR}/{$PART_NAME}\nInsufficient permissions or\ndir already exists?" 7 45
+                        exit 2
+                fi
+
+                case "$PART_TYPE" in
+                4.2BSD)
+                        MOUNT_OPT="-t ffs -o rw,nodev,nosuid,noatime"
+                        NEEDS_FSCK=1
+                        ;;
+                MSDOS)
+                        MOUNT_OPT="-t msdos -o rw,nodev,nosuid,noatime"
+                        NEEDS_FSCK=0
+                        ;;
+                esac
+
+                [ "$RUN_FSCK" == 1 ] && [ "$NEEDS_FSCK" == 1 ] && fsck -p -y /dev/"${DEV}${PART_NAME}"
+                mount $MOUNT_OPT /dev/"${DEV}${PART_NAME}" "${MOUNT_ROOT}/${MOUNT_DIR}/${PART_NAME}"
+
+                # $FILEMGR, when set, must be invoked as unprivileged user
+                [ -n "$FILEMGR" ] && su ${SUDO_USER:-$USER} -c "$FILEMGR \"${MOUNT_ROOT}/${MOUNT_DIR}/${PART_NAME}\""
+                ;;
+
+        unmount)
+                umount /dev/"${DEV}${PART_NAME}"
+
+                rm -rf "${MOUNT_ROOT}/${MOUNT_DIR}/${PART_NAME}"
+                if ! [ ls -d "${MOUNT_ROOT}/${MOUNT_DIR}"/* >/dev/null 2>&1 ]; then
+                        rm -rf "${MOUNT_ROOT}/${MOUNT_DIR}"
+                fi
+                ;;
+
+        esac
+
+fi

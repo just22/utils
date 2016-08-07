@@ -1,0 +1,39 @@
+#!/bin/sh
+
+# File:         dmenu-session-logout
+# Purpose:      Logout from current session (or suspend/reboot/poweroff the
+#               machine) using dmenu
+# Author:       A. DE LAURENZIS
+
+# No output msgs, please
+exec >/dev/null 2>&1
+
+set -A MENU_ITEMS \
+        "Logout" \
+        "Suspend" \
+        "Hibernate" \
+        "Reboot" \
+        "Poweroff"
+
+case "$(printf "%s\n" "${MENU_ITEMS[@]}" |
+        dmenu -p Quit: "$@")" in
+Logout)
+        if pgrep -x fluxbox; then
+                fluxbox-remote quit
+        elif pgrep -x openbox; then
+                openbox --exit
+        fi
+        ;;
+Suspend)
+        /usr/sbin/zzz
+        ;;
+Hibernate)
+        /usr/sbin/ZZZ
+        ;;
+Reboot)
+        sudo /sbin/reboot
+        ;;
+Poweroff)
+        sudo /sbin/shutdown -p now
+        ;;
+esac

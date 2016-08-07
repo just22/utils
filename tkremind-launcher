@@ -1,0 +1,9 @@
+#/bin/sh
+
+if [ -e ~/tmp/tkremind.pid ]; then
+        kill -KILL $(cat ~/tmp/tkremind.pid)
+        rm -f ~/tmp/tkremind.pid
+else
+        tkremind -m -geometry 600x400-0-0 &
+        echo "$!" > ~/tmp/tkremind.pid
+fi

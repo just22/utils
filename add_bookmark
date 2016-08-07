@@ -1,0 +1,31 @@
+#!/bin/sh
+
+# File:         add_bookmark
+# Purpose:      Add bookmark; specifically written for suckless surf browser,
+#               may be adapted; to add tags, just separate them with commas
+# Author:       A. DE LAURENZIS
+
+if [ $# -ne 2 ]; then
+        echo "usage: $(basename $0) <winId> <uri>"
+        exit 1
+fi
+
+BOOKMARK_FILE="${HOME}/.surf/bookmarks"
+
+TITLE="$(xprop -id "$1" WM_NAME |
+                awk -F " = " '{print $2}' |
+                tr -d \" |
+                cut -c 15-)"
+URI="$(xprop -id "$1" _SURF_URI |
+                awk -F " = " '{print $2}' |
+                tr -d \")"
+
+NEW_BM=$(echo "$URI, $TITLE, " | dmenu -l 1)
+if [ -n "$NEW_BM" ]; then
+        grep -v -F "$(echo "$NEW_BM" | cut -d "," -f 1), " "${BOOKMARK_FILE}" \
+                >"${BOOKMARK_FILE}.tmp"
+        (cat "${BOOKMARK_FILE}.tmp"; echo "$NEW_BM") >"${BOOKMARK_FILE}"
+        rm -f "${BOOKMARK_FILE}.tmp"
+fi
+
+exit 0

@@ -1,0 +1,30 @@
+#!/bin/sh
+
+# File:         win_search
+# Purpose:      Switch to selected window (searching for its class
+#               and/or title)
+# Dependencies: dmenu, wmctrl
+# Author:       A. DE LAURENZIS
+
+get_win_ids() {
+        xprop -root _NET_CLIENT_LIST |
+                awk 'BEGIN{FS="#"} {print $2}' |
+                tr -d ","
+}
+
+search_win() {
+        for WIN_ID in $(get_win_ids); do
+                if ! echo $(xprop -id $WIN_ID _NET_WM_WINDOW_TYPE) |
+                     egrep "DOCK|DESKTOP" >/dev/null 2>&1; then
+                        WIN_CLASS="$(xprop -id $WIN_ID WM_CLASS |
+                                        awk '{print $3}')"
+                        WIN_TITLE="$(xprop -id $WIN_ID WM_NAME |
+                                        awk 'BEGIN{FS=" = "} {print $2}')"
+                        echo "$WIN_ID" "$WIN_CLASS" "$WIN_TITLE"
+                fi
+        done |
+        dmenu -p Win: -i -l 5 |
+        awk '{print $1}'
+}
+
+wmctrl -i -a $(search_win)

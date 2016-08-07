@@ -1,0 +1,21 @@
+#!/bin/sh
+
+VOL_LEVEL=$(mixerctl -n outputs.master |
+                cut -d"," -f1 |
+                awk '{printf "%d", $1/255*100}')
+MUTE=$(mixerctl -n outputs.master.mute)
+
+if [ "$VOL_LEVEL" -eq 0 -o "$MUTE" == "on" ]; then
+        #VOL_ICON="<img>/home/just22/.local/share/icons/stlarch_icons/png-transparent_bg/vol3.png</img>"
+        VOL_ICON="<img>/usr/local/share/icons/gnome/16x16/status/audio-volume-muted.png</img>"
+elif [ "$VOL_LEVEL" -gt 66 ]; then
+        #VOL_ICON="<img>/home/just22/.local/share/icons/stlarch_icons/png-transparent_bg/vol1.png</img>"
+        VOL_ICON="<img>/usr/local/share/icons/gnome/16x16/status/audio-volume-high.png</img>"
+elif [ "$VOL_LEVEL" -lt 33 ]; then
+        #VOL_ICON="<img>/home/just22/.local/share/icons/stlarch_icons/png-transparent_bg/vol2.png</img>"
+        VOL_ICON="<img>/usr/local/share/icons/gnome/16x16/status/audio-volume-low.png</img>"
+else
+        VOL_ICON="<img>/usr/local/share/icons/gnome/16x16/status/audio-volume-medium.png</img>"
+fi
+
+printf "%s<txt>%-3s</txt><click>vol-launcher</click><tool></tool>" "$VOL_ICON" "$VOL_LEVEL%"

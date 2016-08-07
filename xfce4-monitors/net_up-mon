@@ -1,0 +1,11 @@
+#!/bin/sh
+
+#NET_UP_ICON="<img>/home/just22/.local/share/icons/sm4tik-icon-pack/xbm/net_up_02.xbm</img>"
+NET_UP_ICON="<img>/home/just22/.local/share/icons/sm4tik-icon-pack/png-transparent_bg/net_up_02.png</img>"
+
+NET_UP_ACTIVITY=$(ifstat -n -i trunk0 0.25 2 |
+        tail -n1 |
+        awk '{printf "%.2f MB/s", $2/1000}')
+printf "%s<txt> %-10s</txt><tool></tool>" \
+        "$NET_UP_ICON" \
+        "$NET_UP_ACTIVITY"

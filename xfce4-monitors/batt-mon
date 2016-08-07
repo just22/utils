@@ -1,0 +1,62 @@
+#!/bin/sh
+
+BATT_LEVEL=$(apm -l)
+
+# If no previous battery level measure exists,
+# safely assume that it was plugged in
+if [ ! -e ${HOME}/tmp/batt-mon-prevcheck ]; then
+        echo "100" > ${HOME}/tmp/batt-mon-prevcheck
+        chmod 777 ${HOME}/tmp/batt-mon-prevcheck
+fi
+
+case "$(sysctl -n hw.sensors.acpibat0.raw0 | awk '{print $1}')" in
+1)
+        BATT_LIFETIME=$(apm -m | awk '{printf "%1d:%02d", int($1/60), $1%60}')
+        if [ "$BATT_LEVEL" -gt 70 ]; then
+                BATT_ICON="<img>/home/just22/.local/share/icons/stlarch_icons/png-transparent_bg/batt5full.png</img>"
+        elif [ "$BATT_LEVEL" -gt 15 -a "$BATT_LEVEL" -le 20 ]; then
+                BATT_ICON="<img>/home/just22/.local/share/icons/stlarch_icons/png-transparent_bg/batt5half.png</img>"
+                [ "$(cat ${HOME}/tmp/batt-mon-prevcheck)" -gt 20 ] && WARN_MSG=1
+        elif [ "$BATT_LEVEL" -gt 10 -a "$BATT_LEVEL" -le 15 ]; then
+                BATT_ICON="<img>/home/just22/.local/share/icons/stlarch_icons/png-transparent_bg/batt5empty.png</img>"
+                [ "$(cat ${HOME}/tmp/batt-mon-prevcheck)" -gt 15 ] && WARN_MSG=1
+        elif [ "$BATT_LEVEL" -gt 5 -a "$BATT_LEVEL" -le 10 ]; then
+                BATT_ICON="<img>/home/just22/.local/share/icons/stlarch_icons/png-transparent_bg/batt5empty.png</img>"
+                [ "$(cat ${HOME}/tmp/batt-mon-prevcheck)" -gt 10 ] && WARN_MSG=1
+        elif [ "$BATT_LEVEL" -le 5 ]; then
+                BATT_ICON="<img>/home/just22/.local/share/icons/stlarch_icons/png-transparent_bg/batt5empty.png</img>"
+                FORCE_SUSPEND=1
+        else
+                BATT_ICON="<img>/home/just22/.local/share/icons/stlarch_icons/png-transparent_bg/batt5half.png</img>"
+        fi
+
+        if [ "$WARN_MSG" == 1 ]; then
+                notify-send \
+                        --urgency=normal \
+                        --expire-time=15000 \
+                        --icon=battery-low \
+                        "Low battery level" \
+                        "This computer is running on low battery level.\n\nPlug-in the AC adapter or it will be forced to go to sleep in a few minutes."
+        elif [ "$FORCE_SUSPEND" == 1 ]; then
+                logger -t "batt-mon" "Critical low battery level: hibernating..."
+                sudo /usr/sbin/ZZZ
+        fi
+
+        echo "$BATT_LEVEL" > ${HOME}/tmp/batt-mon-prevcheck
+
+        ;;
+
+2)
+        BATT_LIFETIME="-:--"
+        BATT_ICON="<img>/home/just22/.local/share/icons/stlarch_icons/png-transparent_bg/ac15.png</img>"
+        rm -f ${HOME}/tmp/batt-mon-prevcheck
+        ;;
+*)
+        BATT_LIFETIME="-:--"
+        # Temporary (waiting for a "nobatt" icon...)
+        #BATT_ICON="<img>/home/just22/.local/share/icons/stlarch_icons/error1.xbm</img>"
+        BATT_ICON="<img>/home/just22/.local/share/icons/stlarch_icons/png-transparent_bg/ac15.png</img>"
+        ;;
+esac
+
+printf "%s<txt> %d%% (%4s) </txt><tool></tool>" "$BATT_ICON" "$BATT_LEVEL" "$BATT_LIFETIME"

@@ -1,0 +1,27 @@
+#!/bin/sh
+
+# Kill daemon on exit
+trap "LOOP=0" HUP INT QUIT ABRT KILL TERM
+
+# Reset X screen to LVDS1 (auto) and lock it when SIGUSR1 is received
+trap 'screen-reset' USR1
+
+# Main function
+screen-reset () {
+    xrandr --display $DISPLAY --output LVDS1 --auto --output VGA1 --off --output DVI1 --off
+    if pgrep fluxbox > /dev/null 2>&1 == 0; then
+        fbsetroot -gradient Vertical -from rgb:07/36/42 -to rgb:58/6E/75
+    elif pgrep fvwm2 > /dev/null 2>&1 == 0; then
+        FvwmCommand Restart
+    fi
+    if pgrep ipager > /dev/null 2>&1 == 0; then
+        pkill ipager && ipager &
+    fi
+        xscreensaver-command -lock
+}
+
+# Daemonize
+LOOP=1
+while [ "${LOOP}" == 1 ]; do
+    sleep 1
+done

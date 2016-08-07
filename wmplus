@@ -1,0 +1,363 @@
+#!/bin/sh
+
+get_workarea_info() {
+        # For the sake of simplicity, let's consider that all DESKTOPs have
+        # the same working area (this is tipically the case)
+        if [ $# -ne 1 ]; then
+                echo "Usage: get_workarea_info <xorig|yorig|xdim|ydim>"
+                return 1
+        fi
+        PARAM="$1"
+        NET_WORKAREA=$(xprop -root _NET_WORKAREA |
+                        awk 'BEGIN{FS="="} {print $2}' |
+                        tr -d " ")
+        case "$PARAM" in
+        xorig)
+                FIELD_NO=1
+                ;;
+        yorig)
+                FIELD_NO=2
+                ;;
+        xdim)
+                FIELD_NO=3
+                ;;
+        ydim)
+                FIELD_NO=4
+                ;;
+        *)
+                echo "get_workarea_info: wrong arg"
+                return 2
+                ;;
+        esac
+        echo $NET_WORKAREA |
+                awk -v FIELD=$FIELD_NO 'BEGIN{FS=","} {print $FIELD}'
+}
+
+get_win_ids() {
+        xprop -root _NET_CLIENT_LIST | egrep -o "0x[0-9a-fA-F]+"
+}
+
+get_current_ws() {
+        xprop -root _NET_CURRENT_DESKTOP |
+        egrep -o "[0-9]+"
+}
+
+get_active_win() {
+        xprop -root _NET_ACTIVE_WINDOW |
+        egrep -o "0x[0-9a-fA-F]{2,}"
+}
+
+get_not_active_visible_win() {
+        for WIN_ID in $(get_win_ids); do
+                [ "$WIN_ID" != "$(get_active_win)" ] &&
+                ! xprop -id $WIN_ID _NET_WM_WINDOW_TYPE |
+                    egrep "DOCK|DESKTOP" >/dev/null 2>&1 &&
+                [ "$(xprop -id $WIN_ID _NET_WM_DESKTOP |
+                    egrep -o "[0-9]+")" = "$(get_current_ws)" ] &&
+                        echo $WIN_ID
+        done
+}
+
+get_win_border() {
+        if [ $# -ne 2 ]; then
+                echo "Usage: get_win_border <winID> <xdir|ydir>"
+                return 1
+        fi
+        WIN_ID="$1"
+        DIR="$2"
+        case "$DIR" in
+        xdir)
+                FIELD_1=1
+                FIELD_2=2
+                ;;
+        ydir)
+                FIELD_1=3
+                FIELD_2=4
+                ;;
+        *)
+                echo "get_win_border: wrong arg"
+                return 2
+                ;;
+        esac
+        xprop -id "$WIN_ID" _NET_FRAME_EXTENTS |
+                awk 'BEGIN{FS="="} {print $2}' |
+                tr -d " " |
+                awk -v FIELD_1="$FIELD_1" -v FIELD_2="$FIELD_2" \
+                        'BEGIN{FS=","} {print $FIELD_1+$FIELD_2}'
+        return 0
+}
+
+tile_active() {
+        TILE_POS="$1"
+        DIM_FACTOR="$2"
+        TILE_GAP="$3"
+        ACTIVE_WIN_ID=$(get_active_win)
+        case "$TILE_POS" in
+        top)
+                wmctrl -i -r $ACTIVE_WIN_ID -b remove,maximized_horz,maximized_vert
+                Y_ORIG=$(get_workarea_info yorig)
+                Y_DIM=$(printf "%.0f" $(echo "scale=3; \
+                                                $(get_workarea_info ydim) * 0.5 - \
+                                                $(get_win_border $ACTIVE_WIN_ID ydir) - \
+                                                $TILE_GAP / 2" | bc))
+                wmctrl -i -r $ACTIVE_WIN_ID -b add,maximized_horz
+                wmctrl -i -r $ACTIVE_WIN_ID -e 0,-1,$Y_ORIG,-1,$Y_DIM
+                ;;
+        bot)
+                wmctrl -i -r $ACTIVE_WIN_ID -b remove,maximized_horz,maximized_vert
+                Y_ORIG=$(printf "%.0f" $(echo "scale=3; \
+                                                $(get_workarea_info yorig) + \
+                                                $(get_workarea_info ydim) * $DIM_FACTOR + \
+                                                $TILE_GAP / 2" | bc))
+                Y_DIM=$(printf "%.0f" $(echo "scale=3; \
+                                                $(get_workarea_info ydim) * (1 - $DIM_FACTOR) - \
+                                                $(get_win_border $ACTIVE_WIN_ID ydir) - \
+                                                $TILE_GAP / 2" | bc))
+                wmctrl -i -r $ACTIVE_WIN_ID -b add,maximized_horz
+                wmctrl -i -r $ACTIVE_WIN_ID -e 0,-1,$Y_ORIG,-1,$Y_DIM
+                ;;
+        left)
+                wmctrl -i -r $ACTIVE_WIN_ID -b remove,maximized_horz,maximized_vert
+                X_ORIG=$(get_workarea_info xorig)
+                X_DIM=$(printf "%.0f" $(echo "scale=3; \
+                                                $(get_workarea_info xdim) * $DIM_FACTOR - \
+                                                $(get_win_border $ACTIVE_WIN_ID xdir) - \
+                                                $TILE_GAP / 2" | bc))
+                wmctrl -i -r $ACTIVE_WIN_ID -b add,maximized_vert
+                wmctrl -i -r $ACTIVE_WIN_ID -e 0,$X_ORIG,-1,$X_DIM,-1
+                ;;
+        right)
+                wmctrl -i -r $ACTIVE_WIN_ID -b remove,maximized_horz,maximized_vert
+                X_ORIG=$(printf "%.0f" $(echo "scale=3; \
+                                                $(get_workarea_info xorig) + \
+                                                $(get_workarea_info xdim) * $DIM_FACTOR + \
+                                                $TILE_GAP / 2" | bc))
+                X_DIM=$(printf "%.0f" $(echo "scale=3; \
+                                                $(get_workarea_info xdim) * (1 - $DIM_FACTOR) - \
+                                                $(get_win_border $ACTIVE_WIN_ID xdir) - \
+                                                $TILE_GAP / 2" | bc))
+                wmctrl -i -r $ACTIVE_WIN_ID -b add,maximized_vert
+                wmctrl -i -r $ACTIVE_WIN_ID -e 0,$X_ORIG,-1,$X_DIM,-1
+                ;;
+        tl)
+                wmctrl -i -r $ACTIVE_WIN_ID -b remove,maximized_horz,maximized_vert
+                X_ORIG=$(get_workarea_info xorig)
+                X_DIM=$(printf "%.0f" $(echo "scale=3; \
+                                                $(get_workarea_info xdim) * $DIM_FACTOR - \
+                                                $(get_win_border $ACTIVE_WIN_ID xdir) - \
+                                                $TILE_GAP / 2" | bc))
+                Y_ORIG=$(get_workarea_info yorig)
+                Y_DIM=$(printf "%.0f" $(echo "scale=3; \
+                                                $(get_workarea_info ydim) * $DIM_FACTOR - \
+                                                $(get_win_border $ACTIVE_WIN_ID ydir) - \
+                                                $TILE_GAP / 2" | bc))
+                wmctrl -i -r $ACTIVE_WIN_ID -e 0,$X_ORIG,$Y_ORIG,$X_DIM,$Y_DIM
+                ;;
+        tr)
+                wmctrl -i -r $ACTIVE_WIN_ID -b remove,maximized_horz,maximized_vert
+                X_ORIG=$(printf "%.0f" $(echo "scale=3; \
+                                                $(get_workarea_info xorig) + \
+                                                $(get_workarea_info xdim) * (1 - $DIM_FACTOR) + \
+                                                $TILE_GAP / 2" | bc))
+                X_DIM=$(printf "%.0f" $(echo "scale=3; \
+                                                $(get_workarea_info xdim) * $DIM_FACTOR - \
+                                                $(get_win_border $ACTIVE_WIN_ID xdir) - \
+                                                $TILE_GAP / 2" | bc))
+                Y_ORIG=$(get_workarea_info yorig)
+                Y_DIM=$(printf "%.0f" $(echo "scale=3; \
+                                                $(get_workarea_info ydim) * $DIM_FACTOR - \
+                                                $(get_win_border $ACTIVE_WIN_ID ydir) - \
+                                                $TILE_GAP / 2" | bc))
+                wmctrl -i -r $ACTIVE_WIN_ID -e 0,$X_ORIG,$Y_ORIG,$X_DIM,$Y_DIM
+                ;;
+        bl)
+                wmctrl -i -r $ACTIVE_WIN_ID -b remove,maximized_horz,maximized_vert
+                X_ORIG=$(get_workarea_info xorig)
+                X_DIM=$(printf "%.0f" $(echo "scale=3; \
+                                                $(get_workarea_info xdim) * $DIM_FACTOR - \
+                                                $(get_win_border $ACTIVE_WIN_ID xdir) - \
+                                                $TILE_GAP / 2" | bc))
+                Y_ORIG=$(printf "%.0f" $(echo "scale=3; \
+                                                $(get_workarea_info yorig) + \
+                                                $(get_workarea_info ydim) * (1 - $DIM_FACTOR) + \
+                                                $TILE_GAP / 2" | bc))
+                Y_DIM=$(printf "%.0f" $(echo "scale=3; \
+                                                $(get_workarea_info ydim) * $DIM_FACTOR - \
+                                                $(get_win_border $ACTIVE_WIN_ID ydir) - \
+                                                $TILE_GAP / 2" | bc))
+                wmctrl -i -r $ACTIVE_WIN_ID -e 0,$X_ORIG,$Y_ORIG,$X_DIM,$Y_DIM
+                ;;
+        br)
+                wmctrl -i -r $ACTIVE_WIN_ID -b remove,maximized_horz,maximized_vert
+                X_ORIG=$(printf "%.0f" $(echo "scale=3; \
+                                                $(get_workarea_info xorig) + \
+                                                $(get_workarea_info xdim) * (1 - $DIM_FACTOR) + \
+                                                $TILE_GAP / 2" | bc))
+                X_DIM=$(printf "%.0f" $(echo "scale=3; \
+                                                $(get_workarea_info xdim) * $DIM_FACTOR - \
+                                                $(get_win_border $ACTIVE_WIN_ID xdir) - \
+                                                $TILE_GAP / 2" | bc))
+                Y_ORIG=$(printf "%.0f" $(echo "scale=3; \
+                                                $(get_workarea_info yorig) + \
+                                                $(get_workarea_info ydim) * (1 - $DIM_FACTOR) + \
+                                                $TILE_GAP / 2" | bc))
+                Y_DIM=$(printf "%.0f" $(echo "scale=3; \
+                                                $(get_workarea_info ydim) * $DIM_FACTOR - \
+                                                $(get_win_border $ACTIVE_WIN_ID ydir) - \
+                                                $TILE_GAP / 2" | bc))
+                wmctrl -i -r $ACTIVE_WIN_ID -e 0,$X_ORIG,$Y_ORIG,$X_DIM,$Y_DIM
+                ;;
+        *)
+                echo "$(basename $0): tile_active: wrong tiling direction"
+                return 1
+                ;;
+        esac
+        return 0
+}
+
+tile_visible() {
+        TILE_DIR="$1"
+        DIM_FACTOR="$2"
+        TILE_GAP="$3"
+
+        # Active win placement
+        ACTIVE_WIN_ID=$(get_active_win)
+        case "$TILE_DIR" in
+        h)
+                wmctrl -i -r $ACTIVE_WIN_ID -b remove,maximized_horz,maximized_vert
+                Y_ORIG=$(get_workarea_info yorig)
+                Y_DIM=$(printf "%.0f" $(echo "scale=3; \
+                                $(get_workarea_info ydim) * $DIM_FACTOR - \
+                                $(get_win_border $ACTIVE_WIN_ID ydir) - \
+                                $TILE_GAP / 2" | bc))
+                wmctrl -i -r $ACTIVE_WIN_ID -b add,maximized_horz
+                wmctrl -i -r $ACTIVE_WIN_ID -e 0,-1,$Y_ORIG,-1,$Y_DIM
+                ;;
+        v)
+                wmctrl -i -r $ACTIVE_WIN_ID -b remove,maximized_horz,maximized_vert
+                X_ORIG=$(get_workarea_info xorig)
+                X_DIM=$(printf "%.0f" $(echo "scale=3; \
+                                $(get_workarea_info xdim) * $DIM_FACTOR - \
+                                $(get_win_border $ACTIVE_WIN_ID xdir) - \
+                                $TILE_GAP / 2" | bc))
+                wmctrl -i -r $ACTIVE_WIN_ID -b add,maximized_vert
+                wmctrl -i -r $ACTIVE_WIN_ID -e 0,$X_ORIG,-1,$X_DIM,-1
+                ;;
+        *)
+                echo "$(basename $0): tile_visible: wrong tiling direction"
+                return 1
+                ;;
+        esac
+
+        # Other win placement
+        INACTIVE_VIS_WIN_NO=$(get_not_active_visible_win | wc -l)
+        case "$TILE_DIR" in
+        h)
+                # Let's assume that borders are the same for all wins
+                # (otherwise calculation must be performed inside the
+                # for cycle
+                X_DIM=$(printf "%.0f" $(echo "scale=3; \
+                                $(get_workarea_info xdim) / $INACTIVE_VIS_WIN_NO - \
+                                $(get_win_border $ACTIVE_WIN_ID xdir) - \
+                                $TILE_GAP" | bc))
+                Y_ORIG=$(printf "%.0f" $(echo "scale=3; \
+                                $(get_workarea_info yorig) + \
+                                $(get_workarea_info ydim) * $DIM_FACTOR + \
+                                $TILE_GAP / 2" | bc))
+                Y_DIM=$(printf "%.0f" $(echo "scale=3; \
+                                $(get_workarea_info ydim) * (1 - $DIM_FACTOR) - \
+                                $(get_win_border $ACTIVE_WIN_ID ydir) - \
+                                $TILE_GAP" | bc))
+                WIN_CNT=0
+                for OTHER_WIN_ID in $(get_not_active_visible_win); do
+                        WIN_CNT=$(expr $WIN_CNT + 1)
+                        wmctrl -i -r $OTHER_WIN_ID -b remove,maximized_horz,maximized_vert
+                        X_ORIG=$(printf "%.0f" $(echo "scale=3; \
+                                        $(get_workarea_info xorig) + \
+                                        ($WIN_CNT - 1) * $(get_win_border $OTHER_WIN_ID xdir) + \
+                                        $X_DIM * ($WIN_CNT - 1) + \
+                                        $TILE_GAP * ($WIN_CNT - 1)" | bc))
+                        wmctrl -i -r $OTHER_WIN_ID -e 0,$X_ORIG,$Y_ORIG,$X_DIM,$Y_DIM
+                done
+                ;;
+        v)
+                X_ORIG=$(printf "%.0f" $(echo "scale=3; \
+                                $(get_workarea_info xorig) + \
+                                $(get_workarea_info xdim) * $DIM_FACTOR + \
+                                $TILE_GAP / 2" | bc))
+                X_DIM=$(printf "%.0f" $(echo "scale=3; \
+                                $(get_workarea_info xdim) * (1 - $DIM_FACTOR) - \
+                                $(get_win_border $ACTIVE_WIN_ID xdir) - \
+                                $TILE_GAP" | bc))
+                Y_DIM=$(printf "%.0f" $(echo "scale=3; \
+                                $(get_workarea_info ydim) / $INACTIVE_VIS_WIN_NO - \
+                                $(get_win_border $ACTIVE_WIN_ID ydir) - \
+                                $TILE_GAP" | bc))
+                WIN_CNT=0
+                for OTHER_WIN_ID in $(get_not_active_visible_win); do
+                        WIN_CNT=$(expr $WIN_CNT + 1)
+                        wmctrl -i -r $OTHER_WIN_ID -b remove,maximized_horz,maximized_vert
+                        Y_ORIG=$(printf "%.0f" $(echo "scale=3; \
+                                        $(get_workarea_info yorig) + \
+                                        ($WIN_CNT - 1) * $(get_win_border $OTHER_WIN_ID ydir) + \
+                                        $Y_DIM * ($WIN_CNT - 1) + \
+                                        $TILE_GAP * ($WIN_CNT - 1)" | bc))
+                        wmctrl -i -r $OTHER_WIN_ID -e 0,$X_ORIG,$Y_ORIG,$X_DIM,$Y_DIM
+                done
+                ;;
+        *)
+                echo "$(basename $0): tile_visible: wrong tiling direction"
+                return 1
+                ;;
+        esac
+        return 0
+}
+
+
+# Main
+if [ $# -eq 0 ]; then
+        echo "Usage: $(basename $0) <command> [options...] | help"
+        exit 1
+fi
+
+ACTION="$1"
+
+case "$ACTION" in
+help)
+        echo "$(basename $0) <tile_active|tile_visible|raise_and_max|move_win_to_ws_and_activate> [options...]"
+        ;;
+tile_*)
+        if [ $# -ne 4 ]; then
+                [ "$ACTION" == tile_active ] &&
+                        OPTS="<top|bot|left|right|tl|tr|bl|br>" ||
+                        OPTS="<h|v>"
+                echo "Usage: $(basename $0) $ACTION $OPTS <mainWinFactor> <tileGap>"
+                exit 2
+        fi
+        TILE_DIR="$2"
+        DIM_FACTOR="$3"
+        TILE_GAP="$4"
+        "$ACTION" "$TILE_DIR" "$DIM_FACTOR" "$TILE_GAP"
+        ;;
+raise_and_max)
+        ACTIVE_WIN_ID="$(get_active_win)"
+        wmctrl -i -a "$ACTIVE_WIN_ID"
+        wmctrl -i -r "$ACTIVE_WIN_ID" -b toggle,maximized_horz,maximized_vert
+        ;;
+move_win_to_ws_and_activate)
+        if [ $# -ne 2 ]; then
+                echo "Usage: $(basename $0) $ACTION <ws>"
+                exit 2
+        fi
+        WS="$2"
+        ACTIVE_WIN_ID="$(get_active_win)"
+        wmctrl -i -r "$ACTIVE_WIN_ID" -t "$WS"
+        wmctrl -i -a "$ACTIVE_WIN_ID"
+        ;;
+*)
+        echo "$ACTION: unknown action"
+        exit 3
+        ;;
+esac
+
+exit 0

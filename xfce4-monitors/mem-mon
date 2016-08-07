@@ -1,0 +1,25 @@
+#!/bin/sh
+
+#MEM_ICON="<img>/home/just22/.local/share/icons/sm4tik-icon-pack/xbm/mem.xbm</img>"
+MEM_ICON="<img>/home/just22/.local/share/icons/sm4tik-icon-pack/png-transparent_bg/mem.png</img>"
+
+MEM_LINE=$(top -u -b -1 -d2 -s1 |
+                grep "Memory" |
+                tail -n 1)
+REAL_MEM=$(echo $MEM_LINE |
+                awk '{print $3}' |
+                awk 'BEGIN{FS="/"} {print $2}' |
+                sed "s/K//;s/M/*1024/;s/G/*1024*1024/")
+FREE_MEM=$(echo $MEM_LINE |
+                awk '{print $6}' |
+                sed "s/K//;s/M/*1024/;s/G/*1024*1024/")
+#SWAP_USAGE=$(echo $MEM_LINE |
+#               awk '{print $10}' |
+#               awk 'BEGIN{FS="/"} {gsub(/K/, "");
+#                       gsub(/M/, "*1024");
+#                       gsub(/G/, "*1024*1024");
+#                       printf "%3d%%", $1/$2*100}')
+MEM_USAGE=$(printf "%.0f%%" \
+                $(echo "scale=3; 100-$FREE_MEM/($REAL_MEM+$FREE_MEM)*100" |
+                bc))
+printf "%s<txt> %-4s</txt><tool></tool>" "$MEM_ICON" "$MEM_USAGE"

@@ -1,0 +1,19 @@
+#!/bin/sh
+
+# File:         dmenu-calc
+# Purpose:      Simple calculator using tcl-calc and dmenu
+# Author:       A. DE LAURENZIS
+
+__calc()
+{
+        printf '%s\n' "$result" | xclip -i
+        result=$(tcl-calc $(xclip -o |
+                dmenu -p Calc: |
+                tr -d " ") 2>/dev/null)
+}
+
+result=0
+while [ -n "$result" ]
+do
+    __calc
+done

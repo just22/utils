@@ -1,0 +1,12 @@
+#!/bin/sh
+
+printf "%-1d/%-1d/%-1d" \
+        "$(expr \
+                $(ls -1 ~/mail/sandro-gmail/INBOX/new/* 2>/dev/null | wc -l) + \
+                $(ls -1 ~/mail/sandro-gmail/INBOX/cur/* 2>/dev/null | grep -cv ":2,.*S.*"))" \
+        "$(expr \
+                $(ls -1 ~/mail/just22-gmail/INBOX/new/* 2>/dev/null | wc -l) + \
+                $(ls -1 ~/mail/just22-gmail/INBOX/cur/* 2>/dev/null | grep -cv ":2,.*S.*"))" \
+        "$(expr \
+                $(ls -1 ~/mail/just22-local/INBOX/new/* 2>/dev/null | wc -l) + \
+                $(ls -1 ~/mail/just22-local/INBOX/cur/* 2>/dev/null | grep -cv ":2,.*S.*"))"

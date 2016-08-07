@@ -1,0 +1,8 @@
+#!/bin/sh
+
+if xdotool search --onlyvisible --class "dzen" windowunmap; then
+        pkill -x space_dapp
+else
+        xdotool search --class "dzen" windowmap windowraise
+        space_dapp
+fi

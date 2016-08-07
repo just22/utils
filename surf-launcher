@@ -1,0 +1,20 @@
+#!/bin/sh
+
+SURF_EXEC_NAME="surf"
+HOMEPAGE="http://www.openbsd.org"
+LOG_FILE="${HOME}/.surf/surf.log"       # /dev/null to disable logging
+
+XID_FILE="${HOME}/tmp/surf.xid"
+if ! $(pgrep surf > /dev/null); then
+        GO_HOME="$HOMEPAGE"
+        [ -f "$LOG_FILE" ] && mv "${LOG_FILE}"{,.old}
+        echo "Browser session started on $(date +"%a %d %b %Y, %R")" > "$LOG_FILE"
+        tabbed -c -d -n "Surf" -r 2 -s \
+                -t "#002b36" -T "#fdf6e3" -u "#586e75" -U "#fdf6e3" \
+                "$SURF_EXEC_NAME" -e xid >"$XID_FILE" 2>/dev/null
+fi
+
+XID="$(cat "$XID_FILE")"
+URL="${1:-$GO_HOME}"
+[ -n "$URL" ] && "$SURF_EXEC_NAME" -e "$XID" "$URL" >>"$LOG_FILE" 2>&1 &
+wmctrl -i -a "$XID"

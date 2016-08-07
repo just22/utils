@@ -1,0 +1,8 @@
+#!/bin/sh
+
+vmstat -w 1 |&
+while read -p PROC_1 PROC_2 PROC_3 MEM_AV MEM_FREE OTHERS
+do
+        #printf "%d%%" $(expr \( 1 - $MEM_FREE / \( $MEM_FREE + $MEM_AV \) \) * 100)
+        echo $(expr \( 100 \* $MEM_FREE \) / \( $MEM_FREE + $MEM_AV \) 2>/dev/null)
+done

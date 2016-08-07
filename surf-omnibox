@@ -1,0 +1,95 @@
+#!/bin/sh
+
+# File:         netsearch
+# Purpose:      Return a valid search uri starting from a string containing
+#               an id for the search engine and the query string
+# Author:       A. DE LAURENZIS
+
+# Search history config
+HIST_FILE="$HOME/.surf/omnibox_history"
+HIST_MAXLINE="100"
+[ ! -f "$HIST_FILE" ] && touch "$HIST_FILE"
+
+# Query string input
+XCLIP="$(xclip -o)"
+QUERY="$(([ -n "$XCLIP" ] && echo "$XCLIP"; cat "$HIST_FILE") | dmenu -i -l 10)"
+[ -z "$QUERY" ] && exit 0
+
+ENGINE_ID=$(echo "$QUERY" | awk '{print $NF}')
+
+case "$ENGINE_ID" in
+ddg)
+        SEARCH_STR="https://www.duckduckgo.com/?q=%s"
+        ;;
+w)
+        SEARCH_STR="https://secure.wikimedia.org/wikipedia/en/w/index.php?title=Special%3ASearch&search=%s"
+        ;;
+wit)
+        SEARCH_STR="https://secure.wikimedia.org/wikipedia/it/w/index.php?title=Special%3ASearch&search=%s"
+        ;;
+yt)
+        SEARCH_STR="https://www.youtube.com/results?search_query=%s"
+        ;;
+en)
+        SEARCH_STR="http://www.wordreference.com/definition/%s"
+        ;;
+ent)
+        SEARCH_STR="http://www.wordreference.com/thesaurus/%s"
+        ;;
+it)
+        SEARCH_STR="http://www.wordreference.com/definizione/%s"
+        ;;
+iten)
+        SEARCH_STR="http://www.wordreference.com/iten/%s"
+        ;;
+enit)
+        SEARCH_STR="http://www.wordreference.com/enit/%s"
+        ;;
+maps)
+        SEARCH_STR="http://maps.google.com/maps?q=%s"
+        ;;
+pkg)
+        SEARCH_STR="http://openports.se/search.php?so=%s"
+        ;;
+misc)
+        SEARCH_STR="http://marc.info/?l=openbsd-misc&w=2&r=1&s=%s&q=b"
+        ;;
+tech)
+        SEARCH_STR="http://marc.info/?l=openbsd-tech&w=2&r=1&s=%s&q=b"
+        ;;
+ports)
+        SEARCH_STR="http://marc.info/?l=openbsd-ports&w=2&r=1&s=%s&q=b"
+        ;;
+bugs)
+        SEARCH_STR="http://marc.info/?l=openbsd-bugs&w=2&r=1&s=%s&q=b"
+        ;;
+*)
+        URL_RE="^[[:blank:]]*(https?://)?([\da-z\.-]+)\.([a-z\.]{2,6})([/\w \.-]*)*/?$"
+        VALID_URL=$(echo "$QUERY" | sed -E -e "s#$URL_RE##")
+        if [ -z "$VALID_URL" ]; then
+                NO_SEARCH=1
+        else
+                DEFAULT_ENGINE=1
+                SEARCH_STR="http://www.google.com/search?q=%s"
+        fi
+        ;;
+esac
+
+[ -z "${NO_SEARCH}${DEFAULT_ENGINE}" ] &&
+        QUERY="$(echo "$QUERY" | sed 's/[[:alnum:]]*$//')"
+
+# Update history (except if input string starts with a space)
+if [ "$(echo "$QUERY" | cut -c 1)" != " " ]; then
+        (echo "$QUERY"; grep -v -F "$QUERY" "$HIST_FILE") > "${HIST_FILE}.tmp"
+        head -n "$HIST_MAXLINE" "${HIST_FILE}.tmp" > "$HIST_FILE"
+        rm "${HIST_FILE}.tmp"
+fi
+
+if [ -z "$NO_SEARCH" ]; then
+        QUERY=$(echo "$QUERY" | sed "s/ /%20/g")
+        echo "$SEARCH_STR" | sed "s/%s/$QUERY/"
+else
+        echo "$QUERY" | sed 's/^[[:blank:]]*//'
+fi
+
+exit 0

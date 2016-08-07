@@ -1,0 +1,10 @@
+#!/bin/sh
+
+if [ $# -eq 0 ]; then
+        if ! xdotool search -name ".*- Mozilla Firefox$" windowactivate; then
+                firefox
+        fi
+else
+        xdotool search -name ".*- Mozilla Firefox$" windowactivate
+        firefox "$@"
+fi

@@ -1,0 +1,74 @@
+#!/bin/sh
+
+# File:         sys-backup
+# Usage:        sys-backup [<configFile>]
+#               when no config file is specified, the default one
+#               (/etc/sys-backup.conf) is used; this is simply a
+#               list of all files that should be included
+# Purpose:      system files' backup usign rsync --link-dest
+# Author:       A. DE LAURENZIS
+
+
+# ----------------------------------------------------------------------
+# Config section
+#
+DAYS_BEFORE_DELETION="8"
+
+# Default values for the following variables shouldn't be changed
+TSTAMP="%Y%m%d_%R"
+TMP_DIR="/tmp"
+BACKUP_REPO="/nfs/vol/sys_backup/$(hostname -s)"
+# ----------------------------------------------------------------------
+
+
+if ! [ -d "$BACKUP_REPO" ]; then
+        echo "sys-backup: Cannot find back-up repo $BACKUP_REPO (not mounted?)" >&2
+        logger -t sys-backup "Cannot find back-up repo $BACKUP_REPO (not mounted?)"
+        exit 1
+fi
+
+if [ -f "${TMP_DIR}/sys-backup.pid" ]; then
+        PID=$(cat "${TMP_DIR}/sys-backup.pid")
+        echo "sys-backup: Previous instance still running (pid=$PID), or stale ${TMP_DIR}/sys-backup.pid" >&2
+        logger -t sys-backup "Previous instance still running (pid=$PID), or stale ${TMP_DIR}/sys-backup.pid"
+        exit 2
+fi
+
+PREV_BACKUP_DIR="${BACKUP_REPO}/$(ls -Atr $BACKUP_REPO | tail -n 1)"
+BACKUP_DIR="${BACKUP_REPO}/$(date +$TSTAMP)"
+if ! mkdir "$BACKUP_DIR" 2>/dev/null; then
+        echo "sys-backup: $BACKUP_DIR: directory already exists; back-up run too early?" >&2
+        logger -t sys-backup "$BACKUP_DIR: directory already exists; back-up run too early?"
+        exit 3
+fi
+
+FILE_LIST=${1-/etc/sys-backup.conf}
+if ! [ -f "$FILE_LIST" ]; then
+        echo "sys-backup: Include file list $FILE_LIST not found" >&2
+        logger -t sys-backup "Include file list $FILE_LIST not found"
+        exit 4
+fi
+
+echo "$$" > ${TMP_DIR}/sys-backup.pid
+
+rsync -arzHx --files-from="$FILE_LIST" --link-dest="${PREV_BACKUP_DIR}" / "${BACKUP_DIR}"
+
+if [ "$?" != 0 ]; then
+        echo "sys-backup: rsync exited with error code $?" >&2
+        logger -t sys-backup "rsync exited with error code $?"
+        RSYNC_FAIL=1
+fi
+
+rm -rf ${TMP_DIR}/sys-backup.pid
+
+if [ "$RSYNC_FAIL" == 1 ]; then
+        echo "sys-backup: Script completed with rsync failures"
+        logger -t sys-backup "Script completed with rsync failures"
+        exit 5
+fi
+
+find "$BACKUP_REPO/" -maxdepth 1 -type d -mtime +$DAYS_BEFORE_DELETION -exec rm -rf {} \;
+
+echo "sys-backup: Script completed successfully"
+logger -t sys-backup "Script completed successfully"
+exit 0

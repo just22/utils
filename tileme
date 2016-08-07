@@ -1,0 +1,31 @@
+#!/bin/sh
+
+get_workarea() {
+        curr_desktop=$(expr $(xdotool get_desktop) + 1)
+        echo $(xprop -root _NET_WORKAREA |
+                        cut -d "=" -f 2 |
+                        cut -d "," -f $curr_desktop-$(expr $curr_desktop \* 4) |
+                        tr -d " ")
+}
+
+# main() {
+        IFS="," read xorig yorig xdim ydim <<- EOT
+		$(get_workarea)
+	EOT
+
+        active_win=$(xdotool getactivewindow)
+        other_win_list=$(xdotool search \
+                                --desktop $(xdotool get_desktop) \
+                                --onlyvisible \
+                                --name ".*" |
+                         sed "s/$active_win//")
+
+
+        echo $other_win_list
+
+        echo "xorig: $xorig"
+        echo "yorig: $yorig"
+        echo "xdim:  $xdim"
+        echo "ydim:  $ydim"
+
+#}

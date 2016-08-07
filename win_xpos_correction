@@ -1,0 +1,16 @@
+#!/bin/sh
+
+# File:         win_xpos_correction
+# Purpose:      Center window horizontally w.r.t. mouse cursor
+#               (used to move around maximized windows in Openbox)
+# Author:       A. DE LAURENZIS
+
+eval $(xdotool getmouselocation --shell)
+X_CURSOR=$X
+Y_CURSOR=$(expr $Y - 2); [ $Y_CURSOR -le 0 ] && Y_CURSOR=2
+
+eval $(xdotool getactivewindow getwindowgeometry --shell)
+X_CENTER=$(expr $X_CURSOR - $WIDTH / 2); [ $X_CENTER -lt 0 ] && X_CENTER=0
+echo $X_CENTER
+
+xdotool getactivewindow windowmove $X_CENTER $Y_CURSOR

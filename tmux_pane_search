@@ -1,0 +1,45 @@
+#!/bin/sh
+
+# File:         tmux_pane_search
+# Purpose:      Switch to selected tmux pane
+# Dependencies: tmux(!), dmenu, wmctrl
+# Author:       A. DE LAURENZIS
+
+get_win_ids() {
+        xprop -root _NET_CLIENT_LIST |
+                awk 'BEGIN{FS="#"} {print $2}' |
+                tr -d ","
+}
+
+get_tmux_win_id() {
+        for WIN_ID in $(get_win_ids); do
+                if $(xprop -id "$WIN_ID" WM_NAME |
+                     grep "$1" > /dev/null 2>&1); then
+                        echo "$WIN_ID"
+                        break
+                fi
+        done
+}
+
+search_pane() {
+        tmux list-panes -s -a \
+            -F '#{session_name} / #{window_index}:#{window_name} / #{pane_index}:#{pane_title}' |
+                dmenu -p Panel: -i -l 5
+}
+
+SELECTED_ITEM=$(search_pane)
+
+if [ -n "$SELECTED_ITEM" ]; then
+        SESSION_NAME="$(echo $SELECTED_ITEM |
+                        awk 'BEGIN{FS=" / "} {print $1}')"
+        WIN_INDEX="$(echo $SELECTED_ITEM |
+                        awk 'BEGIN{FS=" / "} {print $2}' |
+                        awk 'BEGIN{FS=":"} {print $1}')"
+        PANE_INDEX="$(echo $SELECTED_ITEM |
+                        awk 'BEGIN{FS=" / "} {print $3}' |
+                        awk 'BEGIN{FS=":"} {print $1}')"
+
+        tmux select-window -t "${SESSION_NAME}":"${WIN_INDEX}"
+        tmux select-pane -t "${SESSION_NAME}":"${WIN_INDEX}"."${PANE_INDEX}"
+        wmctrl -i -a "$(get_tmux_win_id "\[tmux ${SESSION_NAME}:${WIN_INDEX}.${PANE_INDEX}\]")"
+fi

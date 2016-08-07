@@ -1,0 +1,4 @@
+#!/bin/sh
+
+ytdl-smplayer $(xclip -o -selection clipboard)
+cat /dev/null | xclip -selection clipboard

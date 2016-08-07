@@ -1,0 +1,30 @@
+#!/usr/bin/env tclsh8.5
+
+# Usage:        tcl-calc <expr>
+# Purpose:      Simple calculator in ENG notation
+# Author:       A. DE LAURENZIS
+
+proc eng_fmt {num {p 3}} {
+        lassign [split [format %e $num] e] mant exp
+        scan $exp %d exp
+        while {[expr $exp % 3] != 0} {
+                set mant [expr $mant*10]
+                incr exp -1
+        }
+        return [format %.${p}f $mant]e$exp
+}
+
+if { $argc != 1 } {
+        puts stderr "Usage: tcl-calc <expr>"
+        exit 1
+}
+
+# Always floating point division, please!
+set EXPR [string map {/ *1.0/} $argv]
+
+if { [catch {puts [eng_fmt [expr $EXPR] 3]}] } {
+        puts stderr "tcl-calc: Expression evaluation error"
+        puts 0
+        exit 2
+}
+exit 0

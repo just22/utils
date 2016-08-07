@@ -1,0 +1,3 @@
+#!/bin/sh
+
+if ! pkill -f "Xdialog --title Xdialog Calendar"; then Xdialog-calendar; fi

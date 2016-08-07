@@ -1,0 +1,15 @@
+#!/bin/sh
+
+KEY=7340a4407d9156b2
+
+LOCATION=$(curl -s http://api.wunderground.com/api/${KEY}/geolookup/q/autoip.xml |
+                egrep "country_name|city" |
+                head -n 2 |
+                awk -F '[<>]' '{print $3}' |
+                paste -s -d '/' -)
+
+TEMP=$(curl -s http://api.wunderground.com/api/${KEY}/conditions/q/${LOCATION}.json |
+                grep "temp_c" |
+                awk -F ':' '{printf "%.0f°C", $2}')
+
+echo "$TEMP"

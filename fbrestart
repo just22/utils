@@ -1,0 +1,6 @@
+xdotool search --class "dzen" windowunmap
+pkill -x space_dapp
+
+(sleep 1; xdotool search --class "dzen" windowmap) &
+(sleep 2; space_dapp) &
+fluxbox-remote Restart

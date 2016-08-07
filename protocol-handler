@@ -1,0 +1,25 @@
+#!/bin/sh
+
+# File:         protocol-handler
+# Purpose:      Handles some specific protocols different from "http://",
+#               "https://"
+# Author:       A. DE LAURENZIS
+
+if [ $# -ne 1 ]; then
+        echo "Usage: protocol-handler <URI>"
+        exit 1
+fi
+
+PROT=$(echo "$1" | egrep -o "^[a-z0-9]+:/{0,2}")
+URI=$(echo "$1" | sed "s|$PROT||")
+
+case "$PROT" in
+mailto*)
+        xterm -e mutt "$URI"
+        ;;
+*)
+        echo "Unknown protocol"
+        exit 2
+        ;;
+esac
+exit 0

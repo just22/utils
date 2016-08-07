@@ -1,0 +1,7 @@
+#!/bin/sh
+
+WIN_ID="$(xprop -root | grep "^_NET_ACTIVE_WINDOW(WINDOW)" |
+        cut -d"," -f1 |
+        awk '{print $NF}')"
+xterm -title "Window's properties (xprop)" \
+        -e "xprop -id $WIN_ID | ${PAGER}"

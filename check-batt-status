@@ -1,0 +1,48 @@
+#!/bin/sh
+
+# Kill daemon on exit
+terminate_loop_and_delete_pid_file() {
+        LOOP=0
+        # Delete pid file only if no new daemon has been started in meantime
+        [ "$(cat ~/.check-batt-status.pid)" -eq $$ ] && \
+                rm ~/.check-batt-status.pid
+}
+trap terminate_loop_and_delete_pid_file HUP INT QUIT ABRT TERM
+
+# Check if daemon is already running
+DAEMON_PID=$(cat ~/.check-batt-status.pid 2> /dev/null)
+if DAEMON_STATE=$(ps -o stat="" -p $DAEMON_PID 2> /dev/null); then
+        case "$DAEMON_STATE" in
+        I*|R*|S*)
+                echo "Daemon already running with pid $DAEMON_PID"
+                exit 1
+                ;;
+        *)
+                echo "Killing old stopped/dead daemon with pid $DAEMON_PID"
+                kill -KILL $DAEMON_PID
+                ;;
+        esac
+fi
+echo "Launching daemon with pid $$"
+echo $$ > ~/.check-batt-status.pid
+
+LOOP=1
+while [ "$LOOP" == 1 ]; do
+        if [ "$(apm -a)" -eq 0 ]; then
+                BATT_PERC="$(apm -l)"
+                if [ "BATT_PERC" -le 5 ]; then
+                        echo "Critical low battery level: suspending in 30s..." |
+                        xmessage -title "Low battery" -buttons "OK":0 -timeout 30 -file -
+                        # Check once again if power supply is connected;
+                        # if not, suspend the machine
+                        [ "$(apm -a)" -eq 0 ] && apm -Z
+                elif [ "BATT_PERC" -le 15 ]; then
+                        (echo "This computer is running on low battery level (${BATT_PERC}%)."; \
+                         echo "Plug-in the AC adapter or hibernate the system!") |
+                        xmessage -title "Low battery" -buttons "Hibernate now":1,"OK":0 -timeout 60 -file -
+                        [ "$?" -eq 1 ] && apm -Z
+                fi
+        fi
+        # Check every 2 min
+        sleep 120
+done
