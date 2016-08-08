@@ -1,9 +1,12 @@
 #!/bin/sh
 
-# File:         dmenu
-# Purpose:      dmenu wrapper (it sets default font and colors)
+# ----------------------------------------------------------------------
+#  $Id$
+#
+#  Wrapper around dmanu (it sets default font and colors)
+# ----------------------------------------------------------------------
 
-/usr/local/bin/dmenu \
+/usr/bin/env dmenu \
         -m  0 \
         -fn "Terminus-10" \
         -nf "#073642" \
