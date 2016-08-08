@@ -165,6 +165,10 @@ fmt_kbd_monitor() {
         printf "%s %s" "$KBD_ICON" "$KBD_LAYOUT"
 }
 
+fmt_user_monitor() {
+        printf "%s %s" "$USER_ICON" "$USER"
+}
+
 # Static icons
 MAIL_ICON="^i(/home/just22/.local/share/icons/sm4tik-icon-pack/xbm/mail.xbm)"
 CPU_ICON="^i(/home/just22/.local/share/icons/sm4tik-icon-pack/xbm/cpu.xbm)"
@@ -178,6 +182,7 @@ NET_CONN_ICON="^i(/home/just22/.local/share/icons/sm4tik-icon-pack/xbm/net_wired
 TEMP_ICON="^i(/home/just22/.local/share/icons/sm4tik-icon-pack/xbm/temp.xbm)"
 CLOCK_ICON="^i(/home/just22/.local/share/icons/sm4tik-icon-pack/xbm/clock.xbm)"
 KBD_ICON="^i(/home/just22/.local/share/icons/kbd.xbm)"
+USER_ICON="^i(/home/just22/.local/share/icons/user.xbm)"
 
 # Init
 touch /tmp/weather.dump
@@ -193,7 +198,7 @@ while [ "$LOOP" == 1 ]; do
         get_very_slow_data      # Do not wait for task completion!
         get_cpu_data
         #TMP_STR="$(fmt_fan_monitor)  $(fmt_battery_monitor)  $(fmt_mailbox_monitor)  $(fmt_volume_monitor)  $(fmt_fs_usage)"
-        TMP_STR="$(fmt_fan_monitor)  $(fmt_battery_monitor)  $(fmt_volume_monitor)  $(fmt_kbd_monitor)  [$USER]"
+        TMP_STR="$(fmt_fan_monitor)  $(fmt_battery_monitor)  $(fmt_volume_monitor)  $(fmt_kbd_monitor)  $(fmt_user_monitor)"
 
         # Wait for slow data acquisition completion
         wait $TOP_DUMP_PID $IOSTAT_DUMP_PID $IFSTAT_DUMP_PID
