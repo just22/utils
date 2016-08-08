@@ -1,8 +1,10 @@
 #!/bin/sh
 
-# File:         tmux-session
-# Purpose:      Open an existing tmux session (or connect to an existing one)
-# Author:       A. DE LAURENZIS
+# ----------------------------------------------------------------------
+#  $Id$
+#
+#  Open an existing tmux session (or connect to an existing one)
+# ----------------------------------------------------------------------
 
 SESSION_NAME="$1"
 ~/bin/tmux attach-session -d -t $SESSION_NAME || ~/bin/tmux new-session -s $SESSION_NAME

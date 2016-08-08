@@ -1,8 +1,11 @@
 #!/usr/bin/env tclsh8.5
 
-# Usage:        tcl-calc <expr>
-# Purpose:      Simple calculator in ENG notation
-# Author:       A. DE LAURENZIS
+# ----------------------------------------------------------------------
+#  $Id$
+#
+#  Simple TCL calculator in ENG notation
+#  Usage: tcl-calc <expr>
+# ----------------------------------------------------------------------
 
 proc eng_fmt {num {p 3}} {
         lassign [split [format %e $num] e] mant exp

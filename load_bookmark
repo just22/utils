@@ -1,9 +1,11 @@
 #!/bin/sh
 
-# File:         load_bookmark
-# Purpose:      Load bookmark; specifically written for suckless surf browser,
-#               may be adapted.
-# Author:       A. DE LAURENZIS
+# ----------------------------------------------------------------------
+#  $Id$
+#
+#  Loads a bookmark; specifically written for suckless surf browser,
+#  it may be adapted.
+# ----------------------------------------------------------------------
 
 BOOKMARK_FILE="${HOME}/.surf/bookmarks"
 

@@ -1,10 +1,11 @@
 #!/bin/sh
 
-# File:         screenshot
-# Purpose:      Take a screenshot of the whole desktop or selected window/area
-#               using available tools
-# Author:       A. DE LAURENZIS
-# Date:         Aug 2016
+# ----------------------------------------------------------------------
+#  $Id$
+#
+#  Take a screenshot of the whole desktop or selected window/area
+#  using available tools
+# ----------------------------------------------------------------------
 
 # No output on error
 exec 2> /dev/null

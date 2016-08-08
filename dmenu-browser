@@ -1,8 +1,10 @@
 #!/bin/sh
 
-# File:         dmenu-browser
-# Purpose:      Select the browser to launch using dmenu
-# Author:       A. DE LAURENZIS
+# ----------------------------------------------------------------------
+#  $Id$
+#
+#  Select browser using dmenu
+# ----------------------------------------------------------------------
 
 set -A MENU_ITEMS \
         "firefox" \

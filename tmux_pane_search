@@ -1,9 +1,10 @@
 #!/bin/sh
 
-# File:         tmux_pane_search
-# Purpose:      Switch to selected tmux pane
-# Dependencies: tmux(!), dmenu, wmctrl
-# Author:       A. DE LAURENZIS
+# ----------------------------------------------------------------------
+#  $Id$
+#
+#  Switch to selected tmux pane (using dmenu, wmctrl)
+# ----------------------------------------------------------------------
 
 get_win_ids() {
         xprop -root _NET_CLIENT_LIST |

@@ -1,5 +1,11 @@
 #!/bin/sh
 
+# ----------------------------------------------------------------------
+#  $Id$
+#
+#  Simple launcher for surf browser
+# ----------------------------------------------------------------------
+
 SURF_EXEC_NAME="surf"
 HOMEPAGE="http://www.openbsd.org"
 LOG_FILE="${HOME}/.surf/surf.log"       # /dev/null to disable logging

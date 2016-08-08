@@ -1,10 +1,10 @@
 #!/bin/sh
 
-# File:       move_resize_win
-# Purpose:    Poor man tiling
-# Author:     A. DE LAURENZIS
-# Version:    2.0
-# Date:       20150116
+# ----------------------------------------------------------------------
+#  $Id$
+#
+#  move_resize_win: poor man tiling
+# ----------------------------------------------------------------------
 
 get_screen_size () {
     COORD="$1"
@@ -20,7 +20,6 @@ get_screen_size () {
             ;;
     esac
 }
-
 
 WS_LEFT_MARGIN=0
 WS_RIGHT_MARGIN=0

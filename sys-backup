@@ -1,13 +1,15 @@
 #!/bin/sh
 
-# File:         sys-backup
-# Usage:        sys-backup [<configFile>]
-#               when no config file is specified, the default one
-#               (/etc/sys-backup.conf) is used; this is simply a
-#               list of all files that should be included
-# Purpose:      system files' backup usign rsync --link-dest
-# Author:       A. DE LAURENZIS
-
+# ----------------------------------------------------------------------
+#  $Id$
+#
+#  System files' backup usign rsync --link-dest
+# 
+#  Usage: sys-backup [<configFile>]
+#  When no config file is specified, the default one is used
+#  (/etc/sys-backup.conf); this is simply a list of all files that
+#  should be included
+# ----------------------------------------------------------------------
 
 # ----------------------------------------------------------------------
 # Config section

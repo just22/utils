@@ -1,9 +1,10 @@
 #!/bin/sh
 
-# File:         pic-viewer
-# Purpose:      Just a wrapper for preferred image viewer
-# Author:       A. DE LAURENZIS
-# Date:         Aug 2016
+# ----------------------------------------------------------------------
+#  $Id$
+#
+#  Wrapper around preferred (or available...) image viewer
+# ----------------------------------------------------------------------
 
 if [ $# -lt 1 ]; then
         echo "Usage: $(basename $0) <IMG file list>"

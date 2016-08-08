@@ -1,11 +1,11 @@
 #!/bin/sh
 
-# File:         statusbar
-# Purpose:      Draw a basic statusbar on the top of primary monitor
-#               (using only base tools and dzen2)
-# Author:       A. DE LAURENZIS
-# Version:      2.0
-# Date:         201506
+# ----------------------------------------------------------------------
+#  $Id$
+#
+#  Draw a basic statusbar on the top of primary monitor (using only
+#  base tools and dzen2)
+# ----------------------------------------------------------------------
 
 # Kill daemon on exit
 trap "LOOP=0" HUP INT QUIT ABRT KILL TERM

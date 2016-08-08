@@ -1,4 +1,8 @@
 #!/bin/sh
 
+# ----------------------------------------------------------------------
+#  $Id$
+# ----------------------------------------------------------------------
+
 ytdl-smplayer $(xclip -o -selection clipboard)
 cat /dev/null | xclip -selection clipboard

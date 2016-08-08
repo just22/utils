@@ -1,5 +1,11 @@
 #!/bin/sh
 
+# ----------------------------------------------------------------------
+#  $Id$
+#
+#  Simple firefox launcher (reuse current instance is already running)
+# ----------------------------------------------------------------------
+
 if [ $# -eq 0 ]; then
         if ! xdotool search -name ".*- Mozilla Firefox$" windowactivate; then
                 firefox

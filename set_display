@@ -1,10 +1,10 @@
 #!/bin/sh
 
-# File:         set_display
-# Purpose:      External monitors management
-# Author:       Alessandro DE LAURENZIS <just22.adl@gmail.com>
-# Version:      2.x
-# Date:         Jul 2016
+# ----------------------------------------------------------------------
+#  $Id$
+#
+#  X display layout management with dual monitor configurations
+# ----------------------------------------------------------------------
 
 # No output msgs, please
 exec >/dev/null 2>&1

@@ -1,21 +1,19 @@
 #!/bin/sh
 
-# File:     gtile (Generic TILE)
-# Purpose:  Poor man's tiling
-# Author:   A. DE LAURENZIS
-# Version:  1.0
-# Date:     20150219
-
+# ----------------------------------------------------------------------
+#  $Id$
+#
+#  gtile (Generic TILE): poor man's tiling
+# ----------------------------------------------------------------------
 
 if [ "$#" != "1" ]; then
     echo "Usage: gtile <tileh|tilev|tl|tc|tr|bl|bc|br|lc|rc>"
     exit 1
 fi
 
-
 # ----------------------------------------------------------------------
 #  Customization
-# ----------------------------------------------------------------------
+#
 WS_LEFT_MARGIN=0
 WS_RIGHT_MARGIN=0
 WS_UPPER_MARGIN=0
@@ -26,11 +24,9 @@ WIN_UPPER_BORDER=15
 WIN_LOWER_BORDER=3
 TILE_BORDER=5
 
-
 # ----------------------------------------------------------------------
 #  Utils
-# ----------------------------------------------------------------------
-
+#
 get_screen_size () {
     COORD="$1"
     case "$COORD" in
@@ -77,8 +73,7 @@ get_not_active_visible_windows () {
 
 # ----------------------------------------------------------------------
 #  Visible windows tiling
-# ----------------------------------------------------------------------
-
+#
 horiz_tiling () {
 
     #Y_DIM=$(expr \( $(get_screen_size y) - $WS_UPPER_MARGIN - $WS_LOWER_MARGIN - $WIN_UPPER_BORDER - $WIN_LOWER_BORDER \) \* 2 / 3)
@@ -100,7 +95,6 @@ horiz_tiling () {
     done
 
 }
-
 
 vert_tiling () {
 
@@ -124,11 +118,9 @@ vert_tiling () {
 
 }
 
-
 # ----------------------------------------------------------------------
 #  Main
-# ----------------------------------------------------------------------
-
+#
 ACTION="$1"
 
 WIN_NO=$(get_not_active_visible_windows | wc -l)

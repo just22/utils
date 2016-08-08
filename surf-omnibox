@@ -1,9 +1,11 @@
 #!/bin/sh
 
-# File:         netsearch
-# Purpose:      Return a valid search uri starting from a string containing
-#               an id for the search engine and the query string
-# Author:       A. DE LAURENZIS
+# ----------------------------------------------------------------------
+#  $Id$
+#
+#  Return a valid search uri starting from a string containing the
+#  search engine id and the query string
+# ----------------------------------------------------------------------
 
 # Search history config
 HIST_FILE="$HOME/.surf/omnibox_history"

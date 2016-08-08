@@ -1,9 +1,10 @@
 #!/bin/sh
 
-# File:         protocol-handler
-# Purpose:      Handles some specific protocols different from "http://",
-#               "https://"
-# Author:       A. DE LAURENZIS
+# ----------------------------------------------------------------------
+#  $Id$
+#
+#  Handles some specific protocols different from "http://", "https://"
+# ----------------------------------------------------------------------
 
 if [ $# -ne 1 ]; then
         echo "Usage: protocol-handler <URI>"

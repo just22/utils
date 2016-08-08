@@ -1,9 +1,12 @@
 #!/bin/sh
 
-# File:         add_bookmark
-# Purpose:      Add bookmark; specifically written for suckless surf browser,
-#               may be adapted; to add tags, just separate them with commas
-# Author:       A. DE LAURENZIS
+# ----------------------------------------------------------------------
+#  $Id$
+#
+#  Add a bookmark in text format; specifically written for suckless surf
+#  browser, it may be adapted.
+#  To add tags, just separate them with commas.
+# ----------------------------------------------------------------------
 
 if [ $# -ne 2 ]; then
         echo "usage: $(basename $0) <winId> <uri>"

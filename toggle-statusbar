@@ -1,5 +1,11 @@
 #!/bin/sh
 
+# ----------------------------------------------------------------------
+#  $Id$
+#
+#  Toggle statusbar visibility (and its space reservation)
+# ----------------------------------------------------------------------
+
 if xdotool search --onlyvisible --class "dzen" windowunmap; then
         pkill -x space_dapp
 else

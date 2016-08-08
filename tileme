@@ -1,5 +1,11 @@
 #!/bin/sh
 
+# ----------------------------------------------------------------------
+#  $Id$
+#
+#  (Very) poor man's tiling
+# ----------------------------------------------------------------------
+
 get_workarea() {
         curr_desktop=$(expr $(xdotool get_desktop) + 1)
         echo $(xprop -root _NET_WORKAREA |

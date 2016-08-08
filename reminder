@@ -1,8 +1,10 @@
 #!/bin/sh
 
-# File:         reminder
-# Purpose:      Simple reminder (using at and xmessage)
-# Author:       A. DE LAURENZIS
+# ----------------------------------------------------------------------
+#  $Id$
+#
+#  Simple reminder (using at and xmessage)
+# ----------------------------------------------------------------------
 
 echo -n "Time [see at(0)]: [+ 5 min] "; read TIME
 echo -n "Message: [Foo] "; read MSG

@@ -1,8 +1,10 @@
 #!/bin/sh
 
-# File:         dmenu-calc
-# Purpose:      Simple calculator using tcl-calc and dmenu
-# Author:       A. DE LAURENZIS
+# ----------------------------------------------------------------------
+#  $Id$
+#
+#  Simple calculator using tcl-calc and dmenu
+# ----------------------------------------------------------------------
 
 __calc()
 {

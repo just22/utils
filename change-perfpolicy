@@ -1,10 +1,10 @@
 #!/bin/sh
 
-# File:     change-perfpolicy
-# Purpose:  Loops among performance policies
-# Author:   A. DE LAURENZIS
-# Version:  1.0
-# Date:     20150314
+# ----------------------------------------------------------------------
+#  $Id$
+#
+#  Loops among performance policies
+# ----------------------------------------------------------------------
 
 case $(sysctl -n hw.perfpolicy) in
     auto) sudo sysctl hw.perfpolicy=high

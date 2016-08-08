@@ -1,8 +1,10 @@
 #!/bin/sh
 
-# Usage:        open-removables-dir
-# Purpose:      Open removable devices automount directory
-# Author:       A. DE LAURENZIS
+# ----------------------------------------------------------------------
+#  $Id$
+#
+#  Open removable devices automount directory
+# ----------------------------------------------------------------------
 
 [ -d /run/media/${USER} ] &&
         exo-open --launch FileManager /run/media/${USER}

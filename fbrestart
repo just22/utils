@@ -1,3 +1,11 @@
+#!/bin/sh
+
+# ----------------------------------------------------------------------
+#  $Id$
+#
+#  Restart fluxbox(1), preserving statusbar visibility
+# ----------------------------------------------------------------------
+
 xdotool search --class "dzen" windowunmap
 pkill -x space_dapp
 

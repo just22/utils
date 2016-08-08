@@ -1,17 +1,18 @@
 #!/bin/sh
 
-# Usage:        amount
-# Purpose:      Mount partitions of removable devices through a menu,
-#               then (optionally) open a filemanager window
-#               Notes:
-#               - specific for OpenBSD;
-#               - special permissions are needed for some commands
-#                 (mount, fsck, chgrp, chmod), so it should be run
-#                 using sudo/doas in order to gain root identity;
-#                 on the other hand, $FILEMGR must be executed as
-#                 normal user, so env should be preserved (sudo -E)
-#                 in order to access the correct $USER value
-# Author:       A. DE LAURENZIS
+# ----------------------------------------------------------------------
+#  $Id$
+#
+#  Mounts partitions of removable devices through a menu, then
+#  (optionally) opens a filemanager window
+#  Notes:
+#  - specific for OpenBSD;
+#  - special permissions are needed for some commands (mount, fsck,
+#    chgrp, chmod), so it should be run using sudo/doas in order to
+#    gain root identity; on the other hand, $FILEMGR must be executed
+#    as normal user, so env should be preserved (sudo -E) in order to
+#    access the correct $USER value
+# ----------------------------------------------------------------------
 
 # ----------------------------------------------------------------------
 # Config section

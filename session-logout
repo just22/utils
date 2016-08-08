@@ -1,4 +1,12 @@
 #!/bin/sh
+
+# ----------------------------------------------------------------------
+#  $Id$
+#
+#  Logout from current session (or suspend/reboot/poweroff the machine)
+#  using Xdialog
+# ----------------------------------------------------------------------
+
 DIALOG=Xdialog
 
 $DIALOG --title "System logout" \

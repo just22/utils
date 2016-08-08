@@ -1,4 +1,10 @@
-#/bin/sh
+#!/bin/sh
+
+# ----------------------------------------------------------------------
+#  $Id$
+#
+#  Simple launcher for tkremind
+# ----------------------------------------------------------------------
 
 if [ -e ~/tmp/tkremind.pid ]; then
         kill -KILL $(cat ~/tmp/tkremind.pid)

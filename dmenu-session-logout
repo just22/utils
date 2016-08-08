@@ -1,9 +1,11 @@
 #!/bin/sh
 
-# File:         dmenu-session-logout
-# Purpose:      Logout from current session (or suspend/reboot/poweroff the
-#               machine) using dmenu
-# Author:       A. DE LAURENZIS
+# ----------------------------------------------------------------------
+#  $Id$
+#
+#  Logout from current session (or suspend/reboot/poweroff the machine)
+#  using dmenu
+# ----------------------------------------------------------------------
 
 # No output msgs, please
 exec >/dev/null 2>&1

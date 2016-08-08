@@ -1,4 +1,11 @@
 #!/bin/sh
 
-WIN_ID="$(xprop -root | grep "^_NET_ACTIVE_WINDOW(WINDOW)" | awk '{print $NF}')"
+# ----------------------------------------------------------------------
+#  $Id$
+#
+#  Reports Openbox specific x-properties
+# ----------------------------------------------------------------------
+
+WIN_ID="$(xprop -root _NET_ACTIVE_WINDOW | awk '{print $NF}')"
+
 xterm -title "Window's properties (obxprop)" -e "obxprop --id $WIN_ID | grep "^_OB" | ${PAGER}"
