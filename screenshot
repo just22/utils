@@ -1,0 +1,46 @@
+#!/bin/sh
+
+# File:         screenshot
+# Purpose:      Take a screenshot of the whole desktop or selected window/area
+#               using available tools
+# Author:       A. DE LAURENZIS
+# Date:         Aug 2016
+
+# No output on error
+exec 2> /dev/null
+
+ACTION=${1-win}
+
+case "$ACTION" in
+desktop)
+        SCROT_WRAPPER="xterm -geometry 40x2 -title Screenshot -e"
+        SCROT_OPT="-d 5"
+        GS_OPT="-d 5"
+        IMPORT_OPT="-window root"
+        ;;
+win|area)
+        SCROT_WRAPPER=""
+        SCROT_OPT="-s"
+        GS_OPT="-w -d 5"
+        IMPORT_OPT="-window $(xprop -root _NET_ACTIVE_WINDOW | awk '{print $NF}')"
+        ;;
+*)
+        echo "Usage: $(basename $0) [desktop|win|area] "
+        exit 1
+        ;;
+esac
+
+OUT_FILE="/tmp/screenshot.$(date +%Y%m%d_%H%M%S).jpg"
+
+if scrot -h > /dev/null; then
+        $($SCROT_WRAPPER scrot $SCROT_OPT -c $OUT_FILE -e 'pic-viewer $f')
+elif gnome-screenshot -i $GS_OPT; then
+        :
+elif import $IMPORT_OPT $OUT_FILE; then
+        pic-viewer $OUT_FILE
+else
+        echo "$(basename $0): No suitable screen grabber found"
+        exit 2
+fi
+
+exit 0

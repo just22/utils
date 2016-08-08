@@ -1,0 +1,24 @@
+#!/bin/sh
+
+# File:         pic-viewer
+# Purpose:      Just a wrapper for preferred image viewer
+# Author:       A. DE LAURENZIS
+# Date:         Aug 2016
+
+if [ $# -lt 1 ]; then
+        echo "Usage: $(basename $0) <IMG file list>"
+        exit 1
+fi
+
+if geeqie $@ 2> /dev/null; then
+        :
+elif eog $@ 2> /dev/null; then
+        :
+elif display $@ 2> /dev/null; then
+        :
+else
+        echo "$(basename $0): No suitable viewer found"
+        exit 2
+fi
+
+exit 0
