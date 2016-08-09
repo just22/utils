@@ -4,7 +4,7 @@
 #  $Id$
 #
 #  Plays Youtube (or similar) video (url in clipboard)
-#  Dependencies: youtube-dl, smplayer, curl
+#  Dependencies: xclip, youtube-dl, smplayer, curl
 # ----------------------------------------------------------------------
 
 if [ $# -gt 1 ] || [ $1 != "-c" ]; then
