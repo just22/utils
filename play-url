@@ -7,14 +7,14 @@
 #  Dependencies: xclip, youtube-dl, smplayer, curl
 # ----------------------------------------------------------------------
 
-if [ $# -gt 1 ] || [ $1 != "-c" ]; then
+if [[ $# -gt 1 ]] || [[ $# -eq 1 ]] && [[ $1 != -c ]]; then
         echo "Usage: $(basename $0) [-c]"
         exit 1
 fi
 
 URL="$(xclip -o -selection clipboard)"
 
-if [ -n $1 ]; then
+if [ -n "$1" ]; then
         curl $(youtube-dl -f best -g $URL) | smplayer -cache 4096 -cache-min 5 -
 else
         smplayer -cache 4096 -cache-min 5 $(youtube-dl -f best -g $URL)
