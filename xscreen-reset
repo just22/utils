@@ -1,22 +1,37 @@
 #!/bin/sh
 
 # Kill daemon on exit
-trap "LOOP=0" HUP INT QUIT ABRT KILL TERM
+trap "LOOP=0; rm ~/.xscreen-reset.pid" HUP INT QUIT ABRT TERM
+
+# Check if daemon is already running
+DAEMON_PID=$(cat ~/.xscreen-reset.pid 2> /dev/null)
+if DAEMON_STATE=$(ps -o stat="" -p $DAEMON_PID 2> /dev/null); then
+        case "$DAEMON_STATE" in
+        I*|R*|S*)
+                echo "Daemon already running with pid $DAEMON_PID"
+                exit 1
+                ;;
+        *)
+                echo "Killing old stopped/dead daemon with pid $DAEMON_PID"
+                kill -KILL $DAEMON_PID
+                ;;
+        esac
+fi
+echo "Launching daemon with pid $$"
+echo $$ > ~/.xscreen-reset.pid
 
 # Reset X screen to LVDS1 (auto) and lock it when SIGUSR1 is received
 trap 'screen-reset' USR1
 
+# No output msgs, please
+exec >/dev/null 2>&1
+
 # Main function
 screen-reset () {
-    xrandr --display $DISPLAY --output LVDS1 --auto --output VGA1 --off --output DVI1 --off
-    if pgrep fluxbox > /dev/null 2>&1 == 0; then
-        fbsetroot -gradient Vertical -from rgb:07/36/42 -to rgb:58/6E/75
-    elif pgrep fvwm2 > /dev/null 2>&1 == 0; then
-        FvwmCommand Restart
-    fi
-    if pgrep ipager > /dev/null 2>&1 == 0; then
-        pkill ipager && ipager &
-    fi
+	# Force LVDS-only display layout
+	wmrestart --display $DISPLAY --output LVDS1 --auto --output VGA1 --off --output DVI1 --off
+
+	# Lock the screen
         xscreensaver-command -lock
 }
 
