@@ -8,7 +8,7 @@
 # ----------------------------------------------------------------------
 
 # Kill daemon on exit
-trap "LOOP=0" HUP INT QUIT ABRT KILL TERM
+trap "LOOP=0" HUP INT QUIT ABRT TERM
 
 #get_screen_xdim() {
 #        xrandr |
