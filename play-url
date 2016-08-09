@@ -15,9 +15,9 @@ fi
 URL="$(xclip -o -selection clipboard)"
 
 if [ -n "$1" ]; then
-        curl $(youtube-dl -f best -g $URL) | smplayer -cache 4096 -cache-min 5 -
+        curl $(youtube-dl -f best -g $URL) | mplayer -cache 4096 -cache-min 5 -
 else
-        smplayer -cache 4096 -cache-min 5 $(youtube-dl -f best -g $URL)
+        smplayer $(youtube-dl -f best -g $URL)
 fi
 
 cat /dev/null | xclip -selection clipboard
