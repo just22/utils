@@ -1,10 +1,11 @@
 #!/usr/bin/env tclsh8.5
 
-# File:         vol
-# Purpose:      Simple volume level manager
-#               (specific for OpenBSD)
-# Dependencies: tcl8.5, tk8.5
-# Author:       A. DE LAURENZIS
+# ----------------------------------------------------------------------
+#  $Id$
+#
+#  Simple volume level manager (specific for OpenBSD)
+#  Dependencies: tcl8.5, tk8.5
+# ----------------------------------------------------------------------
 
 package require Tk
 

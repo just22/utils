@@ -1,9 +1,12 @@
 #!/bin/sh
 
-# File:     yt-mplayer
-# Purpose:  play yt (or similar) video whom url is into the clipboard
-# Author:   A. DE LAURENZIS
-# Date:     20140627
+# ----------------------------------------------------------------------
+#  $Id$
+#
+#  Plays Youtube (or similar) video whom url is into the clipboard
+#  (First release: 20140627)
+#  Dependencies: youtube-dl, xclip, mplayer
+# ----------------------------------------------------------------------
 
 URL=$(xclip -o)
 

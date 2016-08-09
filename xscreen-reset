@@ -1,5 +1,12 @@
 #!/bin/sh
 
+# ----------------------------------------------------------------------
+#  $Id$
+#
+#  Resets X screen when SIGUSR1 is received (typically used before
+#  suspend to RAM/disk operations)
+# ----------------------------------------------------------------------
+
 # Kill daemon on exit
 trap "LOOP=0; rm ~/.xscreen-reset.pid" HUP INT QUIT ABRT TERM
 

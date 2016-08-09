@@ -1,5 +1,11 @@
 #!/bin/sh
 
+# ----------------------------------------------------------------------
+#  $Id$
+#
+#  Poor man's window tiling
+# ----------------------------------------------------------------------
+
 get_workarea_info() {
         # For the sake of simplicity, let's consider that all DESKTOPs have
         # the same working area (this is tipically the case)

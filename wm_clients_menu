@@ -1,5 +1,11 @@
 #!/bin/sh
 
+# ----------------------------------------------------------------------
+#  $Id$
+#
+#  Opens window manager's client menu (keybind to "Super_L l" needed)
+# ----------------------------------------------------------------------
+
 X_POS=$(xdotool getmouselocation | awk '{sub(/[a-z]:/,"", $1); print $1}')
 Y_POS=$(xprop -root _NET_WORKAREA | awk -F "," '{print $2+$4}')
 

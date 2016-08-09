@@ -1,5 +1,11 @@
 #!/bin/sh
 
+# ----------------------------------------------------------------------
+#  $Id$
+#
+#  Opens window manager's root menu (keybind to "Super_L space" needed)
+# ----------------------------------------------------------------------
+
 X_POS=0
 Y_POS=$(xprop -root _NET_WORKAREA | awk -F "," '{print $2+$4}')
 

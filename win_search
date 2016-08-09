@@ -1,10 +1,11 @@
 #!/bin/sh
 
-# File:         win_search
-# Purpose:      Switch to selected window (searching for its class
-#               and/or title)
-# Dependencies: dmenu, wmctrl
-# Author:       A. DE LAURENZIS
+# ----------------------------------------------------------------------
+#  $Id$
+#
+#  Switches to selected window (searching for its class and/or title)
+#  Dependencies: dmenu, wmctrl
+# ----------------------------------------------------------------------
 
 get_win_ids() {
         xprop -root _NET_CLIENT_LIST |
