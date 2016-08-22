@@ -37,17 +37,17 @@ if [ -n "$INTERACTIVE" ]; then
         echo -n "Snooze time: [300] "; read SNOOZE_TIME
 fi
 
-TIME=${TIME-"now + 5 min"}
-MSG=${MSG-"Time's up!"}
-SNOOZE_TIME=${SNOOZE_TIME-300}
+TIME=${TIME:-"now + 5 min"}
+MSG=${MSG:-"Time's up!"}
+SNOOZE_TIME=${SNOOZE_TIME:-300}
 
 SHELL=/bin/sh at "$TIME" >/dev/null <<-EOT
-	while true; do
-		echo "$MSG" |
-		DISPLAY="$DISPLAY" xmessage -title "Reminder" -center \
-					-buttons "Got it":0,"Snooze":2 \
-					-file - >/dev/null 2>&1
-		[ "\$?" -eq 0 ] && break
-		sleep $SNOOZE_TIME
-	done
+        while true; do
+                echo "$MSG" |
+                DISPLAY="$DISPLAY" xmessage -title "Reminder" -center \
+                                        -buttons "Got it":0,"Snooze":2 \
+                                        -file - >/dev/null 2>&1
+                [ "\$?" -eq 0 ] && break
+                sleep $SNOOZE_TIME
+        done
 EOT
