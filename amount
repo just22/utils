@@ -24,7 +24,7 @@ RUN_FSCK=1                      # If enabled, fsck is run on all filesystems in
 GROUP="diskmount"
 MODE=0775
 EXCLUDED_DEV="sd0"              # Do not manage these devices
-FILEMGR="exo-open --launch FileManager"
+FILEMGR="pcmanfm"
                                 # Leave it empty if you don't want to open a
                                 # file manager window after mount
 # ----------------------------------------------------------------------
@@ -77,7 +77,7 @@ if [ ${#PART[*]} -eq 0 ]; then
                 --buttons-style text \
                 --screen-center \
                 --title "Removable volume manager" \
-                --msgbox "No removable devices \n(or no usable partitions)" 6 45
+                --msgbox "No removable devices \n(or no usable partitions)" 0 0
         exit 1
 fi
 
