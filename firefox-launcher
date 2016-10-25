@@ -8,9 +8,9 @@
 
 if [ $# -eq 0 ]; then
         if ! xdotool search -name ".*- Mozilla Firefox$" windowactivate; then
-                firefox
+                firefox-esr
         fi
 else
         xdotool search -name ".*- Mozilla Firefox$" windowactivate
-        firefox "$@"
+        firefox-esr "$@"
 fi
