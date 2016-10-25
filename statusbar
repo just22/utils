@@ -157,7 +157,7 @@ fmt_volume_monitor() {
         else
                 VOL_ICON="^i(/home/just22/.local/share/icons/sm4tik-icon-pack/xbm/spkr_01.xbm)"
         fi
-        printf "%s %s%%" "$VOL_ICON" "$VOL_LEVEL"
+        printf "^ca(1, vol-launcher)%s %s%%^ca()" "$VOL_ICON" "$VOL_LEVEL"
 }
 
 fmt_kbd_monitor() {
