@@ -77,7 +77,7 @@ if [ ${#PART[*]} -eq 0 ]; then
                 --buttons-style text \
                 --screen-center \
                 --title "Removable volume manager" \
-                --msgbox "No removable devices \n(or no usable partitions)" 0 0
+                --msgbox "No removable devices (or no usable partitions)" 5 50
         exit 1
 fi
 
