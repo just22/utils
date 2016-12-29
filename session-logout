@@ -10,12 +10,12 @@
 DIALOG=Xdialog
 
 $DIALOG --title "System logout" \
-        --radiolist "Please select a logout action:" 18 46 0 \
-                "Logout"        "Logout from current X session" off \
+        --radiolist "Please select a logout action:" 18 50 0 \
+                "Logout"        "Exit from current X session" off \
                 "Suspend"       "Suspend to RAM"                off \
                 "Hibernate"     "Suspend to disk"               ON  \
                 "Reboot"        "Reboot the system"             off \
-                "Poweroff"      "Power down the machine"        off \
+                "Poweroff"      "Shut down the computer"        off \
         2>/tmp/checklist.tmp.$$
 
 RETVAL=$?
