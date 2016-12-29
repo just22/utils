@@ -1,0 +1,359 @@
+#!/bin/sh
+
+# ----------------------------------------------------------------------
+#  $Id$
+#
+#  Common window manager actions
+#  Partially based on wmplus, optimized code
+# ----------------------------------------------------------------------
+
+_sinopsys() {
+        echo "wmprocs tile <tile_action>[_<tile_gap>] [<win_id>]"
+        echo "wmprocs move2ws <ws>[_a] [<win_id>]"
+        echo "wmprocs winaction <win_action> [<win_id>]"
+        echo "wmprocs mk_links|rm_links"
+        echo "wmprocs help"
+}
+
+_usage() {
+        echo "Usage:"
+        _sinopsys
+}
+
+_help() {
+        echo "NAME"
+        echo "wmprocs - Common window manager actions"
+        echo "wmprocs - Poor man's window tiling"
+        echo
+        echo "SINOPSYS"
+        _sinopsys
+        echo
+        echo "DESCRIPTION"
+        echo "This is a collection of common window management actions;"
+        echo "used to be a \"poor man's window tiling\" tool, it is now"
+        echo "a suite of procedures intended to integrete WS's capabilities."
+        echo ""
+        echo "The options are as follows:"
+        echo ""
+        echo "tile:"
+        echo "{t,b,l,r} tiles window to the top, bottom, left or right;"
+        echo "{h,v} tiles visible windows horizontally or vertically;"
+        echo "set tile_gap to the desired space between windows (default: 2px)"
+        echo "and append it to <tile_action> as suffix prepended by \"_\";"
+        echo ""
+        echo "move2ws:"
+        echo "moves window to the specified workspace (and optionally"
+        echo "activates it (when \"_a\" suffix is appended to <ws>);"
+        echo ""
+        echo "winaction:"
+        echo "Performs various actions on current window, according to <win_action>:"
+        echo "max:     toggles maximized window's state"
+        echo "maxrise: same of max, but also rise the window"
+        echo "kill:    kill a client by its X resource"
+        echo ""
+        echo "Note that it is possible to specify the id of the window on which"
+        echo "the action must be executed; it defaults to the active window."
+        echo ""
+        echo "In order to simplify the procedure usage, the action to perform"
+        echo "may be specified through the command name itself: just make a"
+        echo "symbolic link to wmprocs named as the desired action and"
+        echo "launch the command with the link name."
+        echo ""
+        echo "Two procedures have been added to ease link management:"
+        echo ""
+        echo "mk_links makes symbolic links in the same directory where wmprocs"
+        echo "is launched from;"
+        echo ""
+        echo "rm_links removes those links."
+}
+
+actwin_id() {
+        # Get active window id (in hex)
+        #
+        xprop -root _NET_ACTIVE_WINDOW |
+        egrep -o "0x[0-9a-fA-F]{2,}"
+}
+
+win_ids() {
+        # List X clients
+        #
+        xprop -root _NET_CLIENT_LIST |
+        egrep -o "0x[0-9a-fA-F]+"
+}
+
+curr_ws() {
+        # Get current ws id
+        #
+        xprop -root _NET_CURRENT_DESKTOP |
+        egrep -o "[0-9]+"
+}
+
+viswin_ids() {
+        # Get visible window ids from the current workspace,
+        # excluding docks and panels
+        #
+        for win_id in $(win_ids)
+        do
+                if [ "$win_id" != "$(actwin_id)" ] &&
+                   [ "$(xprop -id $win_id _NET_WM_DESKTOP | egrep -o "[0-9]+")" = "$(curr_ws)" ] &&
+                   ! xprop -id $win_id _NET_WM_WINDOW_TYPE | egrep "DOCK|DESKTOP" >/dev/null 2>&1 &&
+                   xprop -id $win_id WM_STATE | grep "window state" | grep "Normal" >/dev/null 2>&1
+                then
+                        echo "$win_id "
+                fi
+        done
+}
+
+win_orig() {
+        # Get window's origin coordinates
+        #
+        xwininfo -id ${1:-$(actwin_id)} |
+        grep "Absolute upper-left" |
+        tail -n 2 |
+        awk '{print $4}' |
+        xargs
+}
+
+win_output_geom() {
+        # Get the geometry of screen where current window is placed in
+        #
+        read w_x0 w_y0 <<- EOT
+		$(win_orig)
+	EOT
+        for output_geom in \
+                $(xrandr -q |
+                  egrep "\<connected\>" |
+                  egrep -o "[0-9]+x[0-9]+\+[0-9]+\+[0-9]+")
+        do
+                IFS="x+" read xdim ydim x0 y0 <<- EOT
+			$(echo $output_geom)
+		EOT
+                if [ $x0 -le $w_x0 ] &&
+                   [ $w_x0 -le $(expr $x0 + $xdim) ] &&
+                   [ $y0 -le $w_y0 ] &&
+                   [ $w_y0 -le $(expr $y0 + $ydim) ]
+                then
+                        echo $output_geom
+                        break
+                fi
+        done
+}
+
+win_actarea() {
+        # Get the active area of the screen
+        # (i.e. geometry, excluded docks, panels, ...)
+        #
+        IFS="x+" read output_xdim output_ydim output_x0 output_y0 <<- EOT
+		$(win_output_geom)
+	EOT
+        read work_x0 work_y0 work_xdim work_ydim DISCARD <<- EOT
+		$(xprop -root _NET_WORKAREA |
+		awk 'BEGIN{FS=" = "} {print $2}' |
+		tr -d ",")
+	EOT
+        # This is the only practical assumption I can see: if there are
+        # panels/docks, they are all on the "primary" monitor (i.e., the
+        # one with (0,0) origin...)
+        if [ $output_x0 -eq 0 ] && [ $output_y0 -eq 0 ]
+        then
+                [ $work_x0   -le $output_xdim ] && act_x0=$work_x0 || act_x0=$output_x0
+                [ $work_xdim -le $output_xdim ] && act_xdim=$work_xdim || act_xdim=$output_xdim
+                [ $work_y0   -le $output_ydim ] && act_y0=$work_y0 || act_y0=$output_y0
+                [ $work_ydim -le $output_ydim ] && act_ydim=$work_ydim || act_ydim=$output_ydim
+        else
+                act_x0=$output_x0
+                act_xdim=$output_xdim
+                act_y0=$output_y0
+                act_ydim=$output_ydim
+        fi
+        echo $act_x0 $act_y0 $act_xdim $act_ydim
+}
+
+win_frame() {
+        # Get current window's frame extension)
+        #
+        xprop -id ${1:-$(actwin_id)} _NET_FRAME_EXTENTS |
+        awk 'BEGIN{FS=" = "} {print $2}' |
+        tr -d ","
+}
+
+tile() {
+        # Tile specified window to top, bottom, left or right of the screen
+        # or
+        # tile visible windows horizontally or vertically
+        #
+        # Note: wmctrl will place windows *and* *frame* according to
+        #       "-e" option (but the dimension does't consider the
+        #       frame extension)
+        #
+        echo ${1:-t} |& IFS="_" read -p tile_action tile_gap
+        tile_gap=${tile_gap:-2}
+        win_id=${2:-$(actwin_id)}
+        read act_x0 act_y0 act_xdim act_ydim <<- EOT
+		$(win_actarea)
+	EOT
+        read frame_l frame_r frame_t frame_b <<- EOT
+		$(win_frame)
+	EOT
+        wmctrl -i -r $win_id -b remove,maximized_horz,maximized_vert
+        case $tile_action in
+        t)
+                win_y0=$act_y0
+                win_ydim=$(expr $act_ydim / 2 - $frame_t - $frame_b - $tile_gap / 2)
+                wmctrl -i -r $win_id -b add,maximized_horz
+                wmctrl -i -r $win_id -e 0,-1,$win_y0,-1,$win_ydim
+                ;;
+        b)
+                win_y0=$(expr $act_y0 + $act_ydim / 2 + $tile_gap / 2)
+                win_ydim=$(expr $act_ydim / 2 - $frame_t - $frame_b - $tile_gap / 2)
+                wmctrl -i -r $win_id -b add,maximized_horz
+                wmctrl -i -r $win_id -e 0,-1,$win_y0,-1,$win_ydim
+                ;;
+        l)
+                win_x0=$act_x0
+                win_xdim=$(expr $act_xdim / 2 - $frame_r - $frame_l - $tile_gap / 2)
+                wmctrl -i -r $win_id -b add,maximized_vert
+                wmctrl -i -r $win_id -e 0,$win_x0,-1,$win_xdim,-1
+                ;;
+        r)
+                win_x0=$(expr $act_x0 + $act_xdim / 2 + $tile_gap / 2)
+                win_xdim=$(expr $act_xdim / 2 - $frame_r - $frame_l - $tile_gap / 2)
+                wmctrl -i -r $win_id -b add,maximized_vert
+                wmctrl -i -r $win_id -e 0,$win_x0,-1,$win_xdim,-1
+                ;;
+        tl)
+                win_x0=$act_x0
+                win_y0=$act_y0
+                win_xdim=$(expr $act_xdim / 2 - $frame_r - $frame_l - $tile_gap / 2)
+                win_ydim=$(expr $act_ydim / 2 - $frame_t - $frame_b - $tile_gap / 2)
+                wmctrl -i -r $win_id -e 0,$win_x0,$win_y0,$win_xdim,$win_ydim
+                ;;
+        tr)
+                win_x0=$(expr $act_x0 + $act_xdim / 2 + $tile_gap / 2)
+                win_y0=$act_y0
+                win_xdim=$(expr $act_xdim / 2 - $frame_r - $frame_l - $tile_gap / 2)
+                win_ydim=$(expr $act_ydim / 2 - $frame_t - $frame_b - $tile_gap / 2)
+                wmctrl -i -r $win_id -e 0,$win_x0,$win_y0,$win_xdim,$win_ydim
+                ;;
+        bl)
+                win_x0=$act_x0
+                win_y0=$(expr $act_y0 + $act_ydim / 2 + $tile_gap / 2)
+                win_xdim=$(expr $act_xdim / 2 - $frame_r - $frame_l - $tile_gap / 2)
+                win_ydim=$(expr $act_ydim / 2 - $frame_t - $frame_b - $tile_gap / 2)
+                wmctrl -i -r $win_id -e 0,$win_x0,$win_y0,$win_xdim,$win_ydim
+                ;;
+        br)
+                win_x0=$(expr $act_x0 + $act_xdim / 2 + $tile_gap / 2)
+                win_y0=$(expr $act_y0 + $act_ydim / 2 + $tile_gap / 2)
+                win_xdim=$(expr $act_xdim / 2 - $frame_r - $frame_l - $tile_gap / 2)
+                win_ydim=$(expr $act_ydim / 2 - $frame_t - $frame_b - $tile_gap / 2)
+                wmctrl -i -r $win_id -e 0,$win_x0,$win_y0,$win_xdim,$win_ydim
+                ;;
+        h)
+                viswin_no=$(viswin_ids | wc -l)
+                tile t_$tile_gap
+                win_xdim=$(expr \( $act_xdim - \
+                                   $tile_gap \* \( $viswin_no - 1 \) - \
+                                   \( $frame_l + $frame_r \) \* $viswin_no \) / $viswin_no)
+                win_y0=$(expr $act_y0 + $act_ydim / 2 + $tile_gap / 2)
+                win_ydim=$(expr $act_ydim / 2 - $frame_t - $frame_b - $tile_gap / 2)
+                win_cnt=0
+                for viswin_id in $(viswin_ids)
+                do
+                        win_cnt=$(expr $win_cnt + 1)
+                        win_x0=$(expr $act_x0 + \( $win_xdim + $frame_l + $frame_r + $tile_gap \) \* \( $win_cnt - 1 \))
+                        wmctrl -i -r $viswin_id -b remove,maximized_horz,maximized_vert
+                        wmctrl -i -r $viswin_id -e 0,$win_x0,$win_y0,$win_xdim,$win_ydim
+                done
+                ;;
+        v)
+                viswin_no=$(viswin_ids | wc -l)
+                tile l_$tile_gap
+                win_x0=$(expr $act_x0 + $act_xdim / 2 + $tile_gap / 2)
+                win_xdim=$(expr $act_xdim / 2 - $frame_l - $frame_r - $tile_gap / 2)
+                win_ydim=$(expr \( $act_ydim - \
+                                   $tile_gap \* \( $viswin_no - 1 \) - \
+                                   \( $frame_t + $frame_b \) \* $viswin_no \) / $viswin_no)
+                win_cnt=0
+                for viswin_id in $(viswin_ids)
+                do
+                        win_cnt=$(expr $win_cnt + 1)
+                        win_y0=$(expr $act_y0 + \( $win_ydim + $frame_t + $frame_b + $tile_gap \) \* \( $win_cnt - 1 \))
+                        wmctrl -i -r $viswin_id -b remove,maximized_horz,maximized_vert
+                        wmctrl -i -r $viswin_id -e 0,$win_x0,$win_y0,$win_xdim,$win_ydim
+                done
+                ;;
+        *)
+                ;;
+        esac
+}
+
+move2ws() {
+        # Move window to workspace (and optionally activate it)
+        #
+        echo ${1:-$(curr_ws)} |& IFS="_" read -p ws activate
+        win_id="${2:-$(actwin_id)}"
+        wmctrl -i -r $win_id -t $ws
+        [ "$activate" = a ] && wmctrl -i -a $win_id
+}
+
+winaction() {
+        action="${1:-max}"
+        win_id="${2:-$(actwin_id)}"
+        case $action in
+        max*)
+                # Toggle maximized state of window (and optionally raise it)
+                #
+                wmctrl -i -r $win_id -b toggle,maximized_horz,maximized_vert
+                [ "${action%rise}" != $action ] && wmctrl -i -a $win_id
+                ;;
+        kill)
+                # Kill a client by its X resource
+                #
+                xkill -id "$win_id"
+                ;;
+        esac
+}
+
+# main() {
+        case "$(basename $0)" in
+        wmprocs)
+                command="${1:-usage}"
+                action="${2:-""}"
+                win_id="${3:-""}"
+                ;;
+        tile | move2ws | winaction)
+                command="$(basename $0)"
+                action="${1:-""}"
+                win_id="${2:-""}"
+                ;;
+        *)
+                _usage
+                exit
+                ;;
+        esac
+
+        case "$command" in
+        mk_links)
+                ln -s $0 $(dirname $0)/tile
+                ln -s $0 $(dirname $0)/move2ws
+                ln -s $0 $(dirname $0)/winaction
+                ;;
+        rm_links)
+                rm -f $(dirname $0)/tile
+                rm -f $(dirname $0)/move2ws
+                rm -f $(dirname $0)/winaction
+                ;;
+        tile | move2ws | winaction)
+                "$command" "$action" "$win_id"
+                ;;
+        help)
+                _help | ${PAGER:-less}
+                ;;
+        *)
+                _usage
+                exit
+                ;;
+        esac
+        exit 0
+# }

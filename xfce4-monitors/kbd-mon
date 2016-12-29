@@ -1,0 +1,9 @@
+#!/bin/sh
+
+# Note: in xfce4-keyboard-settings -> Layout,
+#       set "Use system default"
+
+KBD_LAYOUT=$(setxkbmap -query | grep layout | awk '{print $2}')
+KBD_ICON="<img>/home/just22/.local/share/icons/kbd.png</img>"
+
+printf "%s<txt>%2s</txt><click>toggle-kb-layout</click><tool></tool>" "$KBD_ICON" "$KBD_LAYOUT"

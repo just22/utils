@@ -1,0 +1,8 @@
+#!/bin/sh
+
+# Note: in xfce4-keyboard-settings -> Layout,
+#       set "Use system default"
+
+USER_ICON="<img>/home/just22/.local/share/icons/user.png</img>"
+
+printf "%s<txt>%s</txt><click>session-logout</click><tool></tool>" "$USER_ICON" "$USER"

@@ -1,0 +1,12 @@
+#!/bin/sh
+
+current_layout=$(setxkbmap -query | grep layout | awk '{print $2}')
+
+case $current_layout in
+it)
+        setxkbmap us
+        ;;
+us)
+        setxkbmap it
+        ;;
+esac
