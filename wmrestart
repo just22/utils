@@ -10,33 +10,35 @@
 exec >/dev/null 2>&1
 
 # Clean up statusbar area
-pkill -x dzen2
-pkill -x space_dapp
-
-# Turn off desktop manager
-pcmanfm --desktop-off
+if pkill -x space_dapp; then
+        restart_desktop_app=1
+        pkill -x dzen2
+        pcmanfm --desktop-off
+fi
 
 # Change display layout
 xrandr $@
 
-# Restart statusbar
-(sleep 2; statusbar) &
-(sleep 3; space_dapp) &
+if [ $restart_desktop_app = 1 ]; then
+        # Restart statusbar
+        (sleep 2; statusbar) &
+        (sleep 3; space_dapp) &
 
-# Restart window manager
-if pgrep -x fluxbox; then
-        fbsetroot -gradient Vertical -from rgb:07/36/42 -to rgb:58/6E/75
-        fluxbox-remote restart
-elif pgrep -x openbox; then
-        xsetroot -solid rgb:58/6E/75
-        #openbox --restart
-elif pgrep -x fvwm2; then
-        xsetroot -solid rgb:58/6E/75
-        FvwmCommand Restart
+        # Restart window manager
+        if pgrep -x fluxbox; then
+                fbsetroot -gradient Vertical -from rgb:07/36/42 -to rgb:58/6E/75
+                #fluxbox-remote restart
+        elif pgrep -x openbox; then
+                xsetroot -solid rgb:58/6E/75
+                #openbox --restart
+        elif pgrep -x fvwm2; then
+                xsetroot -solid rgb:58/6E/75
+                FvwmCommand Restart
+        fi
+
+        # Wallpaper setting
+        [ -x ~/.fehbg ] && ~/.fehbg
+
+        # Launch desktop manager
+        pcmanfm --desktop &
 fi
-
-# Wallpaper setting
-[ -x ~/.fehbg ] && ~/.fehbg
-
-# Launch desktop manager
-pcmanfm --desktop &
