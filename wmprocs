@@ -8,9 +8,9 @@
 # ----------------------------------------------------------------------
 
 _sinopsys() {
-        echo "wmprocs tile <tile_action>[_<tile_gap>] [<win_id>]"
-        echo "wmprocs move2ws <ws>[_a] [<win_id>]"
-        echo "wmprocs winaction <win_action> [<win_id>]"
+        echo "wmprocs tile <tile_action> [-g <tile_gap>] [-w <win_id>]"
+        echo "wmprocs move2ws <ws> [-a] [-w <win_id>]"
+        echo "wmprocs winaction <win_action> [-w <win_id>]"
         echo "wmprocs mk_links|rm_links"
         echo "wmprocs help"
 }
@@ -38,12 +38,11 @@ _help() {
         echo "tile:"
         echo "{t,b,l,r} tiles window to the top, bottom, left or right;"
         echo "{h,v} tiles visible windows horizontally or vertically;"
-        echo "set tile_gap to the desired space between windows (default: 2px)"
-        echo "and append it to <tile_action> as suffix prepended by \"_\";"
+        echo "tile gap between windows can be specified through -t option"
+        echo "(default: 2px);"
         echo ""
         echo "move2ws:"
-        echo "moves window to the specified workspace (and optionally"
-        echo "activates it (when \"_a\" suffix is appended to <ws>);"
+        echo "moves window to the specified workspace; -a activates it;"
         echo ""
         echo "winaction:"
         echo "Performs various actions on current window, according to <win_action>:"
@@ -51,8 +50,8 @@ _help() {
         echo "maxrise: same of max, but also rise the window"
         echo "kill:    kill a client by its X resource"
         echo ""
-        echo "Note that it is possible to specify the id of the window on which"
-        echo "the action must be executed; it defaults to the active window."
+        echo "The id of the window on which the action must be executed can"
+        echo "always be specified through -w option; it defaults to the active one"
         echo ""
         echo "In order to simplify the procedure usage, the action to perform"
         echo "may be specified through the command name itself: just make a"
@@ -186,9 +185,9 @@ tile() {
         #       "-e" option (but the dimension does't consider the
         #       frame extension)
         #
-        echo ${1:-t} |& IFS="_" read -p tile_action tile_gap
-        tile_gap=${tile_gap:-2}
-        win_id=${2:-$(actwin_id)}
+        tile_action=$1
+        tile_gap=${2:-2}
+        win_id=${3:-$(actwin_id)}
         read act_x0 act_y0 act_xdim act_ydim <<- EOT
 		$(win_actarea)
 	EOT
@@ -291,10 +290,11 @@ tile() {
 move2ws() {
         # Move window to workspace (and optionally activate it)
         #
-        echo ${1:-$(curr_ws)} |& IFS="_" read -p ws activate
-        win_id="${2:-$(actwin_id)}"
+        ws=${1:-$(curr_ws)}
+        activate=${2:-0}
+        win_id="${3:-$(actwin_id)}"
         wmctrl -i -r $win_id -t $ws
-        [ "$activate" = a ] && wmctrl -i -a $win_id
+        [ "$activate" = 1 ] && wmctrl -i -a $win_id
 }
 
 winaction() {
@@ -318,21 +318,68 @@ winaction() {
 # main() {
         case "$(basename $0)" in
         wmprocs)
-                command="${1:-usage}"
-                action="${2:-""}"
-                win_id="${3:-""}"
+                if [ $# -eq 0 ]; then
+                        _usage
+                        exit 1
+                else
+                        command="$1"
+                        shift
+                fi
                 ;;
         tile | move2ws | winaction)
                 command="$(basename $0)"
-                action="${1:-""}"
-                win_id="${2:-""}"
                 ;;
         *)
                 _usage
-                exit
+                exit 1
                 ;;
         esac
 
+        # Action *must* always be specified in command line
+        if [ $# -eq 0 ]; then
+                _usage
+                exit 1
+        else
+                action="${1:-""}"; shift
+        fi
+
+        # Optional argument parsing
+        while [ $# -gt 0 ]; do
+                case "$1" in
+                -g)
+                        if [ "$command" != tile ] || [ $# -lt 2 ]; then
+                                _usage
+                                exit 1
+                        else
+                                shift
+                                tile_gap="$1"
+                        fi
+                        ;;
+                -a)
+                        if [ "$command" != move2ws ]; then
+                                _usage
+                                exit 1
+                        else
+                                activate_ws=1
+                        fi
+                        ;;
+                -w)
+                        if [ $# -lt 2 ]; then
+                                _usage
+                                exit 1
+                        else
+                                shift
+                                win_id="$1"
+                        fi
+                        ;;
+                *)
+                        _usage
+                        exit 1
+                esac
+                shift
+        done
+
+        win_id=${win_id:-""}
         case "$command" in
         mk_links)
                 ln -s $0 $(dirname $0)/tile
@@ -344,8 +391,14 @@ winaction() {
                 rm -f $(dirname $0)/move2ws
                 rm -f $(dirname $0)/winaction
                 ;;
-        tile | move2ws | winaction)
-                "$command" "$action" "$win_id"
+        tile)
+                tile "$action" "${tile_gap:-""}" "$win_id"
+                ;;
+        move2ws)
+                move2ws "$action" "${activate_ws:-""}" "$win_id"
+                ;;
+        winaction)
+                winaction "$action" "$win_id"
                 ;;
         help)
                 _help | ${PAGER:-less}
