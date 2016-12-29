@@ -18,4 +18,4 @@ else
         VOL_ICON="<img>/usr/local/share/icons/gnome/16x16/status/audio-volume-medium.png</img>"
 fi
 
-printf "%s<txt>%-3s</txt><click>vol-launcher</click><tool></tool>" "$VOL_ICON" "$VOL_LEVEL%"
+printf "%s<txt>%-4s</txt><click>vol-launcher</click><tool></tool>" "$VOL_ICON" "$VOL_LEVEL%"
