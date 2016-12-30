@@ -120,11 +120,7 @@ win_output_geom() {
         1.0|1.1)
                 # Extend not supported, just report the output geometry
                 # with +0+0 origin
-                read xdim ydim x0 y0 <<- EOT
-			xrandr -q |
-			grep "^*" |
-			awk '{printf "%d %d 0 0", $2, $4}'
-		EOT
+                xrandr -q | grep "^*" | awk '{printf "%dx%d+0+0", $2, $4}'
                 ;;
         *)
                 read w_x0 w_y0 <<- EOT
