@@ -8,9 +8,9 @@
 # ----------------------------------------------------------------------
 
 _sinopsys() {
-        echo "wmprocs tile <tile_action> [-g <tile_gap>] [-w <win_id>]"
-        echo "wmprocs move2ws <ws> [-a] [-w <win_id>]"
-        echo "wmprocs winaction <win_action> [-w <win_id>]"
+        echo "wmprocs tile [<tile_action>] [-g <tile_gap>] [-w <win_id>]"
+        echo "wmprocs move2ws [<ws>] [-a] [-w <win_id>]"
+        echo "wmprocs winaction [<win_action>] [-w <win_id>]"
         echo "wmprocs mk_links|rm_links"
         echo "wmprocs help"
 }
@@ -36,13 +36,14 @@ _help() {
         echo "The options are as follows:"
         echo ""
         echo "tile:"
-        echo "{t,b,l,r} tiles window to the top, bottom, left or right;"
+        echo "{t,b,l,r} tiles window to the top (default), bottom, left or right;"
         echo "{h,v} tiles visible windows horizontally or vertically;"
         echo "tile gap between windows can be specified through -t option"
         echo "(default: 2px);"
         echo ""
         echo "move2ws:"
-        echo "moves window to the specified workspace; -a activates it;"
+        echo "moves window to the specified workspace (by default, current one)"
+        echo "-a activates it;"
         echo ""
         echo "winaction:"
         echo "Performs various actions on current window, according to <win_action>:"
@@ -123,6 +124,9 @@ win_output_geom() {
                 xrandr -q | grep "^*" | awk '{printf "%dx%d+0+0", $2, $4}'
                 ;;
         *)
+                # Get geometry of the screen output containing current
+                # window's origin
+                #
                 read w_x0 w_y0 <<- EOT
 			$(win_orig)
 		EOT
@@ -194,7 +198,7 @@ tile() {
         #       "-e" option (but the dimension does't consider the
         #       frame extension)
         #
-        tile_action=$1
+        tile_action=${1:-t}
         tile_gap=${2:-2}
         win_id=${3:-$(actwin_id)}
         read act_x0 act_y0 act_xdim act_ydim <<- EOT
@@ -259,7 +263,7 @@ tile() {
                 ;;
         h)
                 viswin_no=$(viswin_ids | wc -l)
-                tile t_$tile_gap
+                tile t $tile_gap ""
                 win_xdim=$(expr \( $act_xdim - \
                                    $tile_gap \* \( $viswin_no - 1 \) - \
                                    \( $frame_l + $frame_r \) \* $viswin_no \) / $viswin_no)
@@ -276,7 +280,7 @@ tile() {
                 ;;
         v)
                 viswin_no=$(viswin_ids | wc -l)
-                tile l_$tile_gap
+                tile l $tile_gap ""
                 win_x0=$(expr $act_x0 + $act_xdim / 2 + $tile_gap / 2)
                 win_xdim=$(expr $act_xdim / 2 - $frame_l - $frame_r - $tile_gap / 2)
                 win_ydim=$(expr \( $act_ydim - \
@@ -292,6 +296,8 @@ tile() {
                 done
                 ;;
         *)
+                _usage
+                exit 1
                 ;;
         esac
 }
@@ -300,10 +306,17 @@ move2ws() {
         # Move window to workspace (and optionally activate it)
         #
         ws=${1:-$(curr_ws)}
-        activate=${2:-0}
-        win_id="${3:-$(actwin_id)}"
-        wmctrl -i -r $win_id -t $ws
-        [ "$activate" = 1 ] && wmctrl -i -a $win_id
+        if env test "$ws" -lt $(xprop -root _NET_NUMBER_OF_DESKTOPS |
+                                awk 'BEGIN{FS=" = "} {print $2}') 2>/dev/null
+        then
+                activate=${2:-0}
+                win_id="${3:-$(actwin_id)}"
+                wmctrl -i -r $win_id -t $ws
+                [ "$activate" = 1 ] && wmctrl -i -a $win_id
+        else
+                _usage
+                exit 1
+        fi
 }
 
 winaction() {
@@ -320,6 +333,10 @@ winaction() {
                 # Kill a client by its X resource
                 #
                 xkill -id "$win_id"
+                ;;
+        *)
+                _usage
+                exit 1
                 ;;
         esac
 }
@@ -343,15 +360,6 @@ winaction() {
                 exit 1
                 ;;
         esac
-
-        # Action *must* always be specified in command line, except for
-        # *_links commands
-        if [ $# -eq 0 -a "${command%_links}" = "$command" ]; then
-                _usage
-                exit 1
-        else
-                action="${1:-""}"; shift
-        fi
 
         # Optional argument parsing
         while [ $# -gt 0 ]; do
@@ -383,13 +391,12 @@ winaction() {
                         fi
                         ;;
                 *)
-                        _usage
-                        exit 1
+                        action=$1
+                        ;;
                 esac
                 shift
         done
 
-        win_id=${win_id:-""}
         case "$command" in
         mk_links)
                 ln -s $0 $(dirname $0)/tile
@@ -402,20 +409,20 @@ winaction() {
                 rm -f $(dirname $0)/winaction
                 ;;
         tile)
-                tile "$action" "${tile_gap:-""}" "$win_id"
+                tile "${action:-""}" "${tile_gap:-""}" "${win_id:=""}"
                 ;;
         move2ws)
-                move2ws "$action" "${activate_ws:-""}" "$win_id"
+                move2ws "${action:-""}" "${activate_ws:-""}" "${win_id:-""}"
                 ;;
         winaction)
-                winaction "$action" "$win_id"
+                winaction "${action:-""}" "${win_id:-""}"
                 ;;
         help)
                 _help | ${PAGER:-less}
                 ;;
         *)
                 _usage
-                exit
+                exit 1
                 ;;
         esac
         exit 0
