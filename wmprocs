@@ -116,26 +116,39 @@ win_orig() {
 win_output_geom() {
         # Get the geometry of screen where current window is placed in
         #
-        read w_x0 w_y0 <<- EOT
-		$(win_orig)
-	EOT
-        for output_geom in \
-                $(xrandr -q |
-                  egrep "\<connected\>" |
-                  egrep -o "[0-9]+x[0-9]+\+[0-9]+\+[0-9]+")
-        do
-                IFS="x+" read xdim ydim x0 y0 <<- EOT
-			$(echo $output_geom)
+        case $(xrandr -v | grep "RandR version" | awk '{print $NF}') in
+        1.0|1.1)
+                # Extend not supported, just report the output geometry
+                # with +0+0 origin
+                read xdim ydim x0 y0 <<- EOT
+			xrandr -q |
+			grep "^*" |
+			awk '{printf "%d %d 0 0", $2, $4}'
 		EOT
-                if [ $x0 -le $w_x0 ] &&
-                   [ $w_x0 -le $(expr $x0 + $xdim) ] &&
-                   [ $y0 -le $w_y0 ] &&
-                   [ $w_y0 -le $(expr $y0 + $ydim) ]
-                then
-                        echo $output_geom
-                        break
-                fi
-        done
+                ;;
+        *)
+                read w_x0 w_y0 <<- EOT
+			$(win_orig)
+		EOT
+                for output_geom in \
+                        $(xrandr -q |
+                          egrep "\<connected\>" |
+                          egrep -o "[0-9]+x[0-9]+\+[0-9]+\+[0-9]+")
+                do
+                        IFS="x+" read xdim ydim x0 y0 <<- EOT
+				$(echo $output_geom)
+			EOT
+                        if [ $x0 -le $w_x0 ] &&
+                           [ $w_x0 -le $(expr $x0 + $xdim) ] &&
+                           [ $y0 -le $w_y0 ] &&
+                           [ $w_y0 -le $(expr $y0 + $ydim) ]
+                        then
+                                echo $output_geom
+                                break
+                        fi
+                done
+                ;;
+        esac
 }
 
 win_actarea() {
