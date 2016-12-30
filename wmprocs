@@ -335,8 +335,9 @@ winaction() {
                 ;;
         esac
 
-        # Action *must* always be specified in command line
-        if [ $# -eq 0 ]; then
+        # Action *must* always be specified in command line, except for
+        # *_links commands
+        if [ $# -eq 0 -a "${command%_links}" = "$command" ]; then
                 _usage
                 exit 1
         else
