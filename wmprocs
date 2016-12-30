@@ -22,8 +22,7 @@ _usage() {
 
 _help() {
         echo "NAME"
-        echo "wmprocs - Common window manager actions"
-        echo "wmprocs - Poor man's window tiling"
+        echo "wmprocs - Common window management actions"
         echo
         echo "SINOPSYS"
         _sinopsys
@@ -32,38 +31,36 @@ _help() {
         echo "This is a collection of common window management actions;"
         echo "used to be a \"poor man's window tiling\" tool, it is now"
         echo "a suite of procedures intended to integrete WS's capabilities."
-        echo ""
+        echo
         echo "The options are as follows:"
-        echo ""
+        echo
         echo "tile:"
-        echo "{t,b,l,r} tiles window to the top (default), bottom, left or right;"
+        echo "{t,b,l,r} tiles window to the top (default), bottom, left"
+        echo "or right;"
         echo "{h,v} tiles visible windows horizontally or vertically;"
-        echo "tile gap between windows can be specified through -t option"
-        echo "(default: 2px);"
-        echo ""
+        echo "-g specifies the tile gap between windows (default: 2px);"
+        echo
         echo "move2ws:"
-        echo "moves window to the specified workspace (by default, current one)"
-        echo "-a activates it;"
-        echo ""
+        echo "moves window to the specified workspace (by default,"
+        echo "the current one); -a activates it;"
+        echo
         echo "winaction:"
-        echo "Performs various actions on current window, according to <win_action>:"
+        echo "Performs various actions on current window:"
         echo "max:     toggles maximized window's state"
         echo "maxrise: same of max, but also rise the window"
         echo "kill:    kill a client by its X resource"
-        echo ""
-        echo "The id of the window on which the action must be executed can"
-        echo "always be specified through -w option; it defaults to the active one"
-        echo ""
-        echo "In order to simplify the procedure usage, the action to perform"
-        echo "may be specified through the command name itself: just make a"
-        echo "symbolic link to wmprocs named as the desired action and"
+        echo
+        echo "The id of the window may be specified through -w option;"
+        echo "it defaults to the active one"
+        echo
+        echo "In order to simplify the procedure usage, the action may"
+        echo "be specified through the command name itself: just make a"
+        echo "symbolic link to wmprocs named as the intended action and"
         echo "launch the command with the link name."
-        echo ""
+        echo
         echo "Two procedures have been added to ease link management:"
-        echo ""
-        echo "mk_links makes symbolic links in the same directory where wmprocs"
-        echo "is launched from;"
-        echo ""
+        echo "mk_links makes symbolic links in the same directory where"
+        echo "wmprocs is launched from;"
         echo "rm_links removes those links."
 }
 
