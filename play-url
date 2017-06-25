@@ -4,20 +4,21 @@
 #  $Id$
 #
 #  Plays Youtube (or similar) video (url in clipboard)
-#  Dependencies: xclip, youtube-dl, smplayer, curl
+#  Dependencies: xclip, youtube-dl, (s)mplayer, curl
 # ----------------------------------------------------------------------
 
 __usage() {
-        echo "Usage: $(basename $0) [-h] [-t|-g] -p|-s|-c|<URL>"
+        echo "Usage: $(basename $0) [-t|-g] [-d] -p|-s|-c|<URL>"
         echo "-h This help message"
         echo "-t Use curl to transfer URL data"
         echo "-g Use mplayer GUI (smplayer)"
+        echo "-d Force use of youtube-dl"
         echo "-p URL in XA_PRIMARY"
         echo "-s URL in XA_SECONDARY"
         echo "-c URL in XA_CLIPBOARD"
 }
 
-if [[ $# -lt 1 ]] || [[ $# -gt 2 ]]; then
+if [[ $# -lt 1 ]] || [[ $# -gt 3 ]]; then
         __usage
         exit 1
 fi
@@ -33,6 +34,9 @@ while [ $# -gt 0 ]; do
                 ;;
         -g)
                 PLAYER="smplayer"
+                ;;
+        -d)
+                USE_YTDL=1
                 ;;
         -p)
                 URL_IN_CLIP=primary
@@ -51,16 +55,19 @@ while [ $# -gt 0 ]; do
 done
 
 URL="${URL-$(xclip -o -selection $URL_IN_CLIP)}"
-PLAYER="${PLAYER-mplayer}"
+[ -n "$USE_YTDL" ] && URL="$(youtube-dl -f best -g $URL)"
+
+PLAYER="${PLAYER-mplayer -cache 4096}"
+
 if [ -z "$URL" ]; then
         echo "$(basename $0): No URL in clipboard"
         exit 1
 fi
 
 if [ -n "$USE_CURL" ]; then
-        curl -s $(youtube-dl -f best -g $URL) | $PLAYER -cache 4096 -
+        curl -s "$URL" | $PLAYER -
 else
-        $PLAYER $URL
+        $PLAYER "$URL"
 fi
 
 [ -n "$URL_IN_CLIP" ] && (cat /dev/null | xclip -selection $URL_IN_CLIP)
