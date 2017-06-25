@@ -6,9 +6,6 @@
 #  Toggle statusbar visibility (and its space reservation)
 # ----------------------------------------------------------------------
 
-if xdotool search --onlyvisible --class "dzen" windowunmap; then
-        pkill -x space_dapp
-else
-        xdotool search --class "dzen" windowmap windowraise
-        space_dapp
+if ! xdotool search --onlyvisible --class "dzen" windowunmap %@; then
+        xdotool search --class "dzen" windowmap %@ windowraise %@
 fi
