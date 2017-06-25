@@ -1,0 +1,166 @@
+# ----------------------------------------------------------------------
+#  $Id$
+#
+#  Draw a basic statusbar on the top of primary monitor (using only
+#  base tools and dzen2)
+# ----------------------------------------------------------------------
+
+get_screen_width () {
+        # It works, but could definitely be improved...
+        xrandr -q |
+        grep "\*+" |
+        awk '{print $1}' |
+        cut -d "x" -f 1
+}
+
+show() {
+        dzen2 -ta l \
+              -fn "-xos4-terminus-medium-*-*-*-12-*-*-*-*-*-iso8859-1" \
+              -fg "#073642" \
+              -bg "#EEE8D5" \
+              "$@"
+}
+
+cpu_mem() {
+        cpu_i="^i(/home/just22/.local/share/icons/sm4tik-icon-pack/xbm/cpu.xbm)"
+        mem_i="^i(/home/just22/.local/share/icons/sm4tik-icon-pack/xbm/mem.xbm)"
+        mem_phy=$(sysctl -n hw.physmem)
+        vmstat 2 |& while read -p discard discard discard mem_free restOfLine
+        do
+                cpu_temp=$(sysctl -n hw.sensors.cpu0.temp0 | awk '{printf "%2d°C", $1}')
+                cpu_pol=$(sysctl -n hw.perfpolicy | cut -c -1 | tr \[a-z\] \[A-Z\])
+                case "$mem_free" in
+                *K) mem_free=$(echo $mem_free | tr -d "K" | awk '{print $1*1E3}') ;;
+                *M) mem_free=$(echo $mem_free | tr -d "M" | awk '{print $1*1E6}') ;;
+                *G) mem_free=$(echo $mem_free | tr -d "G" | awk '{print $1*1E9}') ;;
+                *)  ;;
+                esac
+                mem_perc=$((99 - ( 100 * $mem_free / $mem_phy )))
+
+                echo $restOfLine |
+                awk -v cpu_i=$cpu_i -v cpu_temp=$cpu_temp -v cpu_pol=$cpu_pol -v mem_i=$mem_i -v mem_perc=$mem_perc \
+                        '{printf " %s %2d%% %s %s   %s %2d%%  \n", cpu_i, 100 * ($(NF-2)+$(NF-1)) / 101, cpu_temp, cpu_pol, mem_i, mem_perc}' ||
+                exit
+        done | show -x $x_off -w 142 "$@"
+}
+
+io() {
+        disk_i="^i(/home/just22/.local/share/icons/sm4tik-icon-pack/xbm/diskette.xbm)"
+        d="$1"; shift
+        iostat "$d" 2 |& while read -p line
+        do
+                echo $line |
+                awk -v disk_i=$disk_i '{printf " %s %5.2f MB/s  \n", disk_i, $5}' ||
+                exit
+        done | show -x $(($x_off + 142)) -w 92 "$@"
+}
+
+ifspeed() {
+        up_i="^i(/home/just22/.local/share/icons/sm4tik-icon-pack/xbm/net_up_02.xbm)"
+        down_i="^i(/home/just22/.local/share/icons/sm4tik-icon-pack/xbm/net_down_02.xbm)"
+        i="$1"; shift
+        ifstat -i "$i" 2 |& while read -p line
+        do
+                echo $line |
+                awk -v up_i=$up_i -v down_i=$down_i -v iface="$i" \
+                        '{printf " %s %5.2f MB/s   %s %5.2f MB/s  \n", up_i, $1/1000, down_i, $2/1000}' ||
+                exit
+        done | show -x $(( x_off + 234)) -w 184 "$@"
+}
+
+batt() {
+        while sleep 2
+        do
+                ac_conn=$(apm -a)
+                b_perc=$((100 * $(apm -l) / 101))
+                if [ "$ac_conn" -eq 1 ]; then
+                        batt_i="^i(/home/just22/.local/share/icons/stlarch_icons/ac15.xbm)"
+                elif [ "$b_perc" -ge 65 ]; then
+                        batt_i="^i(/home/just22/.local/share/icons/stlarch_icons/batt5full.xbm)"
+                elif [ "$b_perc" -le 15 ]; then
+                        batt_i="^i(/home/just22/.local/share/icons/stlarch_icons/batt5empty.xbm)"
+                else
+                        batt_i="^i(/home/just22/.local/share/icons/stlarch_icons/batt5half.xbm)"
+                fi
+
+                echo $(apm -m) |
+                if [ "$ac_conn" -eq 1 ]; then
+                        printf " %s %2d%% (-:--)  \n" "$batt_i" "$b_perc"
+                else
+                        awk -v batt_i=$batt_i -v b_perc=$b_perc \
+                                '{printf " %s %2d%% (%1d:%02d)  \n", batt_i, b_perc, $1/60, $1%60}'
+                fi || exit
+        done | show -x $(( $x_off + 418)) -w 92 "$@"
+}
+
+vol() {
+        while sleep 2
+        do
+                v_level="$(mixerctl -n outputs.master | awk 'BEGIN{FS=","} {printf "%d", 100 * $2 / 256}')"
+                v_mute="$(mixerctl -n outputs.master.mute)"
+
+                if [ "$v_level" -eq 0 -o "$v_mute" == "on" ]; then
+                        vol_i="^i(/home/just22/.local/share/icons/sm4tik-icon-pack/xbm/spkr_02.xbm)"
+                else
+                        vol_i="^i(/home/just22/.local/share/icons/sm4tik-icon-pack/xbm/spkr_01.xbm)"
+                fi
+
+                printf " %s %2d%%  \n"  "$vol_i" "$v_level" 2>/dev/null || exit
+        done | show -x $(($x_off + 510)) -w 50 "$@"
+}
+
+kbd() {
+        kbd_i="^i(/home/just22/.local/share/icons/kbd.xbm)"
+        while sleep 2
+        do
+                setxkbmap -query | grep layout |
+                awk -v kbd_i=$kbd_i '{printf " %s %s  \n", kbd_i, $2}' || exit
+        done | show -x $(($x_off + 560)) -w 50 "$@"
+}
+
+actwin_title() {
+        win_i="^i(/home/just22/.local/share/icons/stlarch_icons/ntile.xbm)"
+        while sleep 1
+        do
+                echo " $win_i $(xdotool getwindowfocus getwindowname)" || exit
+                #echo " $win_i $(xprop -id $(xprop -root _NET_ACTIVE_WINDOW |
+                #               awk -F '#' '{print $2}') WM_NAME |
+                #               sed "s/WM_NAME(STRING) = \"//; s/\"$//")" || exit
+        done | show "$@"
+}
+
+date_time() {
+        sw="$1"; shift
+        while sleep 2
+        do
+                date +"   %a %d %b (%V) - %R" || exit
+        done | show -x $(($sw - $x_off - 162)) -w 162 "$@"
+}
+
+# main {
+        x_off=${1-0}
+        sn=0
+        for sw in $(get_screen_width); do
+                sn=$((sn + 1))
+
+                if [ "$sn" -eq 1 ]; then
+                        cpu_mem -xs 1         &
+                        io sd0  -xs 1         &
+                        ifspeed trunk0 -xs 1  &
+                        batt -xs 1            &
+                        vol  -xs 1            &
+                        kbd  -xs 1            &
+                        if [ "$XSESSION_CMD" == cwm ]; then
+                                actwin_title -x 610 -w $(($sw - $x_off - 610 - 162)) -xs 1 &
+                                date_time "$sw" -xs 1 &
+                        else
+                                show -p -x $(($x_off + 610)) -w $(($sw - $x_off - 610 - 163)) -xs 1 &
+                        fi
+                else
+                        if [ "$XSESSION_CMD" == cwm ]; then
+                                actwin_title -w $(($sw - -$x_off - 162)) -xs "$sn" &
+                                date_time "$sw" -xs "$sn" &
+                        fi
+                fi
+        done
+# }
