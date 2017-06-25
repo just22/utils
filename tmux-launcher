@@ -6,8 +6,4 @@
 #  Simple launcher for tmux
 # ----------------------------------------------------------------------
 
-#exo-open --launch TerminalEmulator \
-#        sh -c "tmux attach-session -d || \
-#               tmux new-session"
-
-xterm -e "tmux attach-session -d || tmux new-session"
+tmux attach-session -d || tmux new-session
