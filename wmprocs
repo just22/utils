@@ -11,6 +11,7 @@ _sinopsys() {
         echo "wmprocs tile [<tile_action>] [-g <tile_gap>] [-w <win_id>]"
         echo "wmprocs move2ws [<ws>] [-a] [-w <win_id>]"
         echo "wmprocs winaction [<win_action>] [-w <win_id>]"
+        echo "wmprocs getwinid <searchStr>"
         echo "wmprocs mk_links|rm_links"
         echo "wmprocs help"
 }
@@ -47,8 +48,12 @@ _help() {
         echo "winaction:"
         echo "Performs various actions on current window:"
         echo "max:     toggles maximized window's state"
-        echo "maxrise: same of max, but also rise the window"
+        echo "maxraise: same of max, but also raise the window"
         echo "kill:    kill a client by its X resource"
+        echo
+        echo "getwinid:"
+        echo "gets id of the window matching <searchStr> in WM_CLASS or"
+        echo "WM_TITLE fields;"
         echo
         echo "The id of the window may be specified through -w option;"
         echo "it defaults to the active one"
@@ -320,11 +325,15 @@ winaction() {
         action="${1:-max}"
         win_id="${2:-$(actwin_id)}"
         case $action in
-        max*)
+        *max*)
                 # Toggle maximized state of window (and optionally raise it)
                 #
-                wmctrl -i -r $win_id -b toggle,maximized_horz,maximized_vert
-                [ "${action%rise}" != $action ] && wmctrl -i -a $win_id
+                if [ "${action#force}" != $action ]; then
+                        wmctrl -i -r $win_id -b add,maximized_horz,maximized_vert
+                else
+                        wmctrl -i -r $win_id -b toggle,maximized_horz,maximized_vert
+                fi
+                [ "${action%raise}" != $action ] && wmctrl -i -a $win_id
                 ;;
         kill)
                 # Kill a client by its X resource
@@ -338,6 +347,22 @@ winaction() {
         esac
 }
 
+getwinid() {
+        if [ -n "$1" ]; then
+                for win_id in $(win_ids); do
+                        if xprop -id $win_id WM_NAME WM_CLASS |
+                           grep "$1" >/dev/null 2>&1
+                        then
+                                echo $win_id
+                                break
+                        fi
+                done
+        else
+                _usage
+                exit 1
+        fi
+}
+
 # main() {
         case "$(basename $0)" in
         wmprocs)
@@ -349,7 +374,7 @@ winaction() {
                         shift
                 fi
                 ;;
-        tile | move2ws | winaction)
+        tile | move2ws | winaction | getwinid)
                 command="$(basename $0)"
                 ;;
         *)
@@ -399,11 +424,13 @@ winaction() {
                 ln -s $0 $(dirname $0)/tile
                 ln -s $0 $(dirname $0)/move2ws
                 ln -s $0 $(dirname $0)/winaction
+                ln -s $0 $(dirname $0)/getwinid
                 ;;
         rm_links)
                 rm -f $(dirname $0)/tile
                 rm -f $(dirname $0)/move2ws
                 rm -f $(dirname $0)/winaction
+                rm -f $(dirname $0)/getwinid
                 ;;
         tile)
                 tile "${action:-""}" "${tile_gap:-""}" "${win_id:=""}"
@@ -413,6 +440,9 @@ winaction() {
                 ;;
         winaction)
                 winaction "${action:-""}" "${win_id:-""}"
+                ;;
+        getwinid)
+                getwinid "${action:-""}"
                 ;;
         help)
                 _help | ${PAGER:-less}
