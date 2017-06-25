@@ -3,7 +3,7 @@
 # ----------------------------------------------------------------------
 #  $Id$
 #
-#  Simple firefox launcher (reuse current instance is already running)
+#  Simple firefox launcher (reuse current instance if already running)
 # ----------------------------------------------------------------------
 
 if [ $# -eq 0 ]; then
