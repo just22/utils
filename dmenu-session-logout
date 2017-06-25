@@ -20,11 +20,22 @@ set -A MENU_ITEMS \
 case "$(printf "%s\n" "${MENU_ITEMS[@]}" |
         dmenu -p Quit: "$@")" in
 Logout)
-        if pgrep -x fluxbox; then
-                fluxbox-remote quit
-        elif pgrep -x openbox; then
+        case "$XSESSION_CMD" in
+        *fluxbox*)
+                fluxbox-remote Exit
+                ;;
+        *xfce*)
+                xfce4-session-logout --logout --fast
+                ;;
+        cwm|twm)
+                pkill "$XSESSION_CMD"
+                ;;
+        *openbox*)
                 openbox --exit
-        fi
+                ;;
+        *)
+                ;;
+        esac
         ;;
 Suspend)
         /usr/sbin/zzz
