@@ -9,36 +9,35 @@
 # No output msgs, please
 exec >/dev/null 2>&1
 
-# Clean up statusbar area
-if pkill -x space_dapp; then
-        restart_desktop_app=1
-        pkill -x dzen2
+# Clean up statusbar
+if pkill -x bbpager; then
+        restart_bbpager=1
+fi
+if pkill -x dzen2; then
+        restart_headup=1
+fi
+if pgrep -x pcmanfm; then
         pcmanfm --desktop-off
+        restart_pcmanfm_desktop=1
 fi
 
 # Change display layout
 xrandr $@
 
-if [ $restart_desktop_app = 1 ]; then
-        # Restart statusbar
-        (sleep 2; statusbar) &
-        (sleep 3; space_dapp) &
-
-        # Restart window manager
-        if pgrep -x fluxbox; then
-                fbsetroot -gradient Vertical -from rgb:07/36/42 -to rgb:58/6E/75
-                #fluxbox-remote restart
-        elif pgrep -x openbox; then
-                xsetroot -solid rgb:58/6E/75
-                #openbox --restart
-        elif pgrep -x fvwm2; then
-                xsetroot -solid rgb:58/6E/75
-                FvwmCommand Restart
-        fi
-
-        # Wallpaper setting
+# Restart window manager
+if pgrep -x fluxbox; then
+        fluxbox-remote Restart
+        fbsetbg -l
+elif pgrep -x openbox; then
+        xsetroot -solid rgb:58/6E/75
+        openbox --restart
         [ -x ~/.fehbg ] && ~/.fehbg
-
-        # Launch desktop manager
-        pcmanfm --desktop &
+elif pgrep -x fvwm2; then
+        xsetroot -solid rgb:58/6E/75
+        FvwmCommand Restart
+        [ -x ~/.fehbg ] && ~/.fehbg
 fi
+
+[ $restart_bbpager -eq 1 ] && bbpager &
+[ $restart_headup  -eq 1 ] && headup
+[ $restart_pcmanfm_desktop  -eq 1 ] && pcmanfm --desktop &
