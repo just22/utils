@@ -7,11 +7,12 @@
 #  using Xdialog
 # ----------------------------------------------------------------------
 
+echo $XSESSION_CMD
 DIALOG=Xdialog
 
-$DIALOG --title "System logout" \
+$DIALOG --title "Session logout" \
         --radiolist "Please select a logout action:" 18 50 0 \
-                "Logout"        "Exit from current X session" off \
+                "Logout"        "Exit from current X session"   off \
                 "Suspend"       "Suspend to RAM"                off \
                 "Hibernate"     "Suspend to disk"               ON  \
                 "Reboot"        "Reboot the system"             off \
@@ -25,8 +26,22 @@ rm -f /tmp/checklist.tmp.$$
 if [ $RETVAL -eq 0 ]; then
         case "$CHOICE" in
         Logout)
-                xfce4-session-logout --logout --fast
-                #openbox --exit
+                case "$XSESSION_CMD" in
+                *fluxbox*)
+                        fluxbox-remote Exit
+                        ;;
+                *xfce*)
+                        xfce4-session-logout --logout --fast
+                        ;;
+                cwm|twm)
+                        pkill "$XSESSION_CMD"
+                        ;;
+                *openbox*)
+                        openbox --exit
+                        ;;
+                *)
+                        ;;
+                esac
                 ;;
         Suspend)
                 /usr/sbin/zzz
