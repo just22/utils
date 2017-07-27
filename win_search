@@ -24,7 +24,7 @@ search_win() {
                         echo "$WIN_ID" "$WIN_CLASS" "$WIN_TITLE"
                 fi
         done |
-        dmenu -p Win: -i -l 5 |
+        dmenu-cust -p Win: -i -l 5 |
         awk '{print $1}'
 }
 

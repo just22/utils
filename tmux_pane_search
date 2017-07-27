@@ -25,7 +25,7 @@ get_tmux_win_id() {
 search_pane() {
         tmux list-panes -s -a \
             -F '#{session_name} / #{window_index}:#{window_name} / #{pane_index}:#{pane_title}' |
-                dmenu -p Pane: -i -l 5
+                dmenu-cust -p Pane: -i -l 5
 }
 
 SELECTED_ITEM=$(search_pane)

@@ -12,4 +12,4 @@ set -A MENU_ITEMS \
         "surf-launcher"
 
 printf "%s\n" "${MENU_ITEMS[@]}" |
-        dmenu -p "Network browser:" "$@" | ${SHELL:-/bin/sh}
+        dmenu-cust -p "Network browser:" "$@" | ${SHELL:-/bin/sh}
