@@ -1,0 +1,28 @@
+#!/bin/sh
+
+# ----------------------------------------------------------------------
+#  $Id$
+#
+#  Dwm session manager
+# ----------------------------------------------------------------------
+
+# System log
+xterm -title "System log" -e tail -f /var/log/messages &
+
+# Process monitor
+xterm -title "Process monitor" -e top &
+
+# System statistics
+xterm -title "System stats" -e systat &
+
+# Set the root window background & wallpaper
+xsetroot -solid rgb:58/6E/75
+[ -x ~/.fehbg ] && ~/.fehbg
+
+# Statusbar
+~/bin/dstat trunk0 &
+
+while true; do
+    mv ~/.dwm.log{,.old}
+    dwm 2> ~/.dwm.log || exit
+done
