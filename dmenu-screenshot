@@ -1,0 +1,18 @@
+#!/bin/sh
+
+# ----------------------------------------------------------------------
+#  $Id$
+#
+#  Simple screen capture helper
+# ----------------------------------------------------------------------
+
+# No output msgs, please
+exec >/dev/null 2>&1
+
+set -A MENU_ITEMS \
+        "Whole Desktop" \
+        "Selected Window/Area"
+
+[ "$(printf "%s\n" "${MENU_ITEMS[@]}" |
+     dmenu-cust -p Screenshot: -i "$@")" == "Whole Desktop" ] && ARG="desktop"
+screenshot $ARG

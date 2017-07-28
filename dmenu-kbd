@@ -1,0 +1,16 @@
+#!/bin/sh
+
+# ----------------------------------------------------------------------
+#  $Id$
+#
+#  Simple timer
+# ----------------------------------------------------------------------
+
+# No output msgs, please
+exec >/dev/null 2>&1
+
+set -A MENU_ITEMS \
+        "us" \
+        "it"
+
+setxkbmap "+ $(printf "%s\n" "${MENU_ITEMS[@]}" | dmenu-cust -p Keyboard: "$@")"

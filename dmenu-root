@@ -1,0 +1,200 @@
+#!/usr/bin/env tclsh
+
+# ----------------------------------------------------------------------
+#  $Id$
+#
+#  Very basic root menu
+# ----------------------------------------------------------------------
+
+# ----------------------------------------------------------------------
+# Config section
+# - Use a dict definition for each menu/submenu
+# - A submenu entry must end with "..."
+# - dict structure is MENUNAME_MENU MENUITEM <command>
+# - Submenu keys must be one-word
+# - Dict value of a submenu key must be empty
+# - For each "SUBMENUNAME..." key there must be a correspondent
+#   SUBMENUNAME_MENU dict
+
+dict set ROOT_MENU              "SearchItem..."                 "xterm"
+dict set ROOT_MENU              "Terminal Emulator"             "xterm"
+dict set ROOT_MENU              "tmux Session"                  "xterm -e tmux attach-session -d || tmux new-session"
+dict set ROOT_MENU              "Web Browser"                   "xdg-open http://www.atlantide.t28.net"
+dict set ROOT_MENU              "E-Mail Client"                 "xterm -e mutt"
+dict set ROOT_MENU              "Text Editor"                   "gvim"
+dict set ROOT_MENU              "File Manager"                  "xterm -e ranger"
+dict set ROOT_MENU              "File Browser"                  "dmenu-filebrowser"
+dict set ROOT_MENU              "Text Editor"                   "gvim"
+dict set ROOT_MENU              "Removable Devices"             "amount"
+dict set ROOT_MENU              "Applications..."               ""
+dict set ROOT_MENU              "Take a Screenshot"             "dmenu-screenshot"
+dict set ROOT_MENU              "Timer"                         "dmenu-timer"
+dict set ROOT_MENU              "Colorscheme..."                ""
+dict set ROOT_MENU              "Keyboard Layout"               "dmenu-kbd"
+dict set ROOT_MENU              "Display Layout"                "dmenu-xrandr"
+dict set ROOT_MENU              "Quit Session"                  "dmenu-session-logout"
+
+dict set APPLICATIONS_MENU      "Accessories..."                ""
+dict set APPLICATIONS_MENU      "Development..."                ""
+dict set APPLICATIONS_MENU      "Editors..."                    ""
+dict set APPLICATIONS_MENU      "Games..."                      ""
+dict set APPLICATIONS_MENU      "Graphics..."                   ""
+dict set APPLICATIONS_MENU      "Multimedia..."                 ""
+dict set APPLICATIONS_MENU      "Network..."                    ""
+dict set APPLICATIONS_MENU      "Office..."                     ""
+dict set APPLICATIONS_MENU      "System..."                     ""
+dict set APPLICATIONS_MENU      "Utilities..."                  ""
+
+dict set ACCESSORIES_MENU       "Calculator"                    "xcalc"
+dict set ACCESSORIES_MENU       "File Archiver"                 "xarchiver"
+
+dict set DEVELOPMENT_MENU       "Fluid"                         "fluid"
+dict set DEVELOPMENT_MENU       "GDB"                           "xterm -e gdb"
+dict set DEVELOPMENT_MENU       "Python"                        "xterm -e python"
+dict set DEVELOPMENT_MENU       "Python v2.7"                   "xterm -e python2.7"
+dict set DEVELOPMENT_MENU       "Python v3.6"                   "xterm -e python3.6"
+
+dict set EDITORS_MENU           "Emacs"                         "xterm -e emacs"
+dict set EDITORS_MENU           "gVim"                          "gvim"
+dict set EDITORS_MENU           "Vim"                           "xterm -e vim"
+dict set EDITORS_MENU           "Xedit"                         "xedit"
+
+dict set GAMES_MENU             "Adventure..."                  ""
+dict set GAMES_MENU             "Amusement..."                  ""
+dict set GAMES_MENU             "Arcade..."                     ""
+dict set GAMES_MENU             "Board..."                      ""
+dict set GAMES_MENU             "Card..."                       ""
+dict set GAMES_MENU             "Puzzle..."                     ""
+dict set GAMES_MENU             "Simulation..."                 ""
+
+dict set ADVENTURE_MENU         "Adventure"                     "xterm -e adventure"
+dict set ADVENTURE_MENU         "Battlestar"                    "xterm -e battlestar"
+dict set ADVENTURE_MENU         "Hunt the Wumpus"               "xterm -e wump"
+dict set ADVENTURE_MENU         "Phantasia"                     "xterm -e phantasia"
+
+dict set AMUSEMENT_MENU         "AA Fire"                       "xterm -e aafire -driver slang"
+dict set AMUSEMENT_MENU         "Ico"                           "ico"
+dict set AMUSEMENT_MENU         "Rain"                          "xterm -e rain"
+dict set AMUSEMENT_MENU         "Xeyes"                         "xeyes"
+dict set AMUSEMENT_MENU         "Xgc"                           "xgc"
+dict set AMUSEMENT_MENU         "Xlogo"                         "xlogo"
+
+dict set ARCADE_MENU            "Robots"                        "xterm -e robots"
+dict set ARCADE_MENU            "Snake"                         "xterm -e snake"
+dict set ARCADE_MENU            "Star Trek"                     "xterm -e trek"
+dict set ARCADE_MENU            "Worm"                          "xterm -e worm"
+dict set ARCADE_MENU            "Worms"                         "xterm -e worms"
+
+dict set BOARD_MENU             "Backgammon"                    "xterm -e backgammon -pb"
+dict set BOARD_MENU             "Gomoku"                        "xterm -e gomoku"
+dict set BOARD_MENU             "Monopoly"                      "xterm -e monop"
+
+dict set CARD_MENU              "Canfield"                      "xterm -e canfield"
+dict set CARD_MENU              "Cribbage"                      "xterm -e cribbage"
+dict set CARD_MENU              "Mille Bournes"                 "xterm -e mille"
+
+dict set PUZZLE_MENU            "Boggle"                        "xterm -e boggle"
+dict set PUZZLE_MENU            "Hangman"                       "xterm -e hangman"
+
+dict set SIMULATION_MENU        "Sail"                          "xterm -e sail"
+
+dict set GRAPHICS_MENU          "Bitmap"                        "bitmap"
+dict set GRAPHICS_MENU          "Dia"                           "dia"
+dict set GRAPHICS_MENU          "Geeqie"                        "geeqie"
+dict set GRAPHICS_MENU          "Inkscape"                      "inkscape"
+dict set GRAPHICS_MENU          "Scan Image"                    "xterm -e scanimage"
+dict set GRAPHICS_MENU          "The GIMP"                      "gimp"
+dict set GRAPHICS_MENU          "XCircuit"                      "xcircuit"
+dict set GRAPHICS_MENU          "xfig"                          "xfig"
+dict set GRAPHICS_MENU          "xsane"                         "xsane"
+
+dict set MULTIMEDIA_MENU        "Clementine"                    "clementine"
+dict set MULTIMEDIA_MENU        "gtkam"                         "gtkam"
+dict set MULTIMEDIA_MENU        "SMPlayer"                      "smplayer"
+dict set MULTIMEDIA_MENU        "Shotwell"                      "shotwell"
+dict set MULTIMEDIA_MENU        "TkDVD"                         "tkdvd"
+dict set MULTIMEDIA_MENU        "xine"                          "xine"
+
+dict set NETWORK_MENU           "Claws Mail"                    "claws-mail"
+dict set NETWORK_MENU           "Firefox"                       "firefox-launcher"
+dict set NETWORK_MENU           "FTP"                           "xterm -e ftp"
+dict set NETWORK_MENU           "Lynx"                          "xterm -e lynx"
+dict set NETWORK_MENU           "Mutt"                          "xterm -title \"The Mutt E-Mail Client\" -e mutt"
+dict set NETWORK_MENU           "Pidgin"                        "pidgin"
+dict set NETWORK_MENU           "Thunderbird"                   "thunderbird"
+dict set NETWORK_MENU           "VNC viewer"                    "vncviewer"
+dict set NETWORK_MENU           "Xbiff"                         "xbiff"
+
+dict set OFFICE_MENU            "Abook"                         "xterm -e abook"
+dict set OFFICE_MENU            "Evince"                        "evince"
+dict set OFFICE_MENU            "LibreOffice Base"              "soffice -base"
+dict set OFFICE_MENU            "LibreOffice Calc"              "soffice -calc"
+dict set OFFICE_MENU            "LibreOffice Draw"              "soffice -draw"
+dict set OFFICE_MENU            "LibreOffice Impress"           "soffice -impress"
+dict set OFFICE_MENU            "LibreOffice Math"              "soffice -math"
+dict set OFFICE_MENU            "LibreOffice Writer"            "soffice -writer"
+dict set OFFICE_MENU            "Lyx"                           "lyx"
+dict set OFFICE_MENU            "SQLite Database"               "xterm -e sqlite3"
+dict set OFFICE_MENU            "Xpdf"                          "xpdf"
+
+dict set SYSTEM_MENU            "Logged User Info"              "xterm -title \"Logged User Info\" -e \"userinfo $env(USER); echo Hit ENTER to quit; read\""
+dict set SYSTEM_MENU            "Settings..."                   ""
+dict set SYSTEM_MENU            "Top"                           "xterm -e top"
+dict set SYSTEM_MENU            "Xconsole"                      "xconsole"
+dict set SYSTEM_MENU            "Xload"                         "xload"
+
+dict set SETTINGS_MENU          "Reload .Xresources"            "xrdb -load -I$env(HOME) $env(HOME)/.Xresources"
+dict set SETTINGS_MENU          "xfontsel"                      "xfontsel"
+dict set SETTINGS_MENU          "Xvidtune"                      "xvidtune"
+
+dict set UTILITIES_MENU         "GNU Info"                      "xterm -e info"
+dict set UTILITIES_MENU         "Play URL in clip"              "play-url -g -p"
+dict set UTILITIES_MENU         "Screensaver"                   "dmenu-xscreensaver"
+dict set UTILITIES_MENU         "Units"                         "xterm -e units"
+dict set UTILITIES_MENU         "X-Utils..."                    ""
+
+dict set X-UTILS_MENU           "Editres"                       "editres"
+dict set X-UTILS_MENU           "Oclock"                        "oclock"
+dict set X-UTILS_MENU           "Viewres"                       "viewres"
+dict set X-UTILS_MENU           "Xclipboard"                    "xclipboard"
+dict set X-UTILS_MENU           "Xcutsel"                       "xcutsel"
+dict set X-UTILS_MENU           "Xev"                           "xterm -e xev"
+dict set X-UTILS_MENU           "Xkill"                         "xkill"
+dict set X-UTILS_MENU           "Xclock..."                     ""
+dict set X-UTILS_MENU           "Xmag"                          "xmag"
+dict set X-UTILS_MENU           "Xman"                          "xman"
+dict set X-UTILS_MENU           "Xrefresh"                      "xrefresh"
+
+dict set XCLOCK_MENU            "Analog Clock"                  "xclock -analog"
+dict set XCLOCK_MENU            "Digital Clock"                 "xclock -digital -update 1"
+
+dict set COLORSCHEME_MENU       "Solarized Dark"                "xrdb -merge $env(HOME)/.Xresources.d/solarized-dark"
+dict set COLORSCHEME_MENU       "Solarized Dark Desat"          "xrdb -merge $env(HOME)/.Xresources.d/solarized-dark-desat"
+dict set COLORSCHEME_MENU       "Solarized Light"               "xrdb -merge $env(HOME)/.Xresources.d/solarized-light"
+dict set COLORSCHEME_MENU       "Solarized Light Desat"         "xrdb -merge $env(HOME)/.Xresources.d/solarized-light-desat"
+
+# End of config section
+# ----------------------------------------------------------------------
+
+set MENU_NAME Root
+set CURR_MENU $ROOT_MENU
+set LEAF 0
+
+while {! $LEAF} {
+        set SEL [exec echo [join [dict keys $CURR_MENU] "\n"] | dmenu-cust -p $MENU_NAME: -i -l 20]
+        if {[string match *... $SEL]} {
+                set MENU_NAME [string trimright $SEL "..."]
+                if {[string match "SearchItem" $MENU_NAME]} {
+                        set CURR_MENU {}
+                        foreach MENU_VAR [info vars *_MENU] {
+                                set CURR_MENU [dict merge $CURR_MENU [dict filter [set $MENU_VAR] key {*[0-9_A-Za-z]}]]
+                        }
+                } else {
+                        set CURR_MENU [set [string toupper $MENU_NAME]_MENU]
+                }
+        } else {
+                set LEAF 1
+        }
+}
+
+exec {*}[dict get $CURR_MENU $SEL]

@@ -1,0 +1,15 @@
+#!/bin/sh
+
+# ----------------------------------------------------------------------
+#  $Id$
+#
+#  Simple filebrowser using dmenu and xdg-open
+# ----------------------------------------------------------------------
+
+NODE=$(pwd)
+while [ -d $NODE ]; do
+        cd $NODE
+        NODE=$((echo ".."; ls -A -1) |
+                dmenu-cust -p $(echo $(pwd) | sed -e "s/ /_/g") -i -l 20) || exit
+done
+xdg-open "$NODE"

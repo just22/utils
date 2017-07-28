@@ -1,0 +1,36 @@
+#!/bin/sh
+
+# ----------------------------------------------------------------------
+#  $Id$
+#
+#  Xscreensaver control
+# ----------------------------------------------------------------------
+
+# No output msgs, please
+#exec >/dev/null 2>&1
+
+set -A MENU_ITEMS \
+        "Enable" \
+        "Disable" \
+        "Lock Screen" \
+        "Restart" \
+        "Settings"
+
+case "$(printf "%s\n" "${MENU_ITEMS[@]}" |
+        dmenu-cust -p XScreensaver: "$@") -i" in
+Enable)
+        xscreensaver
+        ;;
+Disable)
+        xscreensaver-command -exit
+        ;;
+Lock*)
+        xscreensaver-command -lock
+        ;;
+Restart)
+        xscreensaver-command -restart
+        ;;
+Settings)
+        xscreensaver-demo
+        ;;
+esac
