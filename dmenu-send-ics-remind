@@ -1,0 +1,17 @@
+#!/bin/sh
+
+# ----------------------------------------------------------------------
+#  $Id$
+#
+#  Send ics attachment from remind calendar
+# ----------------------------------------------------------------------
+
+# No output msgs, please
+exec >/dev/null 2>&1
+
+EVENT=$(remind -s2 ~/.reminders $(date) | dmenu-cust -p ComingSoon: "$@" -i -l 20)
+
+if [ -n "$EVENT" ]; then
+        rem2ics -do > /tmp/event.ics
+        xterm -e mutt -a /tmp/event.ics
+fi

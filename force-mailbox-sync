@@ -1,0 +1,11 @@
+#!/bin/sh
+
+# ----------------------------------------------------------------------
+#  $Id$
+#
+#  Force full mailboxes synchronization, restarting offlineimap thereads
+# ----------------------------------------------------------------------
+
+pkill -QUIT -f /usr/local/bin/offlineimap
+offlineimap -s -u quiet -c ~/.offlineimaprc-sandro.delaurenzis@gmail.com &
+offlineimap -s -u quiet -c ~/.offlineimaprc-just22@atlantide.t28.net &
