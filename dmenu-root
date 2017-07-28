@@ -55,6 +55,7 @@ dict set DEVELOPMENT_MENU       "Python v2.7"                   "xterm -e python
 dict set DEVELOPMENT_MENU       "Python v3.6"                   "xterm -e python3.6"
 
 dict set EDITORS_MENU           "Emacs"                         "xterm -e emacs"
+dict set EDITORS_MENU           "nedit"                         "nedit"
 dict set EDITORS_MENU           "gVim"                          "gvim"
 dict set EDITORS_MENU           "Vim"                           "xterm -e vim"
 dict set EDITORS_MENU           "Xedit"                         "xedit"
@@ -149,6 +150,8 @@ dict set SETTINGS_MENU          "Xvidtune"                      "xvidtune"
 
 dict set UTILITIES_MENU         "GNU Info"                      "xterm -e info"
 dict set UTILITIES_MENU         "Play URL in clip"              "play-url -g -p"
+dict set UTILITIES_MENU         "Send iCal attachment"          "dmenu-send-ics-remind"
+dict set UTILITIES_MENU         "Set Performance Policy"        "dmenu-perf"
 dict set UTILITIES_MENU         "Screensaver"                   "dmenu-xscreensaver"
 dict set UTILITIES_MENU         "Units"                         "xterm -e units"
 dict set UTILITIES_MENU         "X-Utils..."                    ""
