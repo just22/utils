@@ -32,12 +32,12 @@ while [ $# -ne 0 ]; do
 done
 
 if [ -n "$INTERACTIVE" ]; then
-        echo -n "Time [see at(0)]: [+ 5 min] "; read TIME
+        echo -n "Time [see at(1)]: [now + 5 minutes] "; read TIME
         echo -n "Message: [Time's up!] "; read MSG
-        echo -n "Snooze time: [300] "; read SNOOZE_TIME
+        echo -n "Snooze time [s]: [300] "; read SNOOZE_TIME
 fi
 
-TIME=${TIME:-"now + 5 min"}
+TIME=${TIME:-"now + 5 minutes"}
 MSG=${MSG:-"Time's up!"}
 SNOOZE_TIME=${SNOOZE_TIME:-300}
 
