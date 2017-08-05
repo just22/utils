@@ -1,0 +1,49 @@
+#!/bin/sh
+
+# ----------------------------------------------------------------------
+#  $Id$
+#
+#  Display a message after a remind trigger; further warnings can be
+#  cancelled
+#
+#  Input must be a 2-line string in the form:
+#       <event description> [[YYYYMMDD at HH:MM]]
+#       (<f_date> at <f_time>, in x days/hours/minutes from now)
+# ----------------------------------------------------------------------
+
+# No output msgs, please
+exec >/dev/null 2>&1
+
+[ "$#" -ne 1 ] && exit 1
+
+TAG=$(echo -e "$1" | head -n 1)
+MSG=${TAG% \[\[*\]\]}
+NOW=$(date -j +%s $(date +%y%m%d%H%M))
+TOE=$(date -j +%s $(echo "$TAG" | sed -E -e "s/.* \[\[(.*)\]\]/\1/" | tr -d " at:"))
+
+# In case of unformatted msg, just assume now as TimeOfEvent, and properly
+# fill the WHEN line
+if [ -z "$TOE" ]; then
+        TOE="$NOW"
+        WHEN="(today at $(date +%R), now)"
+else
+        WHEN=$(echo -e "$1" | tail -n 1)
+fi
+
+grep -F "$TAG" ~/.reminders-nowarn && NOWARN=1
+if [ "$(($TOE - $NOW))" -eq 0 ]; then
+        # Event expired, remove entry in nowarn file and disable snooze
+        cat ~/.reminders-nowarn | grep -Fv "$TAG" > ~/.reminders-nowarn
+        SNZ=""
+else
+        SNZ=",Snooze:2"
+fi
+
+[ -z "$NOWARN" ] &&
+echo -e "$MSG\n$WHEN" |
+xmessage -title "Remind" -center -buttons "Got it":0"${SNZ}" -file -
+
+# "Got it" selected, no other warnings please!
+[ "$?" -eq 0 ] && [ -n "$SNZ" ] && echo "$TAG" >> ~/.reminders-nowarn
+
+exit 0
