@@ -1,0 +1,97 @@
+#!/bin/sh
+
+# ----------------------------------------------------------------------
+#  $Id$
+#
+#  Simple calculator in ENG notation (using bc as backend)
+# ----------------------------------------------------------------------
+
+_usage() {
+        echo "Usage: [file tail $::argv0] -h | \[-s\] \[-p <precision>\] <expr>"
+        echo "       -h: This help message"
+        echo "       -s: Use SI prefixes instead of E notation"
+        echo "       -p <precision>: User-defined precision (default: 3)"
+}
+
+eng_prefix() {
+        case "$1" in
+         15) prefix=P ;;   # peta
+         12) prefix=T ;;   # tera
+          9) prefix=G ;;   # giga
+          6) prefix=M ;;   # mega
+          3) prefix=k ;;   # kilo
+         -3) prefix=m ;;   # milli
+         -6) prefix=u ;;   # micro
+         -9) prefix=n ;;   # nano
+        -12) prefix=p ;;   # pico
+        -15) prefix=f ;;   # femto
+          *) prefix=E$1
+        esac
+        echo $prefix
+}
+
+eng_fmt() {
+        IFS="E" read mant exp <<- EOT
+		$(echo $1)
+	EOT
+        exp="$(echo $exp | awk '{printf "%d", $0}')"
+        while [ $(($exp % 3)) -ne 0 ]; do
+                mant=$(echo "scale=15; $mant * 10" | bc)
+                exp=$(($exp - 1))
+        done
+        if [ "$exp" -eq 0 ]; then
+                exp=""
+        elif [ "$use_prefix" -eq 1 ]; then
+                exp=$(eng_prefix "$exp")
+        else
+                exp="E$exp"
+        fi
+        printf "%.${p}f%s\n" "$mant" "$exp"
+}
+
+
+# Use standard E notation by default
+use_prefix=0
+
+# Default precision depends on command name
+case "$(basename $0)" in
+calc)    p=3 ;;
+calc_lp) p=1 ;;
+calc_hp) p=9 ;;
+esac
+
+# Command line non-positional arguments parsing
+if [ "$1" == -h ]; then
+        >&2 _usage
+        exit 0
+fi
+while getopts ":sp:" arg; do
+        case "$arg" in
+        s) use_prefix=1 ;;
+        p) p="$OPTARG"  ;;
+        esac
+done
+
+# Remaining positional arguments represent the expression to be evaluated
+EXPR="$(for argno in $(jot - $OPTIND $# 1 2>/dev/null); do eval "echo -n \$$argno"; done |
+        sed -E -e "s/([0-9]+)[eE]([+-]*[0-9]+)/(\1*10^\2)/g;    \
+                   s/([0-9]+)P/(\1*10^15)/g;   \
+                   s/([0-9]+)T/(\1*10^12)/g;   \
+                   s/([0-9]+)G/(\1*10^9)/g;    \
+                   s/([0-9]+)M/(\1*10^6)/g;    \
+                   s/([0-9]+)k/(\1*10^3)/g;    \
+                   s/([0-9]+)m/(\1*10^-3)/g;   \
+                   s/([0-9]+)u/(\1*10^-6)/g;   \
+                   s/([0-9]+)n/(\1*10^-9)/g;   \
+                   s/([0-9]+)p/(\1*10^-12)/g;  \
+                   s/([0-9]+)f/(\1*10^-15)/g")"
+RES="$(echo "scale=15; $EXPR" | bc 2>/dev/null)"
+
+if [ -z "$RES" ]; then
+        >&2 echo "$(basename "$0"): Expression evaluation error"
+        exit 1
+fi
+
+eng_fmt $(printf "%.15E" "$RES")
+
+exit 0

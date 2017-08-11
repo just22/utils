@@ -1,0 +1,51 @@
+#!/bin/sh
+
+# ----------------------------------------------------------------------
+#  $Id$
+#
+#  Show a list of the day's events (when SIGUSR1 is received)
+# ----------------------------------------------------------------------
+
+# Kill daemon on exit
+trap "LOOP=0; rm ~/.remind-today.pid" HUP INT QUIT ABRT TERM
+
+# Check if daemon is already running
+DAEMON_PID=$(cat ~/.remind-today.pid 2> /dev/null)
+if DAEMON_STATE=$(ps -o stat="" -p $DAEMON_PID 2> /dev/null); then
+        case "$DAEMON_STATE" in
+        I*|R*|S*)
+                echo "Daemon already running with pid $DAEMON_PID"
+                exit 1
+                ;;
+        *)
+                echo "Killing old stopped/dead daemon with pid $DAEMON_PID"
+                kill -KILL $DAEMON_PID
+                ;;
+        esac
+fi
+echo "Launching daemon with pid $$"
+echo $$ > ~/.remind-today.pid
+
+# Show today's reminders
+trap 'show_today_reminders' USR1
+
+# No output msgs, please
+exec >/dev/null 2>&1
+
+# Main function
+show_today_reminders () {
+        REMINDERS="$(remind -q -g ~/.reminders)"
+        case "$REMINDERS" in
+        "No reminders.")
+                ;;
+        *)
+                echo "$REMINDERS" |
+                xmessage -title "Today's reminders" -center -buttons "OK":0 -file -
+        esac
+}
+
+# Daemonize
+LOOP=1
+while [ "${LOOP}" == 1 ]; do
+    sleep 1
+done
