@@ -141,9 +141,9 @@ win_output_geom() {
 				$(echo $output_geom)
 			EOT
                         if [ $x0 -le $w_x0 ] &&
-                           [ $w_x0 -le $(expr $x0 + $xdim) ] &&
+                           [ $w_x0 -le $(($x0 + $xdim)) ] &&
                            [ $y0 -le $w_y0 ] &&
-                           [ $w_y0 -le $(expr $y0 + $ydim) ]
+                           [ $w_y0 -le $(($y0 + $ydim)) ]
                         then
                                 echo $output_geom
                                 break
@@ -213,69 +213,69 @@ tile() {
         case $tile_action in
         t)
                 win_y0=$act_y0
-                win_ydim=$(expr $act_ydim / 2 - $frame_t - $frame_b - $tile_gap / 2)
+                win_ydim=$(($act_ydim / 2 - $frame_t - $frame_b - $tile_gap / 2))
                 wmctrl -i -r $win_id -b add,maximized_horz
                 wmctrl -i -r $win_id -e 0,-1,$win_y0,-1,$win_ydim
                 ;;
         b)
-                win_y0=$(expr $act_y0 + $act_ydim / 2 + $tile_gap / 2)
-                win_ydim=$(expr $act_ydim / 2 - $frame_t - $frame_b - $tile_gap / 2)
+                win_y0=$(($act_y0 + $act_ydim / 2 + $tile_gap / 2))
+                win_ydim=$(($act_ydim / 2 - $frame_t - $frame_b - $tile_gap / 2))
                 wmctrl -i -r $win_id -b add,maximized_horz
                 wmctrl -i -r $win_id -e 0,-1,$win_y0,-1,$win_ydim
                 ;;
         l)
                 win_x0=$act_x0
-                win_xdim=$(expr $act_xdim / 2 - $frame_r - $frame_l - $tile_gap / 2)
+                win_xdim=$(($act_xdim / 2 - $frame_r - $frame_l - $tile_gap / 2))
                 wmctrl -i -r $win_id -b add,maximized_vert
                 wmctrl -i -r $win_id -e 0,$win_x0,-1,$win_xdim,-1
                 ;;
         r)
-                win_x0=$(expr $act_x0 + $act_xdim / 2 + $tile_gap / 2)
-                win_xdim=$(expr $act_xdim / 2 - $frame_r - $frame_l - $tile_gap / 2)
+                win_x0=$(($act_x0 + $act_xdim / 2 + $tile_gap / 2))
+                win_xdim=$(($act_xdim / 2 - $frame_r - $frame_l - $tile_gap / 2))
                 wmctrl -i -r $win_id -b add,maximized_vert
                 wmctrl -i -r $win_id -e 0,$win_x0,-1,$win_xdim,-1
                 ;;
         tl)
                 win_x0=$act_x0
                 win_y0=$act_y0
-                win_xdim=$(expr $act_xdim / 2 - $frame_r - $frame_l - $tile_gap / 2)
-                win_ydim=$(expr $act_ydim / 2 - $frame_t - $frame_b - $tile_gap / 2)
+                win_xdim=$(($act_xdim / 2 - $frame_r - $frame_l - $tile_gap / 2))
+                win_ydim=$(($act_ydim / 2 - $frame_t - $frame_b - $tile_gap / 2))
                 wmctrl -i -r $win_id -e 0,$win_x0,$win_y0,$win_xdim,$win_ydim
                 ;;
         tr)
-                win_x0=$(expr $act_x0 + $act_xdim / 2 + $tile_gap / 2)
+                win_x0=$(($act_x0 + $act_xdim / 2 + $tile_gap / 2))
                 win_y0=$act_y0
-                win_xdim=$(expr $act_xdim / 2 - $frame_r - $frame_l - $tile_gap / 2)
-                win_ydim=$(expr $act_ydim / 2 - $frame_t - $frame_b - $tile_gap / 2)
+                win_xdim=$(($act_xdim / 2 - $frame_r - $frame_l - $tile_gap / 2))
+                win_ydim=$(($act_ydim / 2 - $frame_t - $frame_b - $tile_gap / 2))
                 wmctrl -i -r $win_id -e 0,$win_x0,$win_y0,$win_xdim,$win_ydim
                 ;;
         bl)
                 win_x0=$act_x0
-                win_y0=$(expr $act_y0 + $act_ydim / 2 + $tile_gap / 2)
-                win_xdim=$(expr $act_xdim / 2 - $frame_r - $frame_l - $tile_gap / 2)
-                win_ydim=$(expr $act_ydim / 2 - $frame_t - $frame_b - $tile_gap / 2)
+                win_y0=$(($act_y0 + $act_ydim / 2 + $tile_gap / 2))
+                win_xdim=$(($act_xdim / 2 - $frame_r - $frame_l - $tile_gap / 2))
+                win_ydim=$(($act_ydim / 2 - $frame_t - $frame_b - $tile_gap / 2))
                 wmctrl -i -r $win_id -e 0,$win_x0,$win_y0,$win_xdim,$win_ydim
                 ;;
         br)
-                win_x0=$(expr $act_x0 + $act_xdim / 2 + $tile_gap / 2)
-                win_y0=$(expr $act_y0 + $act_ydim / 2 + $tile_gap / 2)
-                win_xdim=$(expr $act_xdim / 2 - $frame_r - $frame_l - $tile_gap / 2)
-                win_ydim=$(expr $act_ydim / 2 - $frame_t - $frame_b - $tile_gap / 2)
+                win_x0=$(($act_x0 + $act_xdim / 2 + $tile_gap / 2))
+                win_y0=$(($act_y0 + $act_ydim / 2 + $tile_gap / 2))
+                win_xdim=$(($act_xdim / 2 - $frame_r - $frame_l - $tile_gap / 2))
+                win_ydim=$(($act_ydim / 2 - $frame_t - $frame_b - $tile_gap / 2))
                 wmctrl -i -r $win_id -e 0,$win_x0,$win_y0,$win_xdim,$win_ydim
                 ;;
         h)
                 viswin_no=$(viswin_ids | wc -l)
                 tile t $tile_gap ""
-                win_xdim=$(expr \( $act_xdim - \
-                                   $tile_gap \* \( $viswin_no - 1 \) - \
-                                   \( $frame_l + $frame_r \) \* $viswin_no \) / $viswin_no)
-                win_y0=$(expr $act_y0 + $act_ydim / 2 + $tile_gap / 2)
-                win_ydim=$(expr $act_ydim / 2 - $frame_t - $frame_b - $tile_gap / 2)
+                win_xdim=$((($act_xdim - \
+                             $tile_gap * ($viswin_no - 1) - \
+                             ($frame_l + $frame_r) * $viswin_no) / $viswin_no))
+                win_y0=$(($act_y0 + $act_ydim / 2 + $tile_gap / 2))
+                win_ydim=$(($act_ydim / 2 - $frame_t - $frame_b - $tile_gap / 2))
                 win_cnt=0
                 for viswin_id in $(viswin_ids)
                 do
-                        win_cnt=$(expr $win_cnt + 1)
-                        win_x0=$(expr $act_x0 + \( $win_xdim + $frame_l + $frame_r + $tile_gap \) \* \( $win_cnt - 1 \))
+                        win_cnt=$(($win_cnt + 1))
+                        win_x0=$(($act_x0 + ($win_xdim + $frame_l + $frame_r + $tile_gap) * ($win_cnt - 1)))
                         wmctrl -i -r $viswin_id -b remove,maximized_horz,maximized_vert
                         wmctrl -i -r $viswin_id -e 0,$win_x0,$win_y0,$win_xdim,$win_ydim
                 done
@@ -283,16 +283,16 @@ tile() {
         v)
                 viswin_no=$(viswin_ids | wc -l)
                 tile l $tile_gap ""
-                win_x0=$(expr $act_x0 + $act_xdim / 2 + $tile_gap / 2)
-                win_xdim=$(expr $act_xdim / 2 - $frame_l - $frame_r - $tile_gap / 2)
-                win_ydim=$(expr \( $act_ydim - \
-                                   $tile_gap \* \( $viswin_no - 1 \) - \
-                                   \( $frame_t + $frame_b \) \* $viswin_no \) / $viswin_no)
+                win_x0=$(($act_x0 + $act_xdim / 2 + $tile_gap / 2))
+                win_xdim=$(($act_xdim / 2 - $frame_l - $frame_r - $tile_gap / 2))
+                win_ydim=$((($act_ydim - \
+                                   $tile_gap * ($viswin_no - 1) - \
+                                   ($frame_t + $frame_b) * $viswin_no) / $viswin_no))
                 win_cnt=0
                 for viswin_id in $(viswin_ids)
                 do
-                        win_cnt=$(expr $win_cnt + 1)
-                        win_y0=$(expr $act_y0 + \( $win_ydim + $frame_t + $frame_b + $tile_gap \) \* \( $win_cnt - 1 \))
+                        win_cnt=$(($win_cnt + 1))
+                        win_y0=$(($act_y0 + ($win_ydim + $frame_t + $frame_b + $tile_gap) * ($win_cnt - 1)))
                         wmctrl -i -r $viswin_id -b remove,maximized_horz,maximized_vert
                         wmctrl -i -r $viswin_id -e 0,$win_x0,$win_y0,$win_xdim,$win_ydim
                 done
