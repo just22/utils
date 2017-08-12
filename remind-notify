@@ -21,13 +21,16 @@ MSG=${TAG% \[\[*\]\]}
 NOW=$(date -j +%s $(date +%y%m%d%H%M))
 TOE=$(date -j +%s $(echo "$TAG" | sed -E -e "s/.* \[\[(.*)\]\]/\1/" | tr -d " at:"))
 
-# In case of unformatted msg, just assume now as TimeOfEvent, and properly
-# fill the WHEN line
+# In case of unformatted msg, just assume now as TimeOfEvent, and
+# properly fill-in WHEN line
+WHEN=$(echo -e "$1" | tail -n 1)
 if [ -z "$TOE" ]; then
         TOE="$NOW"
-        WHEN="(today at $(date +%R), now)"
-else
-        WHEN=$(echo -e "$1" | tail -n 1)
+        if [ "$WHEN" != "(Recurrent)" ]; then
+                WHEN="\n(today at $(date +%R), now)"
+        else
+                WHEN=""
+        fi
 fi
 
 grep -F "$TAG" ~/.reminders-nowarn && NOWARN=1
@@ -40,7 +43,7 @@ else
 fi
 
 [ -z "$NOWARN" ] &&
-echo -e "$MSG\n$WHEN" |
+echo -e "${MSG}${WHEN}" |
 xmessage -title "Remind" -center -buttons "Got it":0"${SNZ}" -file -
 
 # "Got it" selected, no other warnings please!
