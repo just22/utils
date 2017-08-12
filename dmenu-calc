@@ -9,9 +9,7 @@
 __calc()
 {
         printf '%s\n' "$result" | xclip -i
-        result=$(tcl-calc $(xclip -o |
-                dmenu-cust -p Calc: |
-                tr -d " ") 2>/dev/null)
+        result=$(calc $(xclip -o | dmenu-cust -p Calc:) 2>/dev/null)
 }
 
 result=0
