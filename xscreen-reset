@@ -3,8 +3,8 @@
 # ----------------------------------------------------------------------
 #  $Id$
 #
-#  Resets X screen when SIGUSR1 is received (typically used before
-#  suspend to RAM/disk operations)
+#  Reset X screen when SIGUSR1 is received (typically before suspend to
+#  RAM/disk operations)
 # ----------------------------------------------------------------------
 
 # Kill daemon on exit
