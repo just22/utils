@@ -25,7 +25,9 @@ fi
 xrandr $@
 
 # Restart window manager
-if pgrep -x fluxbox; then
+if pgrep -x dwm; then
+        [ -x ~/.fehbg ] && ~/.fehbg
+elif pgrep -x fluxbox; then
         fluxbox-remote Restart
         fbsetbg -l
 elif pgrep -x openbox; then
