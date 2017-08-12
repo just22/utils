@@ -1,33 +1,72 @@
-#!/usr/bin/env tclsh8.5
+#!/usr/bin/env tclsh
 
 # ----------------------------------------------------------------------
 #  $Id$
 #
 #  Simple TCL calculator in ENG notation
-#  Usage: tcl-calc <expr>
 # ----------------------------------------------------------------------
 
-proc eng_fmt {num {p 3}} {
+proc _usage {} {
+        puts stderr "Usage: [file tail $::argv0] -h | \[-s\] \[-p <precision>\] <expr>"
+        puts stderr "       -h: This help message"
+        puts stderr "       -s: Use SI prefixes instead of E notation"
+        puts stderr "       -p <precision>: User-defined precision (default: 3)"
+}
+
+proc shift {varName} {
+        upvar $varName args
+        set args [lreplace $args 0 0]
+}
+
+proc eng_prefix {exp} {
+        switch $exp {
+                18  {set exp E} ;# exa
+                15  {set exp P} ;# peta
+                12  {set exp T} ;# tera
+                 9  {set exp G} ;# giga
+                 6  {set exp M} ;# mega
+                 3  {set exp k} ;# kilo
+                -3  {set exp m} ;# milli
+                -6  {set exp u} ;# micro
+                -9  {set exp n} ;# nano
+               -12  {set exp p} ;# pico
+               -15  {set exp f} ;# femto
+               -18  {set exp a} ;# atto
+               default {set exp "E$exp"}
+        }
+        return $exp
+}
+
+proc eng_fmt {num p} {
         lassign [split [format %e $num] e] mant exp
         scan $exp %d exp
         while {[expr $exp % 3] != 0} {
                 set mant [expr $mant*10]
                 incr exp -1
         }
-        return [format %.${p}f $mant]e$exp
+        set exp [expr {$exp == 0 ? "" : [expr {$::use_prefix ? [eng_prefix $exp] : "E$exp"}]}]
+        return [format %.${p}f $mant]$exp
 }
 
-if { $argc != 1 } {
-        puts stderr "Usage: tcl-calc <expr>"
-        exit 1
+# Set defaults
+set use_prefix false    ;# Use standard E notation
+set p 3                 ;# 3-digit precision
+
+# Command line arguments parsing
+while {1} {
+        switch [lindex $argv 0] {
+                "-h"    {_usage; exit 0}
+                "-s"    {set use_prefix true; shift argv; continue}
+                "-p"    {shift argv; set p [lindex $argv 0]; shift argv; continue}
+                default {break}
+        }
 }
 
 # Always floating point division, please!
 set EXPR [string map {/ *1.0/} $argv]
 
-if { [catch {puts [eng_fmt [expr $EXPR] 3]}] } {
-        puts stderr "tcl-calc: Expression evaluation error"
-        puts 0
-        exit 2
+if { [catch {puts [eng_fmt [expr $EXPR] $p]}] } {
+        puts stderr "[file tail $argv0]: Expression evaluation error"
+        exit 1
 }
 exit 0
