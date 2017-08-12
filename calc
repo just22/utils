@@ -3,116 +3,98 @@
 # ----------------------------------------------------------------------
 #  $Id$
 #
-#  Simple calculator with optional SCI/ENG notation
-#  (using awk as backend)
+#  Simple calculator with (optional) ENG notation (using awk as backend)
 # ----------------------------------------------------------------------
 
 _usage() {
-        echo "Usage: $(basename $0): -h | [-n <sci|eng>] [-s] [-p <precision>] <expr>"
+        echo "Usage: $(basename $0): -h | [-n|-s] [-p <precision>] <expr>"
         echo "       -h: This help message"
-        echo "       -n <sci|eng>: Use alternate notation"
-        echo "       -s: Use SI prefixes with eng notation"
-        echo "       -p <precision>: User-defined precision (default: 3)"
+        echo "       -n: Do not use ENG notation"
+        echo "       -s: Use ENG notation with SI prefixes"
+        echo "       -p <n>: User-defined precision (default: 3)"
 }
 
-eng_prefix() {
-        case "$1" in
-         15) prefix=P ;;   # peta
-         12) prefix=T ;;   # tera
-          9) prefix=G ;;   # giga
-          6) prefix=M ;;   # mega
-          3) prefix=k ;;   # kilo
-         -3) prefix=m ;;   # milli
-         -6) prefix=u ;;   # micro
-         -9) prefix=n ;;   # nano
-        -12) prefix=p ;;   # pico
-        -15) prefix=f ;;   # femto
-          *) prefix=E$1
-        esac
-        echo $prefix
-}
-
-out_fmt() {
+eng_fmt() {
         IFS="E" read mant exp <<- EOT
 		$(echo $1)
 	EOT
-        if [ -n "$exp" ]; then
-                if [ "$notation" == eng ]; then
-                        exp="$(awk "BEGIN {printf \"%d\", $exp}")"
-                        while [ $(($exp % 3)) -ne 0 ]; do
-                                mant="$(awk "BEGIN {printf \"%.15f\", $mant * 10}")"
-                                exp="$(($exp - 1))"
-                        done
-                fi
-        else
-                exp=0
-        fi
+
+        # Convert exp in a signed integer
+        exp="$(awk "BEGIN {printf \"%d\", ${exp:-0}}")"
+
+        while [ $(($exp % 3)) -ne 0 ]; do
+                mant="$(awk "BEGIN {printf \"%.15f\", $mant * 10}")"
+                exp="$(($exp - 1))"
+        done
         if [ "$exp" -eq 0 ]; then
                 exp=""
         elif [ "$use_prefix" -eq 1 ]; then
-                exp=$(eng_prefix "$exp")
+                case "$exp" in
+                 15) exp=P ;;   # peta
+                 12) exp=T ;;   # tera
+                  9) exp=G ;;   # giga
+                  6) exp=M ;;   # mega
+                  3) exp=k ;;   # kilo
+                 -3) exp=m ;;   # milli
+                 -6) exp=u ;;   # micro
+                 -9) exp=n ;;   # nano
+                -12) exp=p ;;   # pico
+                -15) exp=f ;;   # femto
+                  *) exp=E$1
+                esac
         else
                 exp="E$exp"
         fi
         printf "%.${p}f%s\n" "$mant" "$exp"
 }
 
-# Defaults depend on command name
-case "$(basename $0)" in
-cs*)
-        notation=sci
-        ;;
-ce*)
-        notation=eng
-        use_prefix=1
-        ;;
-esac
 
-case "$(basename $0)" in
-*lp) p=1 ;;
-*hp) p=6 ;;
-*)   p=3
-esac
+# Main
+# ----------------------------------------------------------------------
+
+# Defaults
+fmt=E           # ENG notation
+use_prefix=0    # No SI prefixes
+p=3             # 3-digit precision
 
 # Command line non-positional arguments parsing
 if [ "$1" == -h ]; then
         >&2 _usage
         exit 0
 fi
-while getopts ":sn:p:" arg; do
+while getopts ":snp:" arg; do
         case "$arg" in
-        s) use_prefix=1         ;;
-        n) notation="$OPTARG"   ;;
-        p) p="$OPTARG"          ;;
+        n) fmt=f        ;;
+        s) use_prefix=1 ;;
+        p) p="$OPTARG"  ;;
         esac
 done
-case "$notation" in
-sci) fmt=E ;;
-eng) fmt=E; eng=1 ;;
-"")  fmt=f ;;
-*)   >&2 echo "$(basename "$0"): Unknown notation"; exit 1
-esac
 
 # Remaining positional arguments represent the expression to be evaluated
-EXPR="$(for argno in $(jot - $OPTIND $# 1 2>/dev/null); do eval "echo -n \$$argno"; done |
-        sed -E -e "s/([0-9]+)P/(\1*10^15)/g;   \
-                   s/([0-9]+)T/(\1*10^12)/g;   \
-                   s/([0-9]+)G/(\1*10^9)/g;    \
-                   s/([0-9]+)M/(\1*10^6)/g;    \
-                   s/([0-9]+)k/(\1*10^3)/g;    \
-                   s/([0-9]+)m/(\1*10^-3)/g;   \
-                   s/([0-9]+)u/(\1*10^-6)/g;   \
-                   s/([0-9]+)n/(\1*10^-9)/g;   \
-                   s/([0-9]+)p/(\1*10^-12)/g;  \
-                   s/([0-9]+)f/(\1*10^-15)/g")"
+ in_expr="$(for argno in $(jot - $OPTIND $# 1 2>/dev/null); do eval "echo -n \$$argno"; done)"
+rdy_expr="$(echo $in_expr |
+            sed -E -e "s/([0-9]+)P/(\1*10^15)/g;   \
+                       s/([0-9]+)T/(\1*10^12)/g;   \
+                       s/([0-9]+)G/(\1*10^9)/g;    \
+                       s/([0-9]+)M/(\1*10^6)/g;    \
+                       s/([0-9]+)k/(\1*10^3)/g;    \
+                       s/([0-9]+)m/(\1*10^-3)/g;   \
+                       s/([0-9]+)u/(\1*10^-6)/g;   \
+                       s/([0-9]+)n/(\1*10^-9)/g;   \
+                       s/([0-9]+)p/(\1*10^-12)/g;  \
+                       s/([0-9]+)f/(\1*10^-15)/g")"
 
-RES="$(awk "BEGIN {printf \"%.15$fmt\", $EXPR}" 2>/dev/null)"
+# Prefixes in input expression?
+[ "$in_expr" != "$rdy_expr" ] && use_prefix=1
 
+# Run computation, exit on errors
+res="$(awk "BEGIN {printf \"%.15$fmt\", $rdy_expr}" 2>/dev/null)"
 if [ "$?" -ne 0 ]; then
         >&2 echo "$(basename "$0"): Expression evaluation error"
         exit 1
 fi
 
-out_fmt "$RES"
+# Result formatting
+eng_fmt "$res"
 
 exit 0
