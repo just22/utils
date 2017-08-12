@@ -7,7 +7,7 @@
 # ----------------------------------------------------------------------
 
 # No output msgs, please
-#exec >/dev/null 2>&1
+exec >/dev/null 2>&1
 
 set -A MENU_ITEMS \
         "auto" \
