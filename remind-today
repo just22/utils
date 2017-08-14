@@ -27,14 +27,14 @@ echo "Launching daemon with pid $$"
 echo $$ > ~/.remind-today.pid
 
 # Show today's reminders
-trap 'show_today_reminders' USR1
+trap 'today_untimed' USR1
 
 # No output msgs, please
 exec >/dev/null 2>&1
 
 # Main function
-show_today_reminders () {
-        REMINDERS="$(remind -q -g ~/.reminders)"
+today_untimed () {
+        REMINDERS="$(remind -q -a -g ~/.reminders)"
         case "$REMINDERS" in
         "No reminders.")
                 ;;
