@@ -3,13 +3,13 @@
 # ----------------------------------------------------------------------
 #  $Id$
 #
-#  Loops among performance policies
+#   Toggle performance policy
 # ----------------------------------------------------------------------
 
 case $(sysctl -n hw.perfpolicy) in
-    auto) sudo sysctl hw.perfpolicy=high
+    auto) /usr/bin/doas sysctl hw.perfpolicy=high
           ;;
-    high) sudo sysctl hw.perfpolicy=auto
+    high) /usr/bin/doas sysctl hw.perfpolicy=auto
           ;;
     *)
           ;;

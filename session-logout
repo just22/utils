@@ -50,10 +50,10 @@ if [ $RETVAL -eq 0 ]; then
                 /usr/sbin/ZZZ
                 ;;
         Reboot)
-                sudo /sbin/reboot
+                /usr/bin/doas /sbin/reboot
                 ;;
         Poweroff)
-                sudo /sbin/shutdown -p now
+                /usr/bin/doas /sbin/shutdown -p now
                 ;;
         esac
 fi
