@@ -8,10 +8,8 @@
 #  Notes:
 #  - specific for OpenBSD;
 #  - special permissions are needed for some commands (mount, fsck,
-#    chgrp, chmod), so it should be run using sudo/doas in order to
-#    gain root identity; on the other hand, $FILEMGR must be executed
-#    as normal user, so env should be preserved (sudo -E) in order to
-#    access the correct $USER value
+#    chgrp, chmod), so it should be run using /usr/bin/doas in order to gain
+#    appropriate permissions.
 # ----------------------------------------------------------------------
 
 # ----------------------------------------------------------------------
@@ -24,7 +22,7 @@ RUN_FSCK=1                      # If enabled, fsck is run on all filesystems in
 GROUP="diskmount"
 MODE=0775
 EXCLUDED_DEV="sd0"              # Do not manage these devices
-FILEMGR="pcmanfm"
+FILEMGR="xterm -title FileManager -e ranger"
                                 # Leave it empty if you don't want to open a
                                 # file manager window after mount
 # ----------------------------------------------------------------------
