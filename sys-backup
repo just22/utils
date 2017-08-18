@@ -19,7 +19,7 @@ DAYS_BEFORE_DELETION="8"
 # Default values for the following variables shouldn't be changed
 TSTAMP="%Y%m%d_%R"
 TMP_DIR="/tmp"
-BACKUP_REPO="/nfs/egeo/vol/sys_backup/$(hostname -s)"
+BACKUP_REPO="/nfs/sys_backup/$(hostname -s)"
 # ----------------------------------------------------------------------
 
 
