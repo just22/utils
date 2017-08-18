@@ -15,4 +15,4 @@ set -A MENU_ITEMS \
 
 POL=$(printf "%s\n" "${MENU_ITEMS[@]}" | dmenu-cust -p PerfPolicy[$(sysctl -n hw.perfpolicy)]: -i "$@")
 
-[ -n "$POL" ] && /usr/bin/doas sysctl hw.perfpolicy="$POL"
+[ -n "$POL" ] && /usr/bin/doas /sbin/sysctl hw.perfpolicy="$POL"
