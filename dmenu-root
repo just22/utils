@@ -145,6 +145,7 @@ dict set SYSTEM_MENU            "Settings..."                   ""
 dict set SYSTEM_MENU            "Top"                           "xterm -e top"
 dict set SYSTEM_MENU            "Xconsole"                      "xconsole"
 dict set SYSTEM_MENU            "Xload"                         "xload"
+dict set SYSTEM_MENU            "Restart Network"               "/usr/bin/doas sh /etc/netstart"
 
 dict set SETTINGS_MENU          "Reload .Xresources"            "xrdb -load -I$env(HOME) $env(HOME)/.Xresources"
 dict set SETTINGS_MENU          "xfontsel"                      "xfontsel"
