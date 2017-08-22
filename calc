@@ -69,31 +69,26 @@ while getopts ":snp:" arg; do
         p) p="$OPTARG"  ;;
         esac
 done
-
-# Which command to print sequential data? (If seq(1) is not available,
-# revert to jot(1)
-s="$(seq $OPTIND $# 2>/dev/null)"
-args="${s:-$(jot - $OPTIND $# 1 2>/dev/null)}"
+shift $(($OPTIND - 1))
 
 # Remaining positional arguments represent the expression to be evaluated
- in_expr="$(for argno in "$args"; do eval "echo -n \$$argno"; done)"
-rdy_expr="$(echo $in_expr |
-            sed -E -e "s/([0-9]+)P/(\1*10^15)/g;   \
-                       s/([0-9]+)T/(\1*10^12)/g;   \
-                       s/([0-9]+)G/(\1*10^9)/g;    \
-                       s/([0-9]+)M/(\1*10^6)/g;    \
-                       s/([0-9]+)k/(\1*10^3)/g;    \
-                       s/([0-9]+)m/(\1*10^-3)/g;   \
-                       s/([0-9]+)u/(\1*10^-6)/g;   \
-                       s/([0-9]+)n/(\1*10^-9)/g;   \
-                       s/([0-9]+)p/(\1*10^-12)/g;  \
-                       s/([0-9]+)f/(\1*10^-15)/g")"
+in_expr="$(echo "$*" |
+           sed -E -e "s/([0-9]+)P/(\1*10^15)/g;   \
+                      s/([0-9]+)T/(\1*10^12)/g;   \
+                      s/([0-9]+)G/(\1*10^9)/g;    \
+                      s/([0-9]+)M/(\1*10^6)/g;    \
+                      s/([0-9]+)k/(\1*10^3)/g;    \
+                      s/([0-9]+)m/(\1*10^-3)/g;   \
+                      s/([0-9]+)u/(\1*10^-6)/g;   \
+                      s/([0-9]+)n/(\1*10^-9)/g;   \
+                      s/([0-9]+)p/(\1*10^-12)/g;  \
+                      s/([0-9]+)f/(\1*10^-15)/g")"
 
 # Prefixes in input expression?
-[ "$in_expr" != "$rdy_expr" ] && use_prefix=1
+[ "$in_expr" != "$*" ] && use_prefix=1
 
 # Run computation, exit on errors
-res="$(awk "BEGIN {printf \"%.15$fmt\", $rdy_expr}" 2>/dev/null)"
+res="$(awk "BEGIN {printf \"%.15$fmt\", $in_expr}" 2>/dev/null)"
 if [ "$?" -ne 0 ]; then
         >&2 echo "$(basename "$0"): Expression evaluation error"
         exit 1
