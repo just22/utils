@@ -16,7 +16,7 @@ _usage() {
 
 eng_fmt() {
         IFS="E" read mant exp <<- EOT
-		$(echo $1)
+		$1
 	EOT
 
         # Convert exp in a signed integer
@@ -70,8 +70,13 @@ while getopts ":snp:" arg; do
         esac
 done
 
+# Which command to print sequential data? (If seq(1) is not available,
+# revert to jot(1)
+s="$(seq $OPTIND $# 2>/dev/null)"
+args="${s:-$(jot - $OPTIND $# 1 2>/dev/null)}"
+
 # Remaining positional arguments represent the expression to be evaluated
- in_expr="$(for argno in $(jot - $OPTIND $# 1 2>/dev/null); do eval "echo -n \$$argno"; done)"
+ in_expr="$(for argno in "$args"; do eval "echo -n \$$argno"; done)"
 rdy_expr="$(echo $in_expr |
             sed -E -e "s/([0-9]+)P/(\1*10^15)/g;   \
                        s/([0-9]+)T/(\1*10^12)/g;   \
