@@ -165,15 +165,15 @@ menu() {
 
 show() {
         if [ "$action" -ge 1 ] && [ "$action" -le $(echo "$matchList" | wc -l) ]; then
-                sel="$(echo "$matchList" |
-                       head -n "$action" | tail -n 1)"
+                sel="$(echo "$matchList" | sed -e "${action}q;d")"
                 if [ "$(echo "$sel" | awk '{print $3}')" == "N/A" ]; then
                         sp="$(echo $sel | awk '{$1=$2=$3=""; print substr($0, 1, 25)}' |
                                           sed -E -e "s/^\s+//; s/ \.\.\.$//")"
                 else
                         sp="$(echo $sel | awk '{print $3}')"
                 fi
-                ${grepCmd-grep} ${grepOpt---color=always -T} -E -C 3 -n "$sp" "$logFile" | less -R
+
+                ${grepCmd-grep} ${grepOpt---color=always -T} -F -C 3 -n "$sp" "$logFile" | less -R
         fi
 }
 
