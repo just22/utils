@@ -71,7 +71,7 @@ while getopts ":snp:" arg; do
 done
 shift $(($OPTIND - 1))
 
-# Remaining positional arguments represent the expression to be evaluated
+# Remaining positional arguments are the expression's terms
 in_expr="$(echo "$*" |
            sed -E -e "s/([0-9]+)P/(\1*10^15)/g;   \
                       s/([0-9]+)T/(\1*10^12)/g;   \
