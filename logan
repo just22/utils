@@ -36,26 +36,34 @@
 # POSSIBILITY OF SUCH DAMAGE.
 # ----------------------------------------------------------------------------
 
-_help() { cat << HELP
+_help() { cat << __HELP__
 NAME
   logan - LOG ANalyzer (and Wolverine's human side, of course!)
 
 SYNOPSIS
-  logan -p pattern -c pattern [-g string] [-o \string\] [-i file] file
-  logan -t tool [-g string] [-o \string\] [-i file] file
+  logan -p pattern -c pattern [-g string] [-o "string"] [-i file] logFile
+  logan -t tool [-g string] [-o "string"] [-i file] logFile
 
 DESCRIPTION
-  The logan utility seaches the input file, selecting lines that match a
-  specific pattern, provided by the user or automatically selected basing on
-  the tool generating the file.  A code pattern may be also checked in order
-  to make a taxonomy of matching lines.  Some results may be removed from the
-  report (when considered "safe") adding their code in a file.  From the main
-  menu, user is allowed to perform these operations:
-  - view all the occurrences of a specific match, with a minimal context;
-  - view the whole file;
-  - toggle on/off the safe-known message visibility.
+  Logan seaches logFile, selecting lines that match a specific pattern,
+  provided by the user or based on the tool generating it.  A code pattern may
+  be also checked in order to make a taxonomy of matching lines.  Some results
+  may be removed from the report (when considered "safe") adding their code in
+  a file.
+  An ordered list of matches is presented (only the first 25 chars are involved
+  in the sort operation); line's description is limited to 100 chars.
 
-  Modifications to log file are not allowed.
+  From the main menu, user is allowed to perform the following operations:
+  - view all the occurrences of a specific match, with a minimal context;
+  - view the whole logFile;
+  - toggle on/off the safe-known messages visibility.
+
+  When user requests to view the occurrences of a specific match, a new screen
+  is shown containing the lines with the selected code (when relevant), or the
+  first 25 chars of the message's description part, surrounded by the two
+  preceeding and the two following lines in logFile.
+
+  Modifications to logFile are not allowed.
 
   The following options are available:
 
@@ -63,15 +71,14 @@ DESCRIPTION
 
   -c pattern   A regex representing the code pattern for each specific match;
 
-  -t tool      The tool that is generating the log file; possible values are:
-  dc      - Synopsys Design Compiler; pt      - Synopsys PrimeTime suite;
-  innovus - Cadence Innovus Digital Implementation System;
+  -t tool      The tool that is generating logFile; possible values are:
+               dc      - Synopsys Design Compiler;
+               pt      - Synopsys PrimeTime suite;
+               innovus - Cadence Innovus Digital Implementation System;
 
-  -g string    A string containing the command used as grep utility (defaults
-  to "grep");
+  -g string    Grep utility command name (defaults to "grep");
 
-  -o string    A string containing the non-POSIX grep's options (defaults to
-  "--color=always -T");
+  -o string    Non-POSIX grep's options (defaults to "--color=always -T");
 
   -i file      A file containing a list of codes to be ignored, one per line.
 
@@ -79,7 +86,7 @@ DESCRIPTION
 
 
 EXIT STATUS
-  The logan utility exits with one of the following values:
+  Logan exits with one of the following values:
     0: Script completed with no error;
     1: Unknown option, missing or non-existing file, pattern not specified.
 
@@ -98,14 +105,14 @@ EXAMPLES
     $> logan -p "^\*info:" -c "\(ID-[0-9]+\)" logFile
 
 SEE ALSO
-grep(1), awk(1)
+grep(1), awk(1), sed(1), less(1)
 
 AUTHOR
   Alessandro De Laurenzis, <alessandro.de-laurenzis@st.com>
   MSD - MEMS Sensors Division
   AMG - Analog & MEMS Group
   STMicroelectronics
-HELP
+__HELP__
 }
 
 match() {
@@ -183,12 +190,12 @@ show() {
 #
 
 # Command line non-positional arguments parsing
-if [ "$1" == -h ]; then
-        >&2 _help
-        exit 0
-fi
-while getopts ":p:t:g:o:i:" arg; do
+while getopts ":hp:t:g:o:i:" arg; do
         case "$arg" in
+        h)
+                _help
+                exit 0
+                ;;
         p)
                 pattern="$OPTARG"
                 ;;
