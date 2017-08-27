@@ -44,7 +44,8 @@ today_untimed () {
         esac
 }
 
-# Daemonize
+# Trigger the warning for today's untimed events, then daemonize
+( sleep 15; today_untimed ) &
 LOOP=1
 while [ "${LOOP}" == 1 ]; do
     sleep 1
