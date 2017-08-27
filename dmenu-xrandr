@@ -19,8 +19,6 @@ set -A MENU_ITEMS \
 
 LVDS="$(xrandr -q | grep -w connected | awk '{print $1}' | grep LVDS)"
  VGA="$(xrandr -q | grep -w connected | awk '{print $1}' | grep VGA)"
-echo $LVDS
-echo $VGA
 if [ -z "$LVDS" ] || [ -z "$VGA" ]; then
         echo "No dual monitor configuration available" |
         xmessage -center -title "dmenu-xrandr" -buttons "Close" -file -
