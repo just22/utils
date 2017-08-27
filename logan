@@ -41,15 +41,14 @@ NAME
   logan - LOG ANalyzer (and Wolverine's human side, of course!)
 
 SYNOPSIS
-  logan -p pattern -c pattern [-g string] [-o "string"] [-i file] logFile
-  logan -t tool [-g string] [-o "string"] [-i file] logFile
+  logan -p pattern -c pattern [-g string] [-o string] [-i file] logFile
+  logan -t tool [-g string] [-o string] [-i file] logFile
 
 DESCRIPTION
   Logan seaches logFile, selecting lines that match a specific pattern,
-  provided by the user or based on the tool generating it.  A code pattern may
-  be also checked in order to make a taxonomy of matching lines.  Some results
-  may be removed from the report (when considered "safe") adding their code in
-  a file.
+  provided by the user or based on the tool generating the log.  A code pattern
+  may also be used to arrange matching lines by classes.  Some results may be
+  removed from the report (when considered "safe") adding their code in a file.
   An ordered list of matches is presented (only the first 25 chars are involved
   in the sort operation); line's description is limited to 100 chars.
 
