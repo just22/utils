@@ -1,0 +1,24 @@
+#!/bin/sh
+
+# ----------------------------------------------------------------------
+#  $Id$
+#
+#  Typically used before suspend to RAM/disk operations:
+#  - reset the screen (forcing LVDS only) and lock it;
+#  - reset keyboard layout to "it".
+# ----------------------------------------------------------------------
+
+# No output msgs, please
+exec >/dev/null 2>&1
+
+# Force LVDS-only display layout
+LVDS="$(xrandr -q | awk '{print $1}' | grep LVDS)"
+ VGA="$(xrandr -q | awk '{print $1}' | grep VGA)"
+ DVI="$(xrandr -q | awk '{print $1}' | grep DVI)"
+wmrestart --display $DISPLAY --output "$LVDS" --auto --output "$VGA" --off --output "$DVI" --off
+
+# Lock the screen
+xscreensaver-command -lock
+
+# Reset keyboard layout
+setxkbmap it
