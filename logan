@@ -49,8 +49,8 @@ DESCRIPTION
   provided by the user or based on the tool generating the log.  A code pattern
   may also be used to arrange matching lines by classes.  Some results may be
   removed from the report (when considered "safe") adding their code in a file.
-  An ordered list of matches is presented (only the first 25 chars are involved
-  in the sort operation); line's description is limited to 100 chars.
+  An ordered list of matches is presented, sort operation being based on code
+  (when relevant), or on first 25 description's chars).
 
   From the main menu, user is allowed to perform the following operations:
   - view all the occurrences of a specific match, with a minimal context;
@@ -58,9 +58,7 @@ DESCRIPTION
   - toggle on/off the safe-known messages visibility.
 
   When user requests to view the occurrences of a specific match, a new screen
-  is shown containing the lines with the selected code (when relevant), or the
-  first 25 chars of the message's description part, surrounded by the two
-  preceeding and the two following lines in logFile.
+  is shown with relevant logFile's lines surrounded by minimal context.
 
   Modifications to logFile are not allowed.
 
@@ -74,6 +72,7 @@ DESCRIPTION
                dc      - Synopsys Design Compiler;
                pt      - Synopsys PrimeTime suite;
                innovus - Cadence Innovus Digital Implementation System;
+               nc      - Cadence Incisive Enterprise Simulator;
 
   -g string    Grep utility command name (defaults to "grep");
 
@@ -121,23 +120,29 @@ match() {
         # List format:
         # Line# #occur code|N/A desc
         #
-        awk -v p="$(echo $pattern | sed -e 's/\\/\\\\\\/')" \
-            -v cp="$(echo $codePattern | sed -e 's/\\/\\\\\\/')" '
+        m=$(awk -v p="$(echo $pattern | sed -e 's/\\/\\\\\\/')" \
+                -v cp="$(echo $codePattern | sed -e 's/\\/\\\\\\/')" '
                 $0 ~ p  {
                         if (cp != "") match($0, cp, arr);
                         if (arr[0] != "") {
                                 code = arr[0];
                                 sub(cp, "")
+                                sub(/^[[:space:]]+/, "");
+                                sub(/[[:space:]]+$/, "");
+                                gsub(/[[:space:]]+/, " ");
                         } else
                                 code = "N/A";
-                        sub(/^[[:space:]]+/, "");
-                        sub(/[[:space:]]+$/, "");
-                        gsub(/[[:space:]]+/, " ");
                         if (length($0) > 100) $0 = substr($0, 1, 97) "...";
-                        printf "%s %s\n", code, $0
-                }
-        ' "$logFile" 2>/dev/null |
-        sort | uniq -c -w 25
+                        printf "%-15s %s\n", code, $0
+                }' "$logFile" 2>/dev/null | sort -r)
+        m_coded=$(echo "$m" | grep -v "^N/A ")
+        m_nocode=$(echo "$m" | grep "^N/A ")
+
+        # Classified lines: sort based on code
+        [ -n "$m_coded" ]  && echo "$m_coded" | uniq -c -w 15
+
+        # Unclassified lines: sort based on description's first 25 chars
+        [ -n "$m_nocode" ] && echo "$m_nocode" | uniq -c -w 41
 }
 
 list() {
@@ -161,9 +166,9 @@ list() {
 
 menu() {
         echo "------------------------------------------------------------------------"
-        echo "Insert line number to show pattern matches (with context), or:"
+        echo "Insert line number to show pattern occurrences (with context), or:"
         echo "'v' to view log file"
-        echo "'t' to toggle safe-known patterns visibility"
+        echo "'t' to toggle on/off safe-known patterns visibility"
         echo "'q' to exit"
         echo "------------------------------------------------------------------------"
         echo
@@ -171,14 +176,21 @@ menu() {
 
 show() {
         if [ "$action" -ge 1 ] && [ "$action" -le $(echo "$matchList" | wc -l) ]; then
-                sel="$(echo "$matchList" | sed -e "${action}q;d")"
-                if [ "$(echo "$sel" | awk '{print $3}')" == "N/A" ]; then
-                        sp="$(echo $sel | awk '{$1=$2=$3=""; print substr($0, 1, 25)}' |
-                                          sed -E -e "s/^\s+//; s/ \.\.\.$//")"
-                else
-                        sp="$(echo $sel | awk '{print $3}')"
-                fi
 
+                # Select ${action}th line of match-set
+                sel="$(echo "$matchList" | sed -e "${action}q;d")"
+
+                if [ "$(echo "$sel" | awk '{print $3}')" == "N/A" ]; then
+                        # Unclassified line: search for description's first 25 chars
+                        #        <- 15  chars ->
+                        # (code="N/A <-12space->", 12 + 25 = 37
+                        sp="$(echo "$sel" |
+                              awk -F " N/A " '{print substr($2, 1, 37)}' |
+                              sed -E -e "s/^\s+//; s/ \.\.\.$//")"
+                else
+                        # Classified line: search for code
+                        sp="$(echo "$sel" | awk '{print $3}')"
+                fi
                 ${grepCmd-grep} ${grepOpt---color=always -T} -F -C 3 -n "$sp" "$logFile" | less -R
         fi
 }
@@ -189,14 +201,11 @@ show() {
 #
 
 # Command line non-positional arguments parsing
-while getopts ":hp:t:g:o:i:" arg; do
+while getopts ":ht:p:c:g:o:i:" arg; do
         case "$arg" in
         h)
                 _help
                 exit 0
-                ;;
-        p)
-                pattern="$OPTARG"
                 ;;
         t)
                 case "$OPTARG" in
@@ -208,10 +217,22 @@ while getopts ":hp:t:g:o:i:" arg; do
                         pattern="^\*\*ERROR:|^\*\*WARN:"
                         codePattern="\([A-Z]+-[0-9]+\):"
                         ;;
+                nc)
+                        #pattern="\*[W,E]"
+                        #codePattern="\*[W,E],[A-Za-z0-9]+:"
+                        #
+                        # "Hackish" patterns to match UVM error/warnings and
+                        # timing violations
+                        pattern="\*[W,E]|^Error|^Warning|_WARNING|_ERROR"
+                        codePattern="\*[W,E],[A-Za-z0-9]+:|[A-Za-z0-9]+_WARNING|[A-Za-z0-9]+_ERROR"
+                        ;;
                 *)
                         >&2 echo "$(basename $0): Unknown tool: $OPTARG"
                         exit 1
                 esac
+                ;;
+        p)
+                pattern="$OPTARG"
                 ;;
         c)
                 codePattern="$OPTARG"
@@ -248,7 +269,7 @@ if [ "$#" -ne 1 ]; then
 fi
 logFile="$1"
 
-# Check for logFile existance
+# Check if logFile exists
 if [ ! -f "$logFile" ]; then
         >&2 echo "$(basename $0): cannot stat $logFile: No such file"
         exit 1
@@ -261,25 +282,32 @@ if [ -z "$pattern" ]; then
         exit 1
 fi
 
-# Switch off LESS filters
-LESSOPEN=
+# less(1) options: clear the screen and ignore filters
+LESS="-c"; LESSOPEN=
 
 # Match logFile's lines againts pattern
 echo "Analyzing file, please wait..."
 allLines="$(match)"
+
+# If ignoreFile is specified, obtain unsafeLines removing its content from allLines,
+# otherwise all lines are considered "unsafe"
 if [ -n "$ignoreFile" ]; then
         unsafeLines="$(echo "$allLines" | ${grepCmd-grep} -Ev "$(cat $ignoreFile)")"
 else
         unsafeLines="$allLines"
 fi
 
+# Exit if no occurrences of specified pattern found
 if [ -z "$allLines" ]; then
         echo "No occurrences of \"$pattern\" in $logFile"
         exit 0
 fi
+
+# By default, list all matches
 unsafeOnly=0
 matchList="$(echo "$allLines" | cat -n)"
 
+# Main loop (q to exit)
 while true; do
         list    # List of matches
         menu    # User actions
@@ -287,12 +315,15 @@ while true; do
         echo -n "What now? "; read action
         case "$action" in
         v)
-                ${PAGER:-less} "$logFile"
+                # View logFile
+                less "$logFile"
                 ;;
         [0-9]*)
-                show    # Show matching lines with context
+                # Show occurrences with context
+                show
                 ;;
         t)
+                # Toggle on/off safe-known patterns visibility
                 if [ "$unsafeOnly" -eq 1 ]; then
                         unsafeOnly=0;
                         matchList="$(echo "$allLines" | cat -n)"
