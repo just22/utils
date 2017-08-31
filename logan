@@ -36,7 +36,7 @@
 # POSSIBILITY OF SUCH DAMAGE.
 # ----------------------------------------------------------------------------
 
-_help() { cat << __HELP__
+_help() { cat | less << __HELP__
 NAME
   logan - LOG ANalyzer (and Wolverine's human side, of course!)
 
@@ -264,7 +264,7 @@ shift $(($OPTIND - 1))
 # Remaining positional argument is supposed to be the logFile
 if [ "$#" -ne 1 ]; then
         >&2 echo "$(basename $0): Missing logFile"
-        >&2 echo "Try \"$0 -h\" for more info"
+        >&2 echo "Try \"$(basename $0) -h\" for more info"
         exit 1
 fi
 logFile="$1"
@@ -278,7 +278,7 @@ fi
 # Check if pattern has been defined
 if [ -z "$pattern" ]; then
         >&2 echo "$(basename $0): Missing pattern or tool"
-        >&2 echo "Try \"$0 -h\" for more info"
+        >&2 echo "Try \"$(basename $0) -h\" for more info"
         exit 1
 fi
 
