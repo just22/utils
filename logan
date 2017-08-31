@@ -115,10 +115,10 @@ __HELP__
 
 match() {
         # Line's anatomy:
-        # [... desc ...] <pattern> [... desc ...] [<codePattern>] [... desc ...]
+        # [... descr ...] <pattern> [... descr ...] [<codePattern>] [... descr ...]
         #
         # List format:
-        # Line# #occur code|N/A desc
+        # Line# #occur code|N/A descr
         #
         m=$(awk -v p="$(echo $pattern | sed -e 's/\\/\\\\\\/')" \
                 -v cp="$(echo $codePattern | sed -e 's/\\/\\\\\\/')" '
@@ -179,19 +179,18 @@ show() {
 
                 # Select ${action}th line of match-set
                 sel="$(echo "$matchList" | sed -e "${action}q;d")"
-
                 if [ "$(echo "$sel" | awk '{print $3}')" == "N/A" ]; then
                         # Unclassified line: search for description's first 25 chars
-                        #        <- 15  chars ->
+                        #       "<- 15  chars ->"
                         # (code="N/A <-12space->", 12 + 25 = 37
-                        sp="$(echo "$sel" |
-                              awk -F " N/A " '{print substr($2, 1, 37)}' |
-                              sed -E -e "s/^\s+//; s/ \.\.\.$//")"
+                        s_str="$(echo "$sel" |
+                                 awk -F " N/A " '{print substr($2, 1, 37)}' |
+                                 sed -E -e "s/^\s+//")"
                 else
                         # Classified line: search for code
-                        sp="$(echo "$sel" | awk '{print $3}')"
+                        s_str="$(echo "$sel" | awk '{print $3}')"
                 fi
-                ${grepCmd-grep} ${grepOpt---color=always -T} -F -C 3 -n "$sp" "$logFile" | less -R
+                ${grepCmd-grep} ${grepOpt---color=always -T} -F -C 3 -n "$s_str" "$logFile" | less -R
         fi
 }
 
@@ -218,13 +217,14 @@ while getopts ":ht:p:c:g:o:i:" arg; do
                         codePattern="\([A-Z]+-[0-9]+\):"
                         ;;
                 nc)
-                        #pattern="\*[W,E]"
-                        #codePattern="\*[W,E],[A-Za-z0-9]+:"
-                        #
                         # "Hackish" patterns to match UVM error/warnings and
                         # timing violations
-                        pattern="\*[W,E]|^Error|^Warning|_WARNING|_ERROR"
-                        codePattern="\*[W,E],[A-Za-z0-9]+:|[A-Za-z0-9]+_WARNING|[A-Za-z0-9]+_ERROR"
+                        pattern="\*[E,W]|^Error|^Warning|_WARNING|_ERROR"
+                        codePattern="\*[E,W],[A-Za-z0-9]+:|[A-Za-z0-9]+_WARNING|[A-Za-z0-9]+_ERROR"
+                        #
+                        # For tool's native E/W msgs only:
+                        #pattern="\*[E,W]"
+                        #codePattern="\*[E,W],[A-Za-z0-9]+:"
                         ;;
                 *)
                         >&2 echo "$(basename $0): Unknown tool: $OPTARG"
