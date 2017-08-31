@@ -36,7 +36,7 @@
 # POSSIBILITY OF SUCH DAMAGE.
 # ----------------------------------------------------------------------------
 
-_help() { cat | less << __HELP__
+_help() { less << __HELP__
 NAME
   logan - LOG ANalyzer (and Wolverine's human side, of course!)
 
