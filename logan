@@ -114,11 +114,11 @@ __HELP__
 }
 
 match() {
-        # Line's anatomy:
+        # logFile line's anatomy:
         # [... descr ...] <pattern> [... descr ...] [<codePattern>] [... descr ...]
         #
         # List format:
-        # Line# #occur code|N/A descr
+        # Match #occur code|N/A descr
         #
         m=$(awk -v p="$(echo $pattern | sed -e 's/\\/\\\\\\/')" \
                 -v cp="$(echo $codePattern | sed -e 's/\\/\\\\\\/')" '
@@ -153,7 +153,7 @@ list() {
         echo "$matchList" |
         awk '
                 BEGIN {
-                        print "Line#   #Occur   Code              Description";
+                        print "Match   #Occur   Code              Description";
                         print "-----   ------   ---------------   -------------------------------------"
                 }
 
@@ -166,7 +166,7 @@ list() {
 
 menu() {
         echo "------------------------------------------------------------------------"
-        echo "Insert line number to show pattern occurrences (with context), or:"
+        echo "Insert match number to show pattern occurrences (with context), or:"
         echo "'v' to view log file"
         echo "'t' to toggle on/off safe-known patterns visibility"
         echo "'q' to exit"
