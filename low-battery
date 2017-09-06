@@ -1,0 +1,14 @@
+#!/bin/sh
+
+# ----------------------------------------------------------------------
+#  $Id$
+#
+#  Low battery warning
+# ----------------------------------------------------------------------
+
+lt=$(apm -m)
+msg="Low battery level (lifetime: $(($lt / 60)):$(($lt % 60)))"
+echo "$msg" |
+xmessage -title "Low battery" -center -buttons "OK":0,"Hibernate":2 -file -
+
+[ "$?" -eq 2 ] && apm -Z
