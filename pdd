@@ -1,0 +1,23 @@
+#!/bin/sh
+
+# ----------------------------------------------------------------------
+#  $Id$
+#
+#  dd with progress meter (requires pv)
+# ----------------------------------------------------------------------
+
+_usage() {
+        echo "Usage: $(basename $0) source dest"
+}
+
+if [ "$#" -ne 2 ]; then
+        _usage
+        exit 1
+fi
+
+src="$1"
+dest="$2"
+
+pv -tpreb "$src" | dd of="$dest" bs=4096
+
+exit 0
