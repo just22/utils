@@ -9,7 +9,7 @@
 _usage() {
         echo "Usage: $(basename $0): -h | <op> <dir> [<tag>]"
         echo "       -h: This help message"
-        echo "       <op>:=<get|update> Operation to perform"
+        echo "       <op>:=<checkout|update> Operation to perform"
         echo "       <dir>:=<src|xenocara|ports> Directory to fetch/update"
         echo "       <tag>:=<OPENBSD_x_x> Tag of stable branch; optional, defaults on current"
 }
@@ -32,9 +32,9 @@ fi
 [ -n "$3" ] && r_opt="-r$3"
 
 case "$1" in
-get)    cd ..; cvs -q get $r_opt -P "$2" ;;
-update) cvs -q update $r_opt -Pd ;;
-*)      >&2 echo "$(basename $0): Unknown operation"; exit 1
+checkout) cd ..; cvs -q get $r_opt -P "$2" ;;
+update)   cvs -q update $r_opt -Pd ;;
+*)        >&2 echo "$(basename $0): Unknown operation"; exit 1
 esac
 
 exit 0
