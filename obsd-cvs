@@ -21,7 +21,7 @@ if [ "$1" == -h ] || [ "$#" -lt 2 ] || [ "$#" -gt 3 ]; then
 fi
 
 # CVSROOT
-CVSROOT=anoncvs@anoncvs.fr.openbsd.org:/cvs
+export CVSROOT="anoncvs@anoncvs.fr.openbsd.org:/cvs"
 
 cd /usr/"$2" 2>/dev/null
 if [ "$?" -ne 0 ]; then
@@ -32,7 +32,7 @@ fi
 [ -n "$3" ] && r_opt="-r$3"
 
 case "$1" in
-checkout) cd ..; cvs -q get $r_opt -P "$2" ;;
+checkout) echo $CVSROOT; cd ..; cvs -q get $r_opt -P "$2" ;;
 update)   cvs -q update $r_opt -Pd ;;
 *)        >&2 echo "$(basename $0): Unknown operation"; exit 1
 esac
