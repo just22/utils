@@ -8,13 +8,12 @@
 #  Notes:
 #  - specific for OpenBSD;
 #  - special permissions are needed for some commands (mount, fsck,
-#    chgrp, chmod), so it should be run using /usr/bin/doas in order to gain
-#    appropriate permissions.
+#    chgrp, chmod), so it should be run using /usr/bin/doas in order to
+#    gain appropriate permissions.
 # ----------------------------------------------------------------------
 
 # ----------------------------------------------------------------------
 # Config section
-#
 #
 MOUNT_ROOT=/vol                 # It must exist and have the proper permissions
 RUN_FSCK=1                      # If enabled, fsck is run on all filesystems in
@@ -47,10 +46,10 @@ for DISKNAME in $(sysctl -n hw.disknames | tr "," " "); do
                         a:*|d:*|e:*|f:*|g:*|h:*|i:*|j:*|k:*|l:*|m:*|n:*|o:*|p:*)
                                 let ++NPART
 
-                                # Mount dir is the dev's label (or disk name if the former is unset)
+                                # DEV_NAME is the dev's label (or disk name if the former is unset)
                                 # (get rid of the leading space!)
-                                MOUNT_DIR[$DEV]=${LABEL[$DEV]:-${DISK[$DEV]}}
-                                MOUNT_DIR[$DEV]=${MOUNT_DIR[$DEV]# }
+                                DEV_NAME[$DEV]=${LABEL[$DEV]:-${DISK[$DEV]}}
+                                DEV_NAME[$DEV]=${DEV_NAME[$DEV]# }
 
                                 PART_NAME=${line%:*}
                                 PART_TYPE="$(echo $line | awk '{print $4}')"
@@ -61,9 +60,9 @@ for DISKNAME in $(sysctl -n hw.disknames | tr "," " "); do
                                         PART_ACTION="mount"
                                 fi
 
-                                PART[$NPART]="$DEV,$MOUNT_DIR,$PART_NAME,$PART_TYPE,$PART_ACTION"
+                                PART[$NPART]="$DEV,$DEV_NAME,$PART_NAME,$PART_TYPE,$PART_ACTION"
                                 ITEM[2*$NPART-1]="$NPART"
-                                ITEM[2*$NPART]="$MOUNT_DIR ($DEV) - Partition $PART_NAME ($PART_TYPE): $PART_ACTION"
+                                ITEM[2*$NPART]="$DEV_NAME ($DEV) - Partition $PART_NAME ($PART_TYPE): $PART_ACTION"
                                 ;;
                         esac
                 done
@@ -89,21 +88,21 @@ SEL=$(Xdialog \
         --menubox "Select an action on available partitions" 15 90 1 "${ITEM[@]}")
 
 if [ -n "$SEL" ]; then
-        IFS="," read DEV MOUNT_DIR PART_NAME PART_TYPE PART_ACTION <<- EOT
+        IFS="," read DEV DEV_NAME PART_NAME PART_TYPE PART_ACTION <<- EOT
 		$(echo ${PART[$SEL]})
 	EOT
+        MOUNT_DIR="${MOUNT_ROOT}/${DEV_NAME}.${PART_NAME}"
         case "$PART_ACTION" in
         mount)
-                [ -d "${MOUNT_ROOT}/${MOUNT_DIR}/${PART_NAME}" ] || \
-                        mkdir -m "$MODE" -p "${MOUNT_ROOT}/${MOUNT_DIR}/${PART_NAME}" 2>/dev/null
-                        chgrp "$GROUP" "${MOUNT_ROOT}/${MOUNT_DIR}/${PART_NAME}" 2>/dev/null
+                [ -d "$MOUNT_DIR" ] || mkdir -m "$MODE" -p "$MOUNT_DIR" 2>/dev/null
+                chgrp "$GROUP" "$MOUNT_DIR" 2>/dev/null
                 if [ $? -ne 0 ]; then
                         Xdialog \
                                 --buttons-style text \
                                 --screen-center \
                                 --left \
                                 --title "Removable volume manager" \
-                                --msgbox "Cannot create ${MOUNT_ROOT}/${MOUNT_DIR}/{$PART_NAME}\nInsufficient permissions or\ndir already exists?" 7 45
+                                --msgbox "Cannot create $MOUNT_DIR\nInsufficient permissions?" 7 45
                         exit 2
                 fi
 
@@ -119,19 +118,18 @@ if [ -n "$SEL" ]; then
                 esac
 
                 [ "$RUN_FSCK" == 1 ] && [ "$NEEDS_FSCK" == 1 ] && fsck -p -y /dev/"${DEV}${PART_NAME}"
-                mount $MOUNT_OPT /dev/"${DEV}${PART_NAME}" "${MOUNT_ROOT}/${MOUNT_DIR}/${PART_NAME}"
+                mount $MOUNT_OPT /dev/"${DEV}${PART_NAME}" "$MOUNT_DIR"
 
                 # $FILEMGR, when set, must be invoked as unprivileged user
-                [ -n "$FILEMGR" ] && su ${SUDO_USER:-$USER} -c "$FILEMGR \"${MOUNT_ROOT}/${MOUNT_DIR}/${PART_NAME}\""
+                [ -n "$FILEMGR" ] && su ${SUDO_USER:-$USER} -c "$FILEMGR \"$MOUNT_DIR\" &"
                 ;;
 
         unmount)
-                umount /dev/"${DEV}${PART_NAME}"
-
-                rm -rf "${MOUNT_ROOT}/${MOUNT_DIR}/${PART_NAME}"
-                if ! [ ls -d "${MOUNT_ROOT}/${MOUNT_DIR}"/* >/dev/null 2>&1 ]; then
-                        rm -rf "${MOUNT_ROOT}/${MOUNT_DIR}"
-                fi
+                for pid in $(fstat | grep "$MOUNT_DIR" | awk '{print $3}' | sort -u); do
+                        kill -KILL "$pid"
+                done
+                umount "$MOUNT_DIR"
+                rm -r "$MOUNT_DIR"
                 ;;
 
         esac
