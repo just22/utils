@@ -8,8 +8,8 @@
 
 if [ "$1" == -q ]; then
         pkill -QUIT -f /usr/local/bin/offlineimap
-        offlineimap -s -u quiet -c ~/.offlineimaprc-sandro.delaurenzis@gmail.com &
-        offlineimap -s -u quiet -c ~/.offlineimaprc-just22@atlantide.t28.net &
+        offlineimap -s -u syslog -c ~/.offlineimaprc-sandro.delaurenzis@gmail.com &
+        offlineimap -s -u syslog -c ~/.offlineimaprc-just22@atlantide.t28.net &
 else
         pkill -USR1 -f /usr/local/bin/offlineimap
 fi
