@@ -1,0 +1,19 @@
+#!/bin/sh
+
+# ----------------------------------------------------------------------
+#  $Id$
+#
+#  Basic system monitors
+# ----------------------------------------------------------------------
+
+# System log
+xterm -title "System log" -e tail -f /var/log/messages &
+
+# Process monitor
+xterm -title "Process monitor" -e top &
+
+# Move windows to proper workspace
+sleep 2
+wmprocs move2ws 5 -w "$(wmprocs getwinid "System log")"
+wmprocs move2ws 5 -w "$(wmprocs getwinid "Process monitor")"
+wmprocs move2ws 5 -w "$(wmprocs getwinid "xconsole")"

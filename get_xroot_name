@@ -1,0 +1,9 @@
+#!/bin/sh
+
+# ----------------------------------------------------------------------
+#  $Id$
+#
+#  Get xroot window's name (useful for system monitoring "a-la-dwm"
+# ----------------------------------------------------------------------
+
+xwininfo -root | grep "^xwininfo:" | cut -d\" -f2
