@@ -11,7 +11,7 @@ echo $XSESSION_CMD
 DIALOG=Xdialog
 
 $DIALOG --title "Session logout" \
-        --radiolist "Please select a logout action:" 18 50 0 \
+        --radiolist "Please select an action:" 18 50 0 \
                 "Logout"        "Exit from current X session"   off \
                 "Suspend"       "Suspend to RAM"                off \
                 "Hibernate"     "Suspend to disk"               ON  \
