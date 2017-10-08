@@ -433,7 +433,7 @@ getwinid() {
                 rm -f $(dirname $0)/getwinid
                 ;;
         tile)
-                tile "${action:-""}" "${tile_gap:-""}" "${win_id:=""}"
+                tile "${action:-""}" "${tile_gap:-""}" "${win_id:-""}"
                 ;;
         move2ws)
                 move2ws "${action:-""}" "${activate_ws:-""}" "${win_id:-""}"
