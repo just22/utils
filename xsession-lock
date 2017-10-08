@@ -17,8 +17,14 @@ LVDS="$(xrandr -q | awk '{print $1}' | grep LVDS)"
  DVI="$(xrandr -q | awk '{print $1}' | grep DVI)"
 wmrestart --display $DISPLAY --output "$LVDS" --auto --output "$VGA" --off --output "$DVI" --off
 
-# Lock the screen
-xscreensaver-command -lock
+# Start xscreensaver, just in case it has been disabled
+if ! pgrep -u $USER xscreensaver; then
+        xscreensaver &
+        sleep 1
+fi
 
 # Reset keyboard layout
 setxkbmap it
+
+# Lock the screen
+xscreensaver-command -lock
