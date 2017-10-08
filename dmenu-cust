@@ -6,9 +6,24 @@
 #  dmenu launcher with custom default settings
 # ----------------------------------------------------------------------
 
+case "$XSESSION_CMD" in
+*dwm*)
+        NB="#EEE8D5"
+        NF="#293A1A"
+        SB="#2AA198"
+        SF="#FDF6E3"
+        ;;
+*xfce*)
+        NB="#DCDCDC"
+        NF="#404040"
+        SB="#404040"
+        SF="#DCDCDC"
+        ;;
+esac
+
 dmenu -fn "DejaVu Sans Mono:size=9" \
-      -nb "#eee8d5" \
-      -nf "#293a1a" \
-      -sb "#2aa198" \
-      -sf "#fdf6e3" \
+      -nb "$NB" \
+      -nf "$NF" \
+      -sb "$SB" \
+      -sf "$SF" \
       $@
