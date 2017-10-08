@@ -6,5 +6,5 @@
 #  Simple firefox launcher (reuse current instance if already running)
 # ----------------------------------------------------------------------
 
+xdotool search -sync -name ".*- Mozilla Firefox$" windowactivate &
 firefox-esr $@ &
-xdotool search -sync -name ".*- Mozilla Firefox$" windowactivate
