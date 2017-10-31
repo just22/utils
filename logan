@@ -113,6 +113,30 @@ AUTHOR
 __HELP__
 }
 
+analyze() {
+        # Match logFile's lines againts pattern
+        echo "Analyzing file, please wait..."
+        allLines="$(match)"
+
+        # If ignoreFile is specified, obtain unsafeLines removing its content from allLines,
+        # otherwise all lines are considered "unsafe"
+        if [ -n "$ignoreFile" ]; then
+                unsafeLines="$(echo "$allLines" | ${grepCmd-grep} -Ev "$(cat $ignoreFile)")"
+        else
+                unsafeLines="$allLines"
+        fi
+
+        # Exit if no occurrences of specified pattern found
+        if [ -z "$allLines" ]; then
+                echo "No occurrences of \"$pattern\" in $logFile"
+                exit 0
+        fi
+
+        # By default, list all matches
+        unsafeOnly=0
+        matchList="$(echo "$allLines" | cat -n)"
+}
+
 match() {
         # logFile line's anatomy:
         # [... descr ...] <pattern> [... descr ...] [<codePattern>] [... descr ...]
@@ -121,7 +145,8 @@ match() {
         # Match #occur code|N/A descr
         #
         m=$(awk -v p="$(echo $pattern | sed -e 's/\\/\\\\\\/')" \
-                -v cp="$(echo $codePattern | sed -e 's/\\/\\\\\\/')" '
+                -v cp="$(echo $codePattern | sed -e 's/\\/\\\\\\/')" \
+                -v cols="$(($(tput cols) - 36))" '
                 $0 ~ p  {
                         if (cp != "") match($0, cp, arr);
                         if (arr[0] != "") {
@@ -132,7 +157,7 @@ match() {
                                 gsub(/[[:space:]]+/, " ");
                         } else
                                 code = "N/A";
-                        if (length($0) > 100) $0 = substr($0, 1, 97) "...";
+                        if (length($0) > cols) $0 = substr($0, 1, (cols - 3)) "...";
                         printf "%-15s %s\n", code, $0
                 }' "$logFile" 2>/dev/null | sort -r)
         m_coded=$(echo "$m" | grep -v "^N/A ")
@@ -166,9 +191,11 @@ list() {
 
 menu() {
         echo "------------------------------------------------------------------------"
-        echo "Insert match number to show pattern occurrences (with context), or:"
+        echo "Insert match number to show pattern occurrences with minimal context"
+        echo "(prepend it with \"-\" to remove the line from list), or:"
         echo "'v' to view log file"
         echo "'t' to toggle on/off safe-known patterns visibility"
+        echo "'r' to re-do log file analysis"
         echo "'q' to exit"
         echo "------------------------------------------------------------------------"
         echo
@@ -213,7 +240,7 @@ while getopts ":ht:p:c:g:o:i:" arg; do
                         codePattern="\([A-Z]+-[0-9]+\)$"
                         ;;
                 innovus)
-                        pattern="^\*\*ERROR:|^\*\*WARN:"
+                        pattern="^\*\*ERROR:|^\*\*WARN:|^Error:|^Warning:"
                         codePattern="\([A-Z]+-[0-9]+\):"
                         ;;
                 nc)
@@ -285,27 +312,8 @@ fi
 # less(1) options: clear the screen and ignore filters
 LESS="-c"; LESSOPEN=
 
-# Match logFile's lines againts pattern
-echo "Analyzing file, please wait..."
-allLines="$(match)"
-
-# If ignoreFile is specified, obtain unsafeLines removing its content from allLines,
-# otherwise all lines are considered "unsafe"
-if [ -n "$ignoreFile" ]; then
-        unsafeLines="$(echo "$allLines" | ${grepCmd-grep} -Ev "$(cat $ignoreFile)")"
-else
-        unsafeLines="$allLines"
-fi
-
-# Exit if no occurrences of specified pattern found
-if [ -z "$allLines" ]; then
-        echo "No occurrences of \"$pattern\" in $logFile"
-        exit 0
-fi
-
-# By default, list all matches
-unsafeOnly=0
-matchList="$(echo "$allLines" | cat -n)"
+# Analyze log file
+analyze
 
 # Main loop (q to exit)
 while true; do
@@ -322,6 +330,11 @@ while true; do
                 # Show occurrences with context
                 show
                 ;;
+        -[0-9]*)
+                # Remove entry from list of matches
+                allLines="$(echo "$allLines" | sed -e "${action#-}d")"
+                matchList="$(echo "$allLines" | cat -n)"
+                ;;
         t)
                 # Toggle on/off safe-known patterns visibility
                 if [ "$unsafeOnly" -eq 1 ]; then
@@ -333,6 +346,9 @@ while true; do
                         unsafeOnly=1;
                         matchList="$(echo "$unsafeLines" | cat -n)"
                 fi
+                ;;
+        r)
+                analyze
                 ;;
         q)
                 exit 0
