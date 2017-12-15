@@ -89,6 +89,8 @@ change_color() {
                 send_osc 10 "$2" ;;
         background)
                 send_osc 11 "$2" ;;
+        highlight)
+                send_osc 17 "$2" ;;
         esac
 }
 
@@ -128,6 +130,7 @@ set)
                 for res in color{0..15} foreground background; do
                         change_color "$res" "$(xrdb -query | grep "\*$res" | awk '{print $2}')"
                 done
+                change_color highlight "$(xrdb -query | grep "\*foreground" | awk '{print $2}')"
 
         else
                 >&2 echo "$(basename $0): Missing or unknown colorscheme"
