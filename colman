@@ -1,0 +1,131 @@
+#!/bin/sh
+
+# ----------------------------------------------------------------------
+#  $Id$
+#
+#  COLors MANager - Command line tool to set base16 themes "globally"
+#                   (sort of... currently it can manage xterm and vim)
+# ----------------------------------------------------------------------
+
+# ----------------------------------------------------------------------------
+# Copyright 2017 Alessandro De Laurenzis
+#
+# Redistribution and use in source and binary forms, with or without
+# modification, are permitted provided that the following conditions are met:
+#
+# 1. Redistributions of source code must retain the above copyright notice,
+# this list of conditions and the following disclaimer.
+#
+# 2. Redistributions in binary form must reproduce the above copyright notice,
+# this list of conditions and the following disclaimer in the documentation
+# and/or other materials provided with the distribution.
+#
+# 3. Neither the name of the copyright holder nor the names of its
+# contributors may be used to endorse or promote products derived from this
+# software without specific prior written permission.
+#
+# THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS"
+# AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE
+# IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE
+# ARE DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT HOLDER OR CONTRIBUTORS BE
+# LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR
+# CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF
+# SUBSTITUTE GOODS OR SERVICES; LOSS OF USE, DATA, OR PROFITS; OR BUSINESS
+# INTERRUPTION) HOWEVER CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN
+# CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE)
+# ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE
+# POSSIBILITY OF SUCH DAMAGE.
+# ----------------------------------------------------------------------------
+
+
+
+# ----------------------------------------------------------------------
+# Set vim colorscheme
+#
+set_vim_cs() {
+        rm -f $HOME/.vim/colors/base16.vim
+        ln -s $HOME/.base16/base16-vim/colors/${cs}.vim $HOME/.vim/colors/base16.vim
+}
+
+# ----------------------------------------------------------------------
+# Set Xresources colorscheme
+#
+set_xresources_cs() {
+        rm -f $HOME/.Xresources.d/base16.colors
+        ln -s $HOME/.base16/base16-xresources/xresources/${cs}.Xresources $HOME/.Xresources.d/base16.colors
+        xrdb -I$HOME -load $HOME/.Xresources
+}
+
+# ----------------------------------------------------------------------
+# Dynamically set colorscheme in current xterm
+#
+
+send_esc_seq() {
+        esc="$1"
+
+        # wrap escape sequence when within a TMUX session
+        [ ! -z "$TMUX" ] && esc="${DSC}tmux;${ESC}${esc}${ESC}\\"
+
+        printf "${esc}"
+}
+
+send_osc() {
+        Ps=$1
+        Pt=$2
+        command="$OSC$Ps;$Pt$BEL"
+        send_esc_seq $command
+}
+
+ESC="\033"
+BEL="\007"
+DSC="${ESC}P"
+OSC="${ESC}]"
+
+#for i in {1..10}; do echo $i; done
+
+# ----------------------------------------------------------------------
+# Main
+#
+
+# Command line arguments parsing
+cmd="$1"
+case "$cmd" in
+install)
+        git clone https://github.com/chriskempson/base16-xresources $HOME/.base16/base16-xresources
+        git clone https://github.com/chriskempson/base16-vim        $HOME/.base16/base16-vim
+        ;;
+update)
+        if [ -d $HOME/.base16/base16-xresources ] && [ -d $HOME/.base16/base16-vim ]; then
+                ( cd $HOME/.base16/base16-xresources; git pull )
+                ( cd $HOME/.base16/base16-vim; git pull )
+        else
+                >&2 echo "$(basename $0): base16 templates not found, please install them first"
+                exit 1
+        fi
+        ;;
+list)
+        for cs in $HOME/.base16/base16-xresources/xresources/*; do
+                cs="$(basename $cs)"
+                cs="${cs#base16-}"
+                echo ${cs%.Xresources}
+        done
+        ;;
+set)
+        shift;
+        cs="base16-${1%-256}"
+        if [ -f $HOME/.base16/base16-xresources/xresources/${cs}.Xresources ]; then
+                set_vim_cs
+                set_xresources_cs
+        else
+                >&2 echo "$(basename $0): Missing or unknown colorscheme"
+                exit 1
+        fi
+        ;;
+help)
+        ;;
+*)
+        >&2 echo "$(basename $0): Missing or unknown command"
+        >&2 echo "Try \"$(basename $0) help\" for more info"
+esac
+
+exit 0
