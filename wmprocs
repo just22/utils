@@ -324,16 +324,16 @@ move2ws() {
 winaction() {
         action="${1:-max}"
         win_id="${2:-$(actwin_id)}"
-        case $action in
+        case "$action" in
         *max*)
                 # Toggle maximized state of window (and optionally raise it)
                 #
-                if [ "${action#force}" != $action ]; then
-                        wmctrl -i -r $win_id -b add,maximized_horz,maximized_vert
+                if [ "${action#force}" != "$action" ]; then
+                        wmctrl -i -r "$win_id" -b add,maximized_horz,maximized_vert
                 else
-                        wmctrl -i -r $win_id -b toggle,maximized_horz,maximized_vert
+                        wmctrl -i -r "$win_id" -b toggle,maximized_horz,maximized_vert
                 fi
-                [ "${action%raise}" != $action ] && wmctrl -i -a $win_id
+                [ "${action%raise}" != "$action" ] && wmctrl -i -a "$win_id"
                 ;;
         kill)
                 # Kill a client by its X resource
