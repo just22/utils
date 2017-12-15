@@ -81,7 +81,16 @@ BEL="\007"
 DSC="${ESC}P"
 OSC="${ESC}]"
 
-#for i in {1..10}; do echo $i; done
+change_color() {
+        case $1 in
+        color*)
+                send_osc 4 "${1#color};$2" ;;
+        foreground)
+                send_osc 10 "$2" ;;
+        background)
+                send_osc 11 "$2" ;;
+        esac
+}
 
 # ----------------------------------------------------------------------
 # Main
@@ -116,6 +125,10 @@ set)
         if [ -f $HOME/.base16/base16-xresources/xresources/${cs}.Xresources ]; then
                 set_vim_cs
                 set_xresources_cs
+                for res in color{0..15} foreground background; do
+                        change_color "$res" "$(xrdb -query | grep "\*$res" | awk '{print $2}')"
+                done
+
         else
                 >&2 echo "$(basename $0): Missing or unknown colorscheme"
                 exit 1
