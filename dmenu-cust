@@ -19,6 +19,11 @@ case "$XSESSION_CMD" in
         SB="#404040"
         SF="#DCDCDC"
         ;;
+*)
+        NB="#DCDCDC"
+        NF="#404040"
+        SB="#404040"
+        SF="#DCDCDC"
 esac
 
 dmenu -fn "DejaVu Sans Mono:size=9" \
