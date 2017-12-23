@@ -37,23 +37,24 @@
 # POSSIBILITY OF SUCH DAMAGE.
 # ----------------------------------------------------------------------------
 
-
+# ----------------------------------------------------------------------
+# Set Xresources colorscheme
+#
+set_xresources_cs() {
+        rm -f $HOME/.Xresources.d/base16.colorscheme
+        grep -E "^!|^#define" $HOME/.base16/base16-xresources/xresources/${cs}.Xresources \
+                > $HOME/.Xresources.d/base16.colorscheme
+        xrdb -I$HOME -load $HOME/.Xresources
+}
 
 # ----------------------------------------------------------------------
 # Set vim colorscheme
 #
 set_vim_cs() {
-        rm -f $HOME/.vim/colors/base16.vim
-        ln -s $HOME/.base16/base16-vim/colors/${cs}.vim $HOME/.vim/colors/base16.vim
-}
-
-# ----------------------------------------------------------------------
-# Set Xresources colorscheme
-#
-set_xresources_cs() {
-        rm -f $HOME/.Xresources.d/base16.colors
-        ln -s $HOME/.base16/base16-xresources/xresources/${cs}.Xresources $HOME/.Xresources.d/base16.colors
-        xrdb -I$HOME -load $HOME/.Xresources
+        grep -E "^!|^#define" $HOME/.base16/base16-xresources/xresources/${cs}.Xresources |
+        sed  -E "s/^!/\"/; s/^#define/let/;
+                 s/base([0-9a-fA-F]{2})/g:gui\1/;
+                 s/#([0-9a-fA-F]{6})/= \"\1\"/" > $HOME/.vim/colors/base16_gui.def
 }
 
 # ----------------------------------------------------------------------
@@ -64,19 +65,19 @@ set_xresources_cs() {
 #
 
 send_esc_seq() {
-        seq="$1"
+        esc_seq="$1"
 
         # Wrap escape sequence when within a TMUX session
-        [ ! -z "$TMUX" ] && seq="${DSC}tmux;${ESC}${seq}${ESC}\\"
+        [ -n "$TMUX" ] && esc_seq="${DSC}tmux;${ESC}${esc_seq}${ESC}\\"
 
-        printf "${seq}"
+        echo -ne "${esc_seq}"
 }
 
 send_osc() {
-        Ps=$1
-        Pt=$2
+        Ps="$1"
+        Pt="$2"
         command="${OSC}${Ps};${Pt}${BEL}"
-        send_esc_seq $command
+        send_esc_seq "$command"
 }
 
 ESC="\033"
@@ -110,32 +111,48 @@ cmd="$1"
 case "$cmd" in
 install)
         git clone https://github.com/chriskempson/base16-xresources $HOME/.base16/base16-xresources
-        git clone https://github.com/chriskempson/base16-vim        $HOME/.base16/base16-vim
         ;;
 update)
-        if [ -d $HOME/.base16/base16-xresources ] && [ -d $HOME/.base16/base16-vim ]; then
+        if [ -d $HOME/.base16/base16-xresources ]; then
                 ( cd $HOME/.base16/base16-xresources; git pull )
-                ( cd $HOME/.base16/base16-vim; git pull )
         else
-                >&2 echo "$(basename $0): base16 templates not found, please install them first"
+                >&2 echo "$(basename $0): base16 xresources directory not found, please install it first"
                 exit 1
         fi
         ;;
 list)
         for cs in $HOME/.base16/base16-xresources/xresources/*; do
-                cs="$(basename $cs)"
+                cs="$(basename "$cs")"
                 cs="${cs#base16-}"
-                echo ${cs%.Xresources}
+                echo "${cs%.Xresources}"
         done
         ;;
 set)
         shift;
         cs="base16-${1%-256}"
         if [ -f $HOME/.base16/base16-xresources/xresources/${cs}.Xresources ]; then
-                set_vim_cs
                 set_xresources_cs
-                for res in background color{0..15} foreground; do
-                        change_color "$res" "$(xrdb -query | grep "\*$res" | awk '{print $2}')"
+                set_vim_cs
+                for res in background \
+                           color0 \
+                           color1 \
+                           color2 \
+                           color3 \
+                           color4 \
+                           color5 \
+                           color6 \
+                           color7 \
+                           color8 \
+                           color9 \
+                           color10 \
+                           color11 \
+                           color12 \
+                           color13 \
+                           color14 \
+                           color15 \
+                           foreground
+                do
+                        change_color "$res" "$(xrdb -query | grep "XTerm\*$res:" | awk '{print $2}')"
                 done
         else
                 >&2 echo "$(basename $0): Missing or unknown colorscheme"
