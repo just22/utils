@@ -3,27 +3,93 @@
 # ----------------------------------------------------------------------
 #  $Id$
 #
-#  Mounts partitions of removable devices through a menu, then
-#  (optionally) opens a filemanager window
-#  Notes:
-#  - specific for OpenBSD;
-#  - special permissions are needed for some commands (mount, fsck,
-#    chgrp, chmod), so it should be run using /usr/bin/doas in order to
-#    gain appropriate permissions.
+#  Automatic MOUNTer for OpenBSD
 # ----------------------------------------------------------------------
 
+_help() { less << __HELP__
+NAME
+  amount - Automatic MOUNTer
+
+SYNOPSIS
+  amount -h
+  amount [-r <root_dir>] [-g <group>] [-m <mode>] [-e <exclude_dev>] [-f <fileManager>]
+
+DESCRIPTION
+
+  Mounts partitions of removable devices through a menu, then
+  (optionally) opens a filemanager window
+  Notes:
+  - specific for OpenBSD;
+  - special permissions are needed for some commands (mount, fsck,
+    chgrp, chmod), so it should be run through /usr/bin/doas
+
+  The following options are available:
+
+  -r dir       Mount root dir; it must exist and have the proper
+               permissions (defaults to /vol);
+
+  -g group     Mount dir will be owned by this group;
+
+  -m mode      Mount dir will have these permissions;
+
+  -e device    Do not manage these devices;
+
+  -f string    Filemanager to be opened after mounting a partition
+
+EXIT STATUS
+  amount exits with one of the following values:
+    0: Script completed with no error;
+    1: Unknown option or missing argument;
+    2: No removable devices;
+    3: Cannot create mount dir;
+    4: Unexpected fsck error.
+
+AUTHOR
+  Alessandro De Laurenzis, <just22@atlantide.t28.net>
+__HELP__
+}
+
 # ----------------------------------------------------------------------
-# Config section
+# Command line argument parsing
 #
-MOUNT_ROOT=/vol                 # It must exist and have the proper permissions
-RUN_FSCK=1                      # If enabled, fsck is run on all filesystems in
-                                # preen mode with "-y" option
-GROUP="diskmount"
+
+# Defaults
+MOUNT_ROOT=/vol
+GROUP=diskmount
 MODE=0775
-EXCLUDED_DEV="sd0"              # Do not manage these devices
-FILEMGR="xterm -title FileManager -e ranger"
-                                # Leave it empty if you don't want to open a
-                                # file manager window after mount
+EXCLUDED_DEV=""
+FILEMGR=""
+
+while getopts ":hr:g:m:e:f:" arg; do
+        case "$arg" in
+        h)
+                _help
+                exit 0
+                ;;
+        r)
+                MOUNT_ROOT="$OPTARG"
+                ;;
+        g)
+                GROUP="$OPTARG"
+                ;;
+        m)
+                MODE="$OPTARG"
+                ;;
+        e)
+                EXCLUDED_DEV="$OPTARG"
+                ;;
+        f)
+                FILEMGR="$OPTARG"
+                ;;
+        :)
+                echo "$(basename $0): Option -$OPTARG requires an argument"
+                exit 1
+                ;;
+        \?)
+                echo "$(basename $0): Unknown option: -$OPTARG"
+                exit 1
+        esac
+done
 # ----------------------------------------------------------------------
 
 NPART=0
@@ -54,15 +120,16 @@ for DISKNAME in $(sysctl -n hw.disknames | tr "," " "); do
                                 PART_NAME=${line%:*}
                                 PART_TYPE="$(echo $line | awk '{print $4}')"
 
-                                if mount | grep -q "${DEV}${PART_NAME}"; then
-                                        PART_ACTION="unmount"
-                                else
-                                        PART_ACTION="mount"
+                                if [ "$PART_TYPE" != "unknown" ]; then
+                                        if mount | grep -q "${DEV}${PART_NAME}"; then
+                                                PART_ACTION="unmount"
+                                        else
+                                                PART_ACTION="mount"
+                                        fi
+                                        PART[$NPART]="$DEV,$DEV_NAME,$PART_NAME,$PART_TYPE,$PART_ACTION"
+                                        ITEM[2*$NPART-1]="$NPART"
+                                        ITEM[2*$NPART]="$DEV_NAME ($DEV) - Partition $PART_NAME ($PART_TYPE): $PART_ACTION"
                                 fi
-
-                                PART[$NPART]="$DEV,$DEV_NAME,$PART_NAME,$PART_TYPE,$PART_ACTION"
-                                ITEM[2*$NPART-1]="$NPART"
-                                ITEM[2*$NPART]="$DEV_NAME ($DEV) - Partition $PART_NAME ($PART_TYPE): $PART_ACTION"
                                 ;;
                         esac
                 done
@@ -74,13 +141,14 @@ if [ ${#PART[*]} -eq 0 ]; then
                 --buttons-style text \
                 --screen-center \
                 --title "Removable volume manager" \
-                --msgbox "No removable devices (or no usable partitions)" 5 50
-        exit 1
+                --msgbox "No removable devices \
+                          or insufficient permissions" 5 60
+        exit 2
 fi
 
 SEL=$(Xdialog \
         --buttons-style text \
-        --rc-file ${HOME}/.Xdialog-fixedFont.rc \
+        --rc-file /usr/local/share/Xdialog/fixed-font.rc \
         --no-tags \
         --screen-center \
         --stdout \
@@ -102,23 +170,38 @@ if [ -n "$SEL" ]; then
                                 --screen-center \
                                 --left \
                                 --title "Removable volume manager" \
-                                --msgbox "Cannot create $MOUNT_DIR\nInsufficient permissions?" 7 45
-                        exit 2
+                                --msgbox "Cannot create $MOUNT_DIR\nInsufficient permissions?" 7 60
+                        exit 3
                 fi
 
                 case "$PART_TYPE" in
                 4.2BSD)
                         MOUNT_OPT="-t ffs -o rw,nodev,nosuid,noatime"
-                        NEEDS_FSCK=1
+                        RUN_FSCK=1
                         ;;
                 MSDOS)
                         MOUNT_OPT="-t msdos -o rw,nodev,nosuid,noatime"
-                        NEEDS_FSCK=0
+                        RUN_FSCK=0
+                        ;;
+                ext2fs)
+                        MOUNT_OPT="-t ext2fs -o rw,nodev,nosuid,noatime"
+                        RUN_FSCK=1
                         ;;
                 esac
 
-                [ "$RUN_FSCK" == 1 ] && [ "$NEEDS_FSCK" == 1 ] && fsck -p -y /dev/"${DEV}${PART_NAME}"
-                mount $MOUNT_OPT /dev/"${DEV}${PART_NAME}" "$MOUNT_DIR"
+                [ "$RUN_FSCK" == 1 ] && fsck -p -y /dev/"${DEV}${PART_NAME}"
+                if [ $? -ne 0 ]; then
+                        Xdialog \
+                                --buttons-style text \
+                                --screen-center \
+                                --left \
+                                --title "Removable volume manager" \
+                                --msgbox "/dev/${DEV}${PART_NAME}: unexpected inconsistency\nPlease run fsck manually" 7 45
+                        rm -r "$MOUNT_DIR"
+                        exit 4
+                else
+                        mount $MOUNT_OPT /dev/"${DEV}${PART_NAME}" "$MOUNT_DIR"
+                fi
 
                 # $FILEMGR, when set, must be invoked as unprivileged user
                 [ -n "$FILEMGR" ] && su ${SUDO_USER:-$USER} -c "$FILEMGR \"$MOUNT_DIR\" &"
@@ -135,3 +218,5 @@ if [ -n "$SEL" ]; then
         esac
 
 fi
+
+exit 0
