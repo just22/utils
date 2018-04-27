@@ -174,10 +174,9 @@ dict set X-UTILS_MENU           "Xrefresh"                      "xrefresh"
 dict set XCLOCK_MENU            "Analog Clock"                  "xclock -analog"
 dict set XCLOCK_MENU            "Digital Clock"                 "xclock -digital -update 1"
 
-dict set COLORSCHEME_MENU       "Solarized Dark"                "xrdb -merge $env(HOME)/.Xresources.d/solarized-dark"
-dict set COLORSCHEME_MENU       "Solarized Dark Desat"          "xrdb -merge $env(HOME)/.Xresources.d/solarized-dark-desat"
-dict set COLORSCHEME_MENU       "Solarized Light"               "xrdb -merge $env(HOME)/.Xresources.d/solarized-light"
-dict set COLORSCHEME_MENU       "Solarized Light Desat"         "xrdb -merge $env(HOME)/.Xresources.d/solarized-light-desat"
+dict set COLORSCHEME_MENU       "Solarized Dark"                "colman set solarized-dark"
+dict set COLORSCHEME_MENU       "Solarized Light"               "colman set solarized-light"
+dict set COLORSCHEME_MENU       "Ocean"                         "colman set ocean"
 
 # End of config section
 # ----------------------------------------------------------------------
