@@ -9,10 +9,19 @@
 # No output msgs, please
 exec >/dev/null 2>&1
 
-set -A MENU_ITEMS \
+_array() {
+        if [ "$KSH_VERSION" ]; then
+                set -A $1 "${@:2}"
+        else
+                eval $1='("${@:2}")'
+        fi
+}
+
+_array MENU_ITEMS \
         "Whole Desktop" \
         "Selected Window/Area"
 
 [ "$(printf "%s\n" "${MENU_ITEMS[@]}" |
      dmenu-cust -p Screenshot: -i "$@")" == "Whole Desktop" ] && ARG="desktop"
+
 screenshot $ARG

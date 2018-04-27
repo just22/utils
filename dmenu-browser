@@ -6,7 +6,15 @@
 #  Select browser using dmenu
 # ----------------------------------------------------------------------
 
-set -A MENU_ITEMS \
+_array() {
+        if [ "$KSH_VERSION" ]; then
+                set -A $1 "${@:2}"
+        else
+                eval $1='("${@:2}")'
+        fi
+}
+
+_array MENU_ITEMS \
         "firefox" \
         "chrome" \
         "surf-launcher"
