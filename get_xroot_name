@@ -3,7 +3,7 @@
 # ----------------------------------------------------------------------
 #  $Id$
 #
-#  Get xroot window's name (useful for system monitoring "a-la-dwm"
+#  Get xroot window's name (useful for system monitoring "a-la-dwm")
 # ----------------------------------------------------------------------
 
-xwininfo -root | grep "^xwininfo:" | cut -d\" -f2
+printf " %s \n" "$(xwininfo -root | grep "^xwininfo:" | cut -d\" -f2)"
