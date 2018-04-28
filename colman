@@ -68,7 +68,7 @@ send_esc_seq() {
         esc_seq="$1"
 
         # Wrap escape sequence when within a TMUX session
-        [ -n "$TMUX" ] && esc_seq="${DSC}tmux;${ESC}${esc_seq}${ESC}\\"
+        [ -n "$TMUX" ] && esc_seq="${DCS}tmux;${ESC}${esc_seq}${ESC}\\"
 
         echo -ne "${esc_seq}"
 }
@@ -84,7 +84,7 @@ ESC="\033"
 BEL="\007"
 
 # C1 (8-bit) control characters
-DSC="${ESC}P"   # Device Control String
+DCS="${ESC}P"   # Device Control String
 OSC="${ESC}]"   # Operating System Command
 
 change_color() {
