@@ -10,11 +10,14 @@
 exec >/dev/null 2>&1
 
 _array() {
-        if [ "$KSH_VERSION" ]; then
-                set -A $1 "${@:2}"
-        else
+        case "$SH_VERSION" in
+        *KSH*)
+                a="$1"; shift
+                set -A "$a" "$@"
+                ;;
+        *)
                 eval $1='("${@:2}")'
-        fi
+        esac
 }
 
 _array MENU_ITEMS \
@@ -37,12 +40,9 @@ case "$(printf "%s\n" "${MENU_ITEMS[@]}" |
         dmenu-cust -p VGA: "$@")" in
 Off*)   wmrestart --output "$LVDS" --auto --output "$VGA" --off ;;
 Only*)  wmrestart --output "$LVDS" --off  --output "$VGA" --auto ;;
-Left*)  wmrestart --output "$LVDS" --auto --primary --output "$VGA" --auto --left-of  "$LVDS" ;;
-Right*) wmrestart --output "$LVDS" --auto --primary --output "$VGA" --auto --right-of "$LVDS" ;;
-Above)  wmrestart --output "$LVDS" --auto --primary --output "$VGA" --auto --above    "$LVDS" ;;
-Below)  wmrestart --output "$LVDS" --auto --primary --output "$VGA" --auto --below    "$LVDS" ;;
+Left*)  wmrestart --output "$LVDS" --primary --auto --output "$VGA" --auto --left-of  "$LVDS" ;;
+Right*) wmrestart --output "$LVDS" --primary --auto --output "$VGA" --auto --right-of "$LVDS" ;;
+Above)  wmrestart --output "$LVDS" --primary --auto --output "$VGA" --auto --above    "$LVDS" ;;
+Below)  wmrestart --output "$LVDS" --primary --auto --output "$VGA" --auto --below    "$LVDS" ;;
 *)      exit 1
 esac
-
-# Reset desktop (background, statusbar, ...)
-wmrestart

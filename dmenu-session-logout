@@ -11,11 +11,14 @@
 exec >/dev/null 2>&1
 
 _array() {
-        if [ "$KSH_VERSION" ]; then
-                set -A $1 "${@:2}"
-        else
+        case "$SH_VERSION" in
+        *KSH*)
+                a="$1"; shift
+                set -A "$a" "$@"
+                ;;
+        *)
                 eval $1='("${@:2}")'
-        fi
+        esac
 }
 
 _array MENU_ITEMS \
@@ -43,6 +46,9 @@ Logout)
                 ;;
         *openbox*)
                 openbox --exit
+                ;;
+        *jwm*)
+                pkill jwm
                 ;;
         *)
                 ;;
