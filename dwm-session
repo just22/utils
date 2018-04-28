@@ -22,7 +22,8 @@ xsetroot -solid rgb:58/6E/75
 # Statusbar
 ~/bin/dstat trunk0 &
 
-while true; do
+while :
+do
     mv ~/.dwm.log{,.old}
     dwm 2> ~/.dwm.log || exit
 done
