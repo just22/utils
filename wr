@@ -1,0 +1,138 @@
+#!/bin/sh
+#
+#       wr
+#
+#       Copyright 2011 neurino <neurino@gmail.com>
+#
+#       This program is free software; you can redistribute it and/or modify
+#       it under the terms of the GNU General Public License as published by
+#       the Free Software Foundation; either version 2 of the License, or
+#       (at your option) any later version.
+#
+#       This program is distributed in the hope that it will be useful,
+#       but WITHOUT ANY WARRANTY; without even the implied warranty of
+#       MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+#       GNU General Public License for more details.
+#
+#       You should have received a copy of the GNU General Public License
+#       along with this program; if not, write to the Free Software
+#       Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston,
+#       MA 02110-1301, USA.
+#
+#       Copyright 2018 just22 <just22@atlantide.t28.net>
+#
+#       POSIX sh and BSD's sed compatibility
+
+API_KEY=3aca8
+
+usage(){
+    echo "Usage: `basename $0` [-c] dictionary term
+Term lookup at wordreference.com
+
+-c	return also compounds
+-h	show this help
+
+The dictionary that you want to look up your term in is specified by
+a combination of the two-letter code for the original language and
+the two-letter code for the target language.
+
+For example, if you are looking up for a word from English to French, the
+dictionary would be 'enfr', where 'en' stands for English, and 'fr' for French.
+The two letter language abbreviations are below:
+
+Language	Abbreviation
+========	============
+Arabic		ar
+Chinese		zh
+Czech		cz
+English		en
+French		fr
+Greek		gr
+Italian		it
+Japanese	ja
+Korean		ko
+Polish		pl
+Portuguese	pt
+Romanian	ro
+Spanish		es
+Turkish		tr
+"
+}
+
+#check number of args
+if [ $# -lt 2 ]; then
+	usage
+	exit 2
+fi
+#check
+
+#do not show compounds by default
+show_compounds=false
+#parse options
+while getopts 'ch' OPTION
+do
+    case $OPTION in
+        h)  usage
+            exit 0
+            ;;
+        c)  show_compounds=true
+            ;;
+        ?)  usage
+            exit 2
+            ;;
+    esac
+done
+shift $(($OPTIND - 1))
+
+#dictionary is first arg
+dict="$1"
+#remove dictionary from args
+shift
+#get all the remaining in a single var
+term="$@"
+#replace spaces with "+"
+term="$(echo $term | tr " " +)"
+
+#build url
+url="http://api.wordreference.com/$API_KEY/json/$dict/$term"
+
+#sed script
+sed_str='
+    /^"(Entries|AdditionalTranslations|PrincipalTranslations|OtherSideEntires)"/, /^"Compounds"/ {
+        /^[[:space:]]*"OriginalTerm"/ {
+            s/^[[:space:]]*"OriginalTerm"[ :\{]+"term"[ :]+"([^"]*)".*"sense"[ :]+"".*/\1:/
+            s/^[[:space:]]*"OriginalTerm"[ :\{]+"term"[ :]+"([^"]*)".*"sense"[ :]+"([^"]+)".*/\1 (\2):/
+            N
+            s/[[:space:]]*"FirstTranslation"[ :\{]+"term"[ :]+"([^"]*)".*/ \1/ p
+        }
+    }
+    s/\{"Note" : "([^"]*)"\}/\1/ p
+    s/[[:space:]]*<title>(404|ERROR).*/Unknown dictionary/ p
+    s/[[:space:]]*"URL" : "\/(.*)\/.*"/Did you mean \1 dictionary?/ p
+'
+
+#if requested add compounds to sed script
+if $show_compounds; then
+    sed_str="$sed_str"'/^"Compounds"/ a \\n:::::::Compounds:::::::\n
+        /^"Compounds"/, /}},/ {
+            /^[[:space:]]*"OriginalTerm"/ {
+                s/^[[:space:]]*"OriginalTerm"[ :\{]+"term"[ :]+"([^"]*)".*"sense"[ :]+"".*/\1:/
+                s/^[[:space:]]*"OriginalTerm"[ :\{]+"term"[ :]+"([^"]*)".*"sense"[ :]+"([^"]+)".*/\1 (\2):/
+                N
+                s/[[:space:]]*"FirstTranslation"[ :\{]+"term"[ :]+"([^"]*)".*/ \1/ p
+            }
+        }
+    '
+fi
+
+#add link and copyright notice
+sed_str="$sed_str"'
+$ a\
+--
+$ a\
+http://www.wordreference.com/'"$dict"'/'"$term"'
+$ a\
+© WordReference.com'
+
+#get json and parse it with sed
+curl --silent --user-agent "Mozilla" "$url" | sed -nr "$sed_str"
