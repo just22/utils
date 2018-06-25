@@ -69,54 +69,67 @@ _help() {
         echo "rm_links removes those links."
 }
 
-actwin_id() {
+_array() {
+        case "$SH_VERSION" in
+        *KSH*)
+                a="$1"; shift
+                set -A "$a" "$@"
+                ;;
+        *)
+                eval $1='("${@:2}")'
+        esac
+}
+
+get_actwin_id() {
         # Get active window id (in hex)
         #
         xprop -root _NET_ACTIVE_WINDOW |
         egrep -o "0x[0-9a-fA-F]{2,}"
 }
 
-win_ids() {
+get_win_ids() {
         # List X clients
         #
         xprop -root _NET_CLIENT_LIST |
         egrep -o "0x[0-9a-fA-F]+"
 }
 
-curr_ws() {
+get_curr_ws() {
         # Get current ws id
         #
         xprop -root _NET_CURRENT_DESKTOP |
         egrep -o "[0-9]+"
 }
 
-viswin_ids() {
+get_viswin_ids() {
         # Get visible window ids from the current workspace,
         # excluding docks and panels
         #
-        for win_id in $(win_ids)
+        actwin_id=${1:-$(get_actwin_id)}
+        curr_ws="$(get_curr_ws)"
+        for win_id in $(get_win_ids)
         do
-                if [ "$win_id" != "$(actwin_id)" ] &&
-                   [ "$(xprop -id $win_id _NET_WM_DESKTOP | egrep -o "[0-9]+")" = "$(curr_ws)" ] &&
+                if [ "$win_id" != "$actwin_id" ] &&
+                   [ "$(xprop -id $win_id _NET_WM_DESKTOP | egrep -o "[0-9]+")" = "$curr_ws" ] &&
                    ! xprop -id $win_id _NET_WM_WINDOW_TYPE | egrep "DOCK|DESKTOP" >/dev/null 2>&1 &&
                    xprop -id $win_id WM_STATE | grep "window state" | grep "Normal" >/dev/null 2>&1
                 then
-                        echo "$win_id "
+                        echo $win_id
                 fi
         done
 }
 
-win_orig() {
+get_win_orig() {
         # Get window's origin coordinates
         #
-        xwininfo -id ${1:-$(actwin_id)} |
+        xwininfo -id ${1:-$(get_actwin_id)} |
         grep "Absolute upper-left" |
         tail -n 2 |
         awk '{print $4}' |
         xargs
 }
 
-win_output_geom() {
+get_win_output_geom() {
         # Get the geometry of screen where current window is placed in
         #
         case $(xrandr -v | grep "RandR version" | awk '{print $NF}') in
@@ -130,7 +143,7 @@ win_output_geom() {
                 # window's origin
                 #
                 read w_x0 w_y0 <<- EOT
-			$(win_orig)
+			$(get_win_orig ${1:-$(get_actwin_id)})
 		EOT
                 for output_geom in \
                         $(xrandr -q |
@@ -153,12 +166,12 @@ win_output_geom() {
         esac
 }
 
-win_actarea() {
+get_win_actarea() {
         # Get the active area of the screen
         # (i.e. geometry, excluded docks, panels, ...)
         #
         IFS="x+" read output_xdim output_ydim output_x0 output_y0 <<- EOT
-		$(win_output_geom)
+		$(get_win_output_geom ${1:-$(get_actwin_id)})
 	EOT
         read work_x0 work_y0 work_xdim work_ydim DISCARD <<- EOT
 		$(xprop -root _NET_WORKAREA |
@@ -183,10 +196,10 @@ win_actarea() {
         echo $act_x0 $act_y0 $act_xdim $act_ydim
 }
 
-win_frame() {
+get_win_frame() {
         # Get current window's frame extension)
         #
-        xprop -id ${1:-$(actwin_id)} _NET_FRAME_EXTENTS |
+        xprop -id ${1:-$(get_actwin_id)} _NET_FRAME_EXTENTS |
         awk 'BEGIN{FS=" = "} {print $2}' |
         tr -d ","
 }
@@ -198,103 +211,139 @@ tile() {
         #
         # Note: wmctrl will place windows *and* *frame* according to
         #       "-e" option (but the dimension does't consider the
-        #       frame extension)
+        #       frame extension) - Using xdotool because more reliable
         #
         tile_action=${1:-t}
         tile_gap=${2:-2}
-        win_id=${3:-$(actwin_id)}
+        win_id=${3:-$(get_actwin_id)}
         read act_x0 act_y0 act_xdim act_ydim <<- EOT
-		$(win_actarea)
-	EOT
-        read frame_l frame_r frame_t frame_b <<- EOT
-		$(win_frame)
+		$(get_win_actarea $win_id)
 	EOT
         wmctrl -i -r $win_id -b remove,maximized_horz,maximized_vert
+        read frame_l frame_r frame_t frame_b <<- EOT
+		$(get_win_frame $win_id)
+	EOT
         case $tile_action in
         t)
+                win_x0=$act_x0
                 win_y0=$act_y0
+                win_xdim=$(($act_xdim - $frame_r - $frame_l - $tile_gap / 2))
                 win_ydim=$(($act_ydim / 2 - $frame_t - $frame_b - $tile_gap / 2))
-                wmctrl -i -r $win_id -b add,maximized_horz
-                wmctrl -i -r $win_id -e 0,-1,$win_y0,-1,$win_ydim
+                # wmctrl -i -r $win_id -b add,maximized_horz
+                # wmctrl -i -r $win_id -e 0,-1,$win_y0,-1,$win_ydim
+                xdotool windowmove $win_id x $win_y0 windowsize $win_id $win_xdim $win_ydim
                 ;;
         b)
+                win_x0=$act_x0
                 win_y0=$(($act_y0 + $act_ydim / 2 + $tile_gap / 2))
+                win_xdim=$(($act_xdim - $frame_r - $frame_l - $tile_gap / 2))
                 win_ydim=$(($act_ydim / 2 - $frame_t - $frame_b - $tile_gap / 2))
-                wmctrl -i -r $win_id -b add,maximized_horz
-                wmctrl -i -r $win_id -e 0,-1,$win_y0,-1,$win_ydim
+                # wmctrl -i -r $win_id -b add,maximized_horz
+                # wmctrl -i -r $win_id -e 0,-1,$win_y0,-1,$win_ydim
+                xdotool windowmove $win_id x $win_y0 windowsize $win_id $win_xdim $win_ydim
                 ;;
         l)
                 win_x0=$act_x0
+                win_y0=$act_y0
                 win_xdim=$(($act_xdim / 2 - $frame_r - $frame_l - $tile_gap / 2))
-                wmctrl -i -r $win_id -b add,maximized_vert
-                wmctrl -i -r $win_id -e 0,$win_x0,-1,$win_xdim,-1
+                win_ydim=$(($act_ydim - $frame_t - $frame_b - $tile_gap / 2))
+                # wmctrl -i -r $win_id -b add,maximized_vert
+                # wmctrl -i -r $win_id -e 0,$win_x0,-1,$win_xdim,-1
+                xdotool windowmove $win_id $win_x0 $win_y0 windowsize $win_id $win_xdim $win_ydim
                 ;;
         r)
                 win_x0=$(($act_x0 + $act_xdim / 2 + $tile_gap / 2))
+                win_y0=$act_y0
                 win_xdim=$(($act_xdim / 2 - $frame_r - $frame_l - $tile_gap / 2))
-                wmctrl -i -r $win_id -b add,maximized_vert
-                wmctrl -i -r $win_id -e 0,$win_x0,-1,$win_xdim,-1
+                win_ydim=$(($act_ydim - $frame_t - $frame_b - $tile_gap / 2))
+                # wmctrl -i -r $win_id -b add,maximized_vert
+                # wmctrl -i -r $win_id -e 0,$win_x0,-1,$win_xdim,-1
+                xdotool windowmove $win_id $win_x0 y windowsize $win_id $win_xdim $win_ydim
                 ;;
         tl)
                 win_x0=$act_x0
                 win_y0=$act_y0
                 win_xdim=$(($act_xdim / 2 - $frame_r - $frame_l - $tile_gap / 2))
                 win_ydim=$(($act_ydim / 2 - $frame_t - $frame_b - $tile_gap / 2))
-                wmctrl -i -r $win_id -e 0,$win_x0,$win_y0,$win_xdim,$win_ydim
+                # wmctrl -i -r $win_id -e 0,$win_x0,$win_y0,$win_xdim,$win_ydim
+                xdotool windowmove $win_id $win_x0 $win_y0 windowsize $win_id $win_xdim $win_ydim
                 ;;
         tr)
                 win_x0=$(($act_x0 + $act_xdim / 2 + $tile_gap / 2))
                 win_y0=$act_y0
                 win_xdim=$(($act_xdim / 2 - $frame_r - $frame_l - $tile_gap / 2))
                 win_ydim=$(($act_ydim / 2 - $frame_t - $frame_b - $tile_gap / 2))
-                wmctrl -i -r $win_id -e 0,$win_x0,$win_y0,$win_xdim,$win_ydim
+                # wmctrl -i -r $win_id -e 0,$win_x0,$win_y0,$win_xdim,$win_ydim
+                xdotool windowmove $win_id $win_x0 $win_y0 windowsize $win_id $win_xdim $win_ydim
                 ;;
         bl)
                 win_x0=$act_x0
                 win_y0=$(($act_y0 + $act_ydim / 2 + $tile_gap / 2))
                 win_xdim=$(($act_xdim / 2 - $frame_r - $frame_l - $tile_gap / 2))
                 win_ydim=$(($act_ydim / 2 - $frame_t - $frame_b - $tile_gap / 2))
-                wmctrl -i -r $win_id -e 0,$win_x0,$win_y0,$win_xdim,$win_ydim
+                # wmctrl -i -r $win_id -e 0,$win_x0,$win_y0,$win_xdim,$win_ydim
+                xdotool windowmove $win_id $win_x0 $win_y0 windowsize $win_id $win_xdim $win_ydim
                 ;;
         br)
                 win_x0=$(($act_x0 + $act_xdim / 2 + $tile_gap / 2))
                 win_y0=$(($act_y0 + $act_ydim / 2 + $tile_gap / 2))
                 win_xdim=$(($act_xdim / 2 - $frame_r - $frame_l - $tile_gap / 2))
                 win_ydim=$(($act_ydim / 2 - $frame_t - $frame_b - $tile_gap / 2))
-                wmctrl -i -r $win_id -e 0,$win_x0,$win_y0,$win_xdim,$win_ydim
+                # wmctrl -i -r $win_id -e 0,$win_x0,$win_y0,$win_xdim,$win_ydim
+                xdotool windowmove $win_id $win_x0 $win_y0 windowsize $win_id $win_xdim $win_ydim
                 ;;
         h)
-                viswin_no=$(viswin_ids | wc -l)
-                tile t $tile_gap ""
+                # Main window (note: recursively calling "tile t $tile_gap "" " is less efficient)
+                win_x0=$act_x0
+                win_y0=$act_y0
+                win_xdim=$(($act_xdim - $frame_r - $frame_l - $tile_gap / 2))
+                win_ydim=$(($act_ydim / 2 - $frame_t - $frame_b - $tile_gap / 2))
+                xdotool windowmove $win_id x $win_y0 windowsize $win_id $win_xdim $win_ydim
+
+                # Other windows
+                _array viswin_ids $(get_viswin_ids $win_id)
+                viswin_no=${#viswin_ids[@]}
                 win_xdim=$((($act_xdim - \
                              $tile_gap * ($viswin_no - 1) - \
                              ($frame_l + $frame_r) * $viswin_no) / $viswin_no))
                 win_y0=$(($act_y0 + $act_ydim / 2 + $tile_gap / 2))
                 win_ydim=$(($act_ydim / 2 - $frame_t - $frame_b - $tile_gap / 2))
                 win_cnt=0
-                for viswin_id in $(viswin_ids)
+                for viswin_id in ${viswin_ids[@]}
                 do
                         win_cnt=$(($win_cnt + 1))
                         win_x0=$(($act_x0 + ($win_xdim + $frame_l + $frame_r + $tile_gap) * ($win_cnt - 1)))
                         wmctrl -i -r $viswin_id -b remove,maximized_horz,maximized_vert
-                        wmctrl -i -r $viswin_id -e 0,$win_x0,$win_y0,$win_xdim,$win_ydim
+                        # wmctrl -i -r $viswin_id -e 0,$win_x0,$win_y0,$win_xdim,$win_ydim
+                        xdotool windowmove $viswin_id $win_x0 $win_y0 windowsize $viswin_id $win_xdim $win_ydim
                 done
                 ;;
         v)
-                viswin_no=$(viswin_ids | wc -l)
-                tile l $tile_gap ""
+                # Main window (note: recursively calling "tile l $tile_gap "" " is less efficient)
+                win_x0=$act_x0
+                win_y0=$act_y0
+                win_xdim=$(($act_xdim / 2 - $frame_r - $frame_l - $tile_gap / 2))
+                win_ydim=$(($act_ydim - $frame_t - $frame_b - $tile_gap / 2))
+                # wmctrl -i -r $win_id -b add,maximized_vert
+                # wmctrl -i -r $win_id -e 0,$win_x0,-1,$win_xdim,-1
+                xdotool windowmove $win_id $win_x0 $win_y0 windowsize $win_id $win_xdim $win_ydim
+
+                # Other windows
+                _array viswin_ids $(get_viswin_ids $win_id)
+                viswin_no=${#viswin_ids[@]}
                 win_x0=$(($act_x0 + $act_xdim / 2 + $tile_gap / 2))
                 win_xdim=$(($act_xdim / 2 - $frame_l - $frame_r - $tile_gap / 2))
                 win_ydim=$((($act_ydim - \
                                    $tile_gap * ($viswin_no - 1) - \
                                    ($frame_t + $frame_b) * $viswin_no) / $viswin_no))
                 win_cnt=0
-                for viswin_id in $(viswin_ids)
+                for viswin_id in ${viswin_ids[@]}
                 do
                         win_cnt=$(($win_cnt + 1))
                         win_y0=$(($act_y0 + ($win_ydim + $frame_t + $frame_b + $tile_gap) * ($win_cnt - 1)))
-                        wmctrl -i -r $viswin_id -b remove,maximized_horz,maximized_vert
-                        wmctrl -i -r $viswin_id -e 0,$win_x0,$win_y0,$win_xdim,$win_ydim
+                        # wmctrl -i -r $viswin_id -b remove,maximized_horz,maximized_vert
+                        # wmctrl -i -r $viswin_id -e 0,$win_x0,$win_y0,$win_xdim,$win_ydim
+                        xdotool windowmove $viswin_id $win_x0 $win_y0 windowsize $viswin_id $win_xdim $win_ydim
                 done
                 ;;
         *)
@@ -307,12 +356,12 @@ tile() {
 move2ws() {
         # Move window to workspace (and optionally activate it)
         #
-        ws=${1:-$(curr_ws)}
+        ws=${1:-$(get_curr_ws)}
         if env test "$ws" -lt $(xprop -root _NET_NUMBER_OF_DESKTOPS |
                                 awk 'BEGIN{FS=" = "} {print $2}') 2>/dev/null
         then
                 activate=${2:-0}
-                win_id="${3:-$(actwin_id)}"
+                win_id="${3:-$(get_actwin_id)}"
                 wmctrl -i -r $win_id -t $ws
                 [ "$activate" = 1 ] && wmctrl -i -a $win_id
         else
@@ -323,7 +372,7 @@ move2ws() {
 
 winaction() {
         action="${1:-max}"
-        win_id="${2:-$(actwin_id)}"
+        win_id="${2:-$(get_actwin_id)}"
         case "$action" in
         *max*)
                 # Toggle maximized state of window (and optionally raise it)
@@ -349,7 +398,7 @@ winaction() {
 
 getwinid() {
         if [ -n "$1" ]; then
-                for win_id in $(win_ids); do
+                for win_id in $(get_win_ids); do
                         if xprop -id $win_id WM_NAME WM_CLASS |
                            grep "$1" >/dev/null 2>&1
                         then
