@@ -132,7 +132,8 @@ $ a\
 $ a\
 http://www.wordreference.com/'"$dict"'/'"$term"'
 $ a\
-© WordReference.com'
+© WordReference.com
+'
 
 #get json and parse it with sed
 curl --silent --user-agent "Mozilla" "$url" | sed -nr "$sed_str"

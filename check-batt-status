@@ -26,7 +26,7 @@ if [ "$(apm -a)" -eq 0 ]; then
                 logger -t check-batt-status "$msg"
 
                 echo "$msg" | DISPLAY=$(cat /tmp/X_DISPLAY.$USER) \
-                xmessage -title "Low battery" -center -buttons "OK":0,"Hibernate":2 -timeout 60 -file -
+                                xmessage -title "Low battery" -center -buttons "OK":0,"Hibernate":2 -timeout 60 -file -
 
                 [ "$?" -eq 2 ] && apm -Z
         fi
