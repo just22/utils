@@ -41,7 +41,7 @@ TIME=${TIME:-"now + 5 minutes"}
 MSG=${MSG:-"Time's up!"}
 SNOOZE_TIME=${SNOOZE_TIME:-300}
 
-SHELL=/bin/sh at "$TIME" >/dev/null <<-EOT
+SHELL=/bin/sh at "$TIME" 2>/tmp/$USER.timer.$$ <<-EOT
         while true; do
                 echo "$MSG" |
                 DISPLAY="$DISPLAY" xmessage -title "Reminder" -center \
@@ -51,3 +51,17 @@ SHELL=/bin/sh at "$TIME" >/dev/null <<-EOT
                 sleep $SNOOZE_TIME
         done
 EOT
+
+if [ "$?" -eq 0 ]; then
+        msg="Reminder set at:\n$(cat /tmp/$USER.timer.$$ |
+                                 grep "^job" |
+                                 awk -F " at " '{print $2}')"
+else
+        msg="Error: wrong time format?\n(Reminder not set)"
+fi
+
+echo $msg | xmessage -title "Reminder" -center \
+                     -buttons "OK":0 \
+                     -file - >/dev/null 2>&1
+rm -r /tmp/$USER.timer.$$
+exit 0
