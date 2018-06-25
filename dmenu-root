@@ -16,7 +16,7 @@
 # - For each "SUBMENUNAME..." key there must be a correspondent
 #   SUBMENUNAME_MENU dict
 
-dict set ROOT_MENU              "SearchItem..."                 "xterm"
+dict set ROOT_MENU              "SearchItem..."                 ""
 dict set ROOT_MENU              "Terminal Emulator"             "xterm"
 dict set ROOT_MENU              "tmux Session"                  "xterm -e tmux attach-session -d || tmux new-session"
 dict set ROOT_MENU              "Web Browser"                   "xdg-open http://www.atlantide.t28.net"
@@ -102,29 +102,28 @@ dict set PUZZLE_MENU            "Hangman"                       "xterm -e hangma
 dict set SIMULATION_MENU        "Sail"                          "xterm -e sail"
 
 dict set GRAPHICS_MENU          "Bitmap"                        "bitmap"
-dict set GRAPHICS_MENU          "Dia"                           "dia"
+dict set GRAPHICS_MENU          "Dia Diagram Editor"            "dia"
 dict set GRAPHICS_MENU          "Geeqie"                        "geeqie"
 dict set GRAPHICS_MENU          "Inkscape"                      "inkscape"
 dict set GRAPHICS_MENU          "Scan Image"                    "xterm -e scanimage"
-dict set GRAPHICS_MENU          "The GIMP"                      "gimp"
+dict set GRAPHICS_MENU          "GIMP"                          "gimp"
 dict set GRAPHICS_MENU          "XCircuit"                      "xcircuit"
 dict set GRAPHICS_MENU          "xfig"                          "xfig"
-dict set GRAPHICS_MENU          "xsane"                         "xsane"
+dict set GRAPHICS_MENU          "XSane - Scanning"              "xsane"
 
-dict set MULTIMEDIA_MENU        "Clementine"                    "clementine"
+dict set MULTIMEDIA_MENU        "DeaDBeeF Audio Player"         "deadbeef"
+dict set MULTIMEDIA_MENU        "Gradio"                        "gradio"
 dict set MULTIMEDIA_MENU        "gtkam"                         "gtkam"
 dict set MULTIMEDIA_MENU        "SMPlayer"                      "smplayer"
 dict set MULTIMEDIA_MENU        "Shotwell"                      "shotwell"
 dict set MULTIMEDIA_MENU        "TkDVD"                         "tkdvd"
-dict set MULTIMEDIA_MENU        "xine"                          "xine"
+dict set MULTIMEDIA_MENU        "VLC Media Player"              "vlc"
 
-dict set NETWORK_MENU           "Claws Mail"                    "claws-mail"
 dict set NETWORK_MENU           "Firefox"                       "firefox-launcher"
 dict set NETWORK_MENU           "FTP"                           "xterm -e ftp"
 dict set NETWORK_MENU           "Lynx"                          "xterm -e lynx"
 dict set NETWORK_MENU           "Mutt"                          "xterm -title \"The Mutt E-Mail Client\" -e mutt"
 dict set NETWORK_MENU           "Pidgin"                        "pidgin"
-dict set NETWORK_MENU           "Thunderbird"                   "thunderbird"
 dict set NETWORK_MENU           "VNC viewer"                    "vncviewer"
 dict set NETWORK_MENU           "Xbiff"                         "xbiff"
 
