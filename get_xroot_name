@@ -6,4 +6,7 @@
 #  Get xroot window's name (useful for system monitoring "a-la-dwm")
 # ----------------------------------------------------------------------
 
-printf " %s \n" "$(xwininfo -root | grep "^xwininfo:" | cut -d\" -f2)"
+xwininfo -root |
+        grep "^xwininfo:" |
+        cut -d\" -f2- |
+        sed -e "s/^\"//" -e "s/\"$//"
