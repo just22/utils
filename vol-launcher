@@ -6,4 +6,4 @@
 #  Simple launcher for vol
 # ----------------------------------------------------------------------
 
-if ! pkill -KILL -f "tclsh.*vol"; then ${HOME}/bin/vol; fi
+if ! pkill -KILL -f "tclsh.*vol"; then ${HOME}/bin/vol "$@"; fi

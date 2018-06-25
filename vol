@@ -9,8 +9,11 @@
 
 package require Tk
 
-wm overrideredirect . 1
-#wm title . "Volume level"
+if {[lindex $argv 0] == "-o"} {
+        wm overrideredirect . 1
+} else {
+        wm title . "Volume level"
+}
 
 grid [ttk::frame .frame -padding "2 2 2 2"] -column 0 -row 0 -sticky nwes
 grid columnconfigure . 0 -weight 1
