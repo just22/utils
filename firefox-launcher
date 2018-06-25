@@ -7,4 +7,4 @@
 # ----------------------------------------------------------------------
 
 xdotool search -sync -name ".*- Mozilla Firefox$" windowactivate &
-firefox-esr $@ &
+firefox-esr "$@" &
