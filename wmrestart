@@ -13,8 +13,14 @@ exec >/dev/null 2>&1
 if pkill -x bbpager; then
         restart_bbpager=1
 fi
-if pkill -x dzen2; then
-        restart_headup=1
+if pkill -x lemonbar; then
+        restart_bar=1
+fi
+if pkill -x space_dapp; then
+        restart_dock_spacer=1
+fi
+if pkill -x tint2; then
+        restart_tint2=1
 fi
 if pgrep -x pcmanfm; then
         pcmanfm --desktop-off
@@ -27,6 +33,8 @@ xrandr $@
 # Restart window manager
 if pgrep -x dwm; then
         [ -x ~/.fehbg ] && ~/.fehbg
+elif pgrep -x jwm; then
+        jwm -restart
 elif pgrep -x fluxbox; then
         fluxbox-remote Restart
         fbsetbg -l
@@ -40,6 +48,8 @@ elif pgrep -x fvwm2; then
         [ -x ~/.fehbg ] && ~/.fehbg
 fi
 
-[ $restart_bbpager -eq 1 ] && bbpager &
-[ $restart_headup  -eq 1 ] && headup
-[ $restart_pcmanfm_desktop  -eq 1 ] && pcmanfm --desktop &
+[ "$restart_dock_spacer"      -eq 1 ] && space_dapp $((($(screen-width) - 166 - 1))) 15 &
+[ "$restart_bar"              -eq 1 ] && dzen-dstat
+[ "$restart_bbpager"          -eq 1 ] && (sleep 1 && bbpager) &
+[ "$restart_tint2"            -eq 1 ] && tint2 &
+[ "$restart_pcmanfm_desktop"  -eq 1 ] && pcmanfm --desktop &

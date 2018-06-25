@@ -7,12 +7,6 @@
 # ----------------------------------------------------------------------
 
 case "$XSESSION_CMD" in
-*dwm*)
-        NB="#EEE8D5"
-        NF="#293A1A"
-        SB="#2AA198"
-        SF="#FDF6E3"
-        ;;
 *xfce*)
         NB="#DCDCDC"
         NF="#404040"
@@ -20,15 +14,18 @@ case "$XSESSION_CMD" in
         SF="#DCDCDC"
         ;;
 *)
-        NB="#DCDCDC"
-        NF="#404040"
-        SB="#404040"
-        SF="#DCDCDC"
+        NB="#EEE8D5"
+        NF="#293A1A"
+        SB="#2AA198"
+        SF="#FDF6E3"
+        ;;
 esac
 
-dmenu -fn "DejaVu Sans Mono:size=9" \
-      -nb "$NB" \
-      -nf "$NF" \
-      -sb "$SB" \
-      -sf "$SF" \
-      $@
+CMD="$(basename ${0%-cust})"
+
+"$CMD" -fn "DejaVu Sans Mono:size=9" \
+       -nb "$NB" \
+       -nf "$NF" \
+       -sb "$SB" \
+       -sf "$SF" \
+       $@
