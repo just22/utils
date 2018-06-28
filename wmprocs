@@ -341,7 +341,7 @@ tile() {
                 do
                         win_cnt=$(($win_cnt + 1))
                         win_y0=$(($act_y0 + ($win_ydim + $frame_t + $frame_b + $tile_gap) * ($win_cnt - 1)))
-                        # wmctrl -i -r $viswin_id -b remove,maximized_horz,maximized_vert
+                        wmctrl -i -r $viswin_id -b remove,maximized_horz,maximized_vert
                         # wmctrl -i -r $viswin_id -e 0,$win_x0,$win_y0,$win_xdim,$win_ydim
                         xdotool windowmove $viswin_id $win_x0 $win_y0 windowsize $viswin_id $win_xdim $win_ydim
                 done
