@@ -229,8 +229,6 @@ tile() {
                 win_y0=$act_y0
                 win_xdim=$(($act_xdim - $frame_r - $frame_l - $tile_gap / 2))
                 win_ydim=$(($act_ydim / 2 - $frame_t - $frame_b - $tile_gap / 2))
-                # wmctrl -i -r $win_id -b add,maximized_horz
-                # wmctrl -i -r $win_id -e 0,-1,$win_y0,-1,$win_ydim
                 xdotool windowmove $win_id x $win_y0 windowsize $win_id $win_xdim $win_ydim
                 ;;
         b)
@@ -238,8 +236,6 @@ tile() {
                 win_y0=$(($act_y0 + $act_ydim / 2 + $tile_gap / 2))
                 win_xdim=$(($act_xdim - $frame_r - $frame_l - $tile_gap / 2))
                 win_ydim=$(($act_ydim / 2 - $frame_t - $frame_b - $tile_gap / 2))
-                # wmctrl -i -r $win_id -b add,maximized_horz
-                # wmctrl -i -r $win_id -e 0,-1,$win_y0,-1,$win_ydim
                 xdotool windowmove $win_id x $win_y0 windowsize $win_id $win_xdim $win_ydim
                 ;;
         l)
@@ -247,8 +243,6 @@ tile() {
                 win_y0=$act_y0
                 win_xdim=$(($act_xdim / 2 - $frame_r - $frame_l - $tile_gap / 2))
                 win_ydim=$(($act_ydim - $frame_t - $frame_b - $tile_gap / 2))
-                # wmctrl -i -r $win_id -b add,maximized_vert
-                # wmctrl -i -r $win_id -e 0,$win_x0,-1,$win_xdim,-1
                 xdotool windowmove $win_id $win_x0 $win_y0 windowsize $win_id $win_xdim $win_ydim
                 ;;
         r)
@@ -256,8 +250,6 @@ tile() {
                 win_y0=$act_y0
                 win_xdim=$(($act_xdim / 2 - $frame_r - $frame_l - $tile_gap / 2))
                 win_ydim=$(($act_ydim - $frame_t - $frame_b - $tile_gap / 2))
-                # wmctrl -i -r $win_id -b add,maximized_vert
-                # wmctrl -i -r $win_id -e 0,$win_x0,-1,$win_xdim,-1
                 xdotool windowmove $win_id $win_x0 y windowsize $win_id $win_xdim $win_ydim
                 ;;
         tl)
@@ -265,7 +257,6 @@ tile() {
                 win_y0=$act_y0
                 win_xdim=$(($act_xdim / 2 - $frame_r - $frame_l - $tile_gap / 2))
                 win_ydim=$(($act_ydim / 2 - $frame_t - $frame_b - $tile_gap / 2))
-                # wmctrl -i -r $win_id -e 0,$win_x0,$win_y0,$win_xdim,$win_ydim
                 xdotool windowmove $win_id $win_x0 $win_y0 windowsize $win_id $win_xdim $win_ydim
                 ;;
         tr)
@@ -273,7 +264,6 @@ tile() {
                 win_y0=$act_y0
                 win_xdim=$(($act_xdim / 2 - $frame_r - $frame_l - $tile_gap / 2))
                 win_ydim=$(($act_ydim / 2 - $frame_t - $frame_b - $tile_gap / 2))
-                # wmctrl -i -r $win_id -e 0,$win_x0,$win_y0,$win_xdim,$win_ydim
                 xdotool windowmove $win_id $win_x0 $win_y0 windowsize $win_id $win_xdim $win_ydim
                 ;;
         bl)
@@ -281,7 +271,6 @@ tile() {
                 win_y0=$(($act_y0 + $act_ydim / 2 + $tile_gap / 2))
                 win_xdim=$(($act_xdim / 2 - $frame_r - $frame_l - $tile_gap / 2))
                 win_ydim=$(($act_ydim / 2 - $frame_t - $frame_b - $tile_gap / 2))
-                # wmctrl -i -r $win_id -e 0,$win_x0,$win_y0,$win_xdim,$win_ydim
                 xdotool windowmove $win_id $win_x0 $win_y0 windowsize $win_id $win_xdim $win_ydim
                 ;;
         br)
@@ -289,7 +278,6 @@ tile() {
                 win_y0=$(($act_y0 + $act_ydim / 2 + $tile_gap / 2))
                 win_xdim=$(($act_xdim / 2 - $frame_r - $frame_l - $tile_gap / 2))
                 win_ydim=$(($act_ydim / 2 - $frame_t - $frame_b - $tile_gap / 2))
-                # wmctrl -i -r $win_id -e 0,$win_x0,$win_y0,$win_xdim,$win_ydim
                 xdotool windowmove $win_id $win_x0 $win_y0 windowsize $win_id $win_xdim $win_ydim
                 ;;
         h)
@@ -314,7 +302,6 @@ tile() {
                         win_cnt=$(($win_cnt + 1))
                         win_x0=$(($act_x0 + ($win_xdim + $frame_l + $frame_r + $tile_gap) * ($win_cnt - 1)))
                         wmctrl -i -r $viswin_id -b remove,maximized_horz,maximized_vert
-                        # wmctrl -i -r $viswin_id -e 0,$win_x0,$win_y0,$win_xdim,$win_ydim
                         xdotool windowmove $viswin_id $win_x0 $win_y0 windowsize $viswin_id $win_xdim $win_ydim
                 done
                 ;;
@@ -324,8 +311,6 @@ tile() {
                 win_y0=$act_y0
                 win_xdim=$(($act_xdim / 2 - $frame_r - $frame_l - $tile_gap / 2))
                 win_ydim=$(($act_ydim - $frame_t - $frame_b - $tile_gap / 2))
-                # wmctrl -i -r $win_id -b add,maximized_vert
-                # wmctrl -i -r $win_id -e 0,$win_x0,-1,$win_xdim,-1
                 xdotool windowmove $win_id $win_x0 $win_y0 windowsize $win_id $win_xdim $win_ydim
 
                 # Other windows
@@ -342,7 +327,6 @@ tile() {
                         win_cnt=$(($win_cnt + 1))
                         win_y0=$(($act_y0 + ($win_ydim + $frame_t + $frame_b + $tile_gap) * ($win_cnt - 1)))
                         wmctrl -i -r $viswin_id -b remove,maximized_horz,maximized_vert
-                        # wmctrl -i -r $viswin_id -e 0,$win_x0,$win_y0,$win_xdim,$win_ydim
                         xdotool windowmove $viswin_id $win_x0 $win_y0 windowsize $viswin_id $win_xdim $win_ydim
                 done
                 ;;
