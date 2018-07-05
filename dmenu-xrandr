@@ -28,20 +28,74 @@ _array MENU_ITEMS \
         "Above" \
         "Below"
 
-LVDS="$(xrandr -q | grep -w connected | awk '{print $1}' | grep LVDS)"
- VGA="$(xrandr -q | grep -w connected | awk '{print $1}' | grep VGA)"
-if [ -z "$LVDS" ] || [ -z "$VGA" ]; then
-        echo "No dual monitor configuration available" |
-        xmessage -center -title "dmenu-xrandr" -buttons "Close" -file -
-        exit 1
-fi
+wmrestart() {
+        # Clean up statusbar
+        if pkill -x bbpager; then
+                restart_bbpager=1
+        fi
+        if pkill -x dzen2; then
+                restart_bar=1
+        fi
+        if pkill -x space_dapp; then
+                restart_dock_spacer=1
+        fi
+        if pkill -x tint2; then
+                restart_tint2=1
+        fi
+        if pgrep -x pcmanfm; then
+                pcmanfm --desktop-off
+                restart_pcmanfm_desktop=1
+        fi
 
-case "${1-$(printf "%s\n" "${MENU_ITEMS[@]}" | dmenu-cust -p VGA: "$@")}" in
-Off*)   wmrestart --output "$LVDS" --auto --output "$VGA" --off ;;
-Only*)  wmrestart --output "$LVDS" --off  --output "$VGA" --auto ;;
-Left*)  wmrestart --output "$LVDS" --auto --output "$VGA" --primary --auto --left-of  "$LVDS" ;;
-Right*) wmrestart --output "$LVDS" --primary --auto --output "$VGA" --auto --right-of "$LVDS" ;;
-Below)  wmrestart --output "$LVDS" --auto --output "$VGA" --primary --auto --below    "$LVDS" ;;
-Above)  wmrestart --output "$LVDS" --primary --auto --output "$VGA" --auto --above    "$LVDS" ;;
-*)      exit 1
-esac
+        # Change display layout
+        xrandr $@
+
+        # Restart window manager
+        if pgrep -x dwm; then
+                [ -x ~/.fehbg ] && ~/.fehbg
+        elif pgrep -x jwm; then
+                jwm -restart
+        elif pgrep -x fluxbox; then
+                fluxbox-remote Restart
+                fbsetbg -l
+        elif pgrep -x openbox; then
+                xsetroot -solid rgb:58/6E/75
+                openbox --restart
+                [ -x ~/.fehbg ] && ~/.fehbg
+        elif pgrep -x fvwm2; then
+                xsetroot -solid rgb:58/6E/75
+                FvwmCommand Restart
+                [ -x ~/.fehbg ] && ~/.fehbg
+        fi
+
+        [ "$restart_dock_spacer"      -eq 1 ] && (sleep 1; space_dapp $((($(screen-width) - 2))) 17) &
+        [ "$restart_bar"              -eq 1 ] && (sleep 2; dstat trunk0 | dzen2-cust -xs "${xs:-1}") &
+        [ "$restart_bbpager"          -eq 1 ] && (sleep 3 && bbpager) &
+        [ "$restart_tint2"            -eq 1 ] && tint2 &
+        [ "$restart_pcmanfm_desktop"  -eq 1 ] && pcmanfm --desktop &
+}
+
+
+# main() {
+
+        LVDS="$(xrandr -q | grep -w connected | awk '{print $1}' | grep LVDS)"
+         VGA="$(xrandr -q | grep -w connected | awk '{print $1}' | grep VGA)"
+        if [ -z "$LVDS" ] || [ -z "$VGA" ]; then
+                echo "No dual monitor configuration available" |
+                xmessage -center -title "dmenu-xrandr" \
+                        -buttons "Close":0,"Reset Display":2 -file -
+                [ "$?" -eq 2 ] && wmrestart --auto
+                exit 1
+        fi
+
+        case "${1-$(printf "%s\n" "${MENU_ITEMS[@]}" | dmenu-cust -p VGA: "$@")}" in
+        Off*)   xs=1; wmrestart --output "$LVDS" --auto --output "$VGA" --off ;;
+        Only*)  xs=1; wmrestart --output "$LVDS" --off  --output "$VGA" --auto ;;
+        Left*)  xs=1; wmrestart --output "$LVDS" --auto --output "$VGA" --primary --auto --left-of  "$LVDS" ;;
+        Right*) xs=1; wmrestart --output "$LVDS" --primary --auto --output "$VGA" --auto --right-of "$LVDS" ;;
+        Below)  xs=2; wmrestart --output "$LVDS" --auto --output "$VGA" --primary --auto --below    "$LVDS" ;;
+        Above)  xs=2; wmrestart --output "$LVDS" --primary --auto --output "$VGA" --auto --above    "$LVDS" ;;
+        *)      exit 1
+        esac
+
+# }
