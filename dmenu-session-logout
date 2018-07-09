@@ -31,6 +31,12 @@ _array MENU_ITEMS \
 case "$(printf "%s\n" "${MENU_ITEMS[@]}" |
         dmenu-cust -p Quit: "$@")" in
 Logout)
+        # Next login should start from a known display configuration...
+        case "$(xrandr -q | grep -E "[0-9]+x[0-9]+\+[0-9]+\+[0-9]+" | head -n 1 | cut -d" " -f1)" in
+        LVDS*) dmenu-xrandr Off ;;
+        VGA*)  dmenu-xrandr Only ;;
+        esac
+
         case "$XSESSION_CMD" in
         *fluxbox*)
                 fluxbox-remote Exit
@@ -46,11 +52,6 @@ Logout)
                 ;;
         *openbox*)
                 openbox --exit
-                ;;
-        *jwm*)
-                pkill jwm
-                ;;
-        *)
                 ;;
         esac
         ;;
