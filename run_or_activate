@@ -1,0 +1,68 @@
+#!/bin/sh
+
+# ----------------------------------------------------------------------
+#  $Id$
+#
+#  Exec only one instance of the app passed as argument (activating the
+#  corresponding window in case it's already running).
+#
+#  Note: xdotool's command chaining is completely unreliable...
+# ----------------------------------------------------------------------
+
+if [ "$#" -eq 0 ]; then
+        echo "$(basename $0): missing command name"
+        exit 1
+fi
+
+cmd="$1"; shift
+
+get_win_ids() {
+        # List X clients
+        #
+        xprop -root _NET_CLIENT_LIST |
+        egrep -o "0x[0-9a-fA-F]+"
+}
+
+get_win_classname() {
+        xprop -id "$1" WM_CLASS |
+        cut -d "=" -f 2 | cut -d "," -f 1 |
+        tr -d ' "'
+}
+
+get_classname_string() {
+        wcmd="$(which "$cmd")"
+        rcmd="$(readlink -f "$wcmd")"
+        bcmd="$(basename "$rcmd")"
+
+        # Quirks
+        case "$bcmd" in
+        chrome)
+                echo chromium
+                ;;
+        thunderbird)
+                echo Mail
+                ;;
+        *)
+                echo "$bcmd"
+        esac
+}
+
+for winId in $(get_win_ids); do
+        case "$(get_win_classname "$winId")" in
+        *$(get_classname_string)*)
+                xdotool windowactivate $winId
+                # If a parameter is passed, the command must be executed
+                # (hopefully, it will open a new tab in the same window...)
+                if [ $# -ne 0 ]; then
+                        $cmd "$@" &
+                fi
+                exit 0
+                ;;
+        *)
+                ;;
+        esac
+done
+
+$cmd "$@" &
+exit 0
+

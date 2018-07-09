@@ -1,0 +1,23 @@
+#!/bin/sh
+
+# ----------------------------------------------------------------------
+#  $Id$
+#
+#  Kill login shell when USR1 is received (typically used with xidle
+#  to automatically log out from console)
+# ----------------------------------------------------------------------
+
+# Kill daemon on exit
+trap "LOOP=0" HUP INT QUIT ABRT KILL TERM
+
+# Lock console when SIGUSR1 is received
+#trap '/usr/bin/lock -np' USR1
+trap 'clear; kill -KILL $LOGIN_SHELL_PID $$' USR1
+
+LOGIN_SHELL_PID=$(ps -j -p $$ | tail -1 | awk '{print $3}')
+
+# Daemonize
+LOOP=1
+while [ "${LOOP}" == 1 ]; do
+    sleep 1
+done

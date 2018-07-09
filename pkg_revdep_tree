@@ -1,0 +1,42 @@
+#!/bin/sh
+
+# ----------------------------------------------------------------------
+#  $Id$
+#
+#  Reverse dependency tree for OpenBSD pkg system
+# ----------------------------------------------------------------------
+
+if [ "$#" -ne 1 ]; then
+        echo "$(basename $0): missing pkg name"
+        exit 1
+fi
+
+_array() {
+        case "$SH_VERSION" in
+        *KSH*)
+                a="$1"; shift
+                set -A "$a" "$@"
+                ;;
+        *)
+                eval $1='("${@:2}")'
+        esac
+}
+
+find_req() {
+        root_pkg="$1"
+        _array req $(pkg_info -qR "$root_pkg")
+
+        if [ "${#req[@]}" -ne 0 ]; then
+                if ! echo "${out[@]}" | grep "$root_pkg" >/dev/null; then
+                        echo "$root_pkg required by: ${req[@]}"
+                        _array out "${out[@]}" "$root_pkg"
+                fi
+
+                for pkg in "${req[@]}"; do
+                        find_req "$pkg"
+                done
+        fi
+}
+
+find_req "$1"
+
