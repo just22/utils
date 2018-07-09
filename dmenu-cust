@@ -28,4 +28,4 @@ CMD="$(basename ${0%-cust})"
        -nf "$NF" \
        -sb "$SB" \
        -sf "$SF" \
-       $@
+       "$@"
