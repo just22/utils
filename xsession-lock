@@ -12,10 +12,7 @@
 exec >/dev/null 2>&1
 
 # Force LVDS-only display layout
-LVDS="$(xrandr -q | awk '{print $1}' | grep LVDS)"
- VGA="$(xrandr -q | awk '{print $1}' | grep VGA)"
- DVI="$(xrandr -q | awk '{print $1}' | grep DVI)"
-wmrestart --display $DISPLAY --output "$LVDS" --auto --output "$VGA" --off --output "$DVI" --off
+dmenu-xrandr Off
 
 # Start xscreensaver, just in case it has been disabled
 if ! pgrep -u $USER xscreensaver; then
