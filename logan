@@ -69,10 +69,10 @@ DESCRIPTION
   -c pattern   A regex representing the code pattern for each specific match;
 
   -t tool      The tool that is generating logFile; possible values are:
-               dc      - Synopsys Design Compiler;
-               pt      - Synopsys PrimeTime suite;
-               innovus - Cadence Innovus Digital Implementation System;
-               nc      - Cadence Incisive Enterprise Simulator;
+               dc      - Synopsys(R) Design Compiler(R);
+               pt      - Synopsys(R) PrimeTime(R);
+               innovus - Cadence(R) Innovus(TM) Implementation System;
+               nc      - Cadence(R) Incisive(R) Enterprise Simulator;
 
   -g string    Grep utility command name (defaults to "grep");
 
