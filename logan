@@ -36,7 +36,7 @@
 # POSSIBILITY OF SUCH DAMAGE.
 # ----------------------------------------------------------------------------
 
-_help() { less << __HELP__
+_help() { exec less << __HELP__
 NAME
   logan - LOG ANalyzer (and Wolverine's human side, of course!)
 
@@ -45,11 +45,11 @@ SYNOPSIS
   logan -t tool [-g string] [-o string] [-i file] logFile
 
 DESCRIPTION
-  Logan seaches logFile, selecting lines that match a specific pattern,
-  provided by the user or based on the tool generating the log.  A code pattern
-  may also be used to arrange matching lines by classes.  Some results may be
-  removed from the report (when considered "safe") adding their code in a file.
-  An ordered list of matches is presented, sort operation being based on code
+  Logan scans logFile, selecting lines that match a specific pattern, provided
+  by the user or based on the tool generating the log.  A code pattern may also
+  be used to arrange matching lines by classes.  Some results may be removed
+  from the report (when considered "safe") adding their code in a file.  An
+  ordered list of matches is presented, sort operation being based on code
   (when relevant), or on first 25 description's chars).
 
   From the main menu, user is allowed to perform the following operations:
@@ -106,10 +106,8 @@ SEE ALSO
 grep(1), awk(1), sed(1), less(1)
 
 AUTHOR
-  Alessandro De Laurenzis, <alessandro.de-laurenzis@st.com>
-  MSD - MEMS Sensors Division
-  AMG - Analog & MEMS Group
-  STMicroelectronics
+  Written by Alessandro De Laurenzis <just22@atlantide.t28.net>
+
 __HELP__
 }
 
@@ -137,6 +135,13 @@ analyze() {
         matchList="$(echo "$allLines" | cat -n)"
 }
 
+csort() {
+        ptrn="$(echo "$1" | head -1 | awk '{print $1}')"
+        echo "$1" | grep "$ptrn"
+        nlist="$(echo "$1" | grep -v "$ptrn")"
+        [ -n "$nlist" ] && csort "$nlist"
+}
+
 match() {
         # logFile line's anatomy:
         # [... descr ...] <pattern> [... descr ...] [<codePattern>] [... descr ...]
@@ -159,14 +164,15 @@ match() {
                                 code = "N/A";
                         if (length($0) > cols) $0 = substr($0, 1, (cols - 3)) "...";
                         printf "%-15s %s\n", code, $0
-                }' "$logFile" 2>/dev/null | sort -r)
-        m_coded=$(echo "$m" | grep -v "^N/A ")
-        m_nocode=$(echo "$m" | grep "^N/A ")
+                }' "$logFile" 2>/dev/null)
+        m_sorted="$(csort "$m")"
+        m_coded=$(echo "$m_sorted" | grep -v "^N/A ")
+        m_nocode=$(echo "$m_sorted" | grep "^N/A ")
 
-        # Classified lines: sort based on code
+        # Classified lines: uniq based on code
         [ -n "$m_coded" ]  && echo "$m_coded" | uniq -c -w 15
 
-        # Unclassified lines: sort based on description's first 25 chars
+        # Unclassified lines: uniq based on description's first 25 chars
         [ -n "$m_nocode" ] && echo "$m_nocode" | uniq -c -w 41
 }
 
@@ -231,7 +237,6 @@ while getopts ":ht:p:c:g:o:i:" arg; do
         case "$arg" in
         h)
                 _help
-                exit 0
                 ;;
         t)
                 case "$OPTARG" in
