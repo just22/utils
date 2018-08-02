@@ -36,7 +36,7 @@
 # POSSIBILITY OF SUCH DAMAGE.
 # ----------------------------------------------------------------------------
 
-_help() { exec less << __HELP__
+_help() { less << __HELP__
 NAME
   logan - LOG ANalyzer (and Wolverine's human side, of course!)
 
@@ -83,6 +83,9 @@ DESCRIPTION
   -i file      A file containing a list of codes to be ignored, one per line.
 
   Logan always interprets patterns as extended regular expressions (ERE).
+
+  Logan is a POSIX compliant shell script, but running it in an advanced shell
+  (like bash or similar) may improve user's experience (e.g. arrow keys usage).
 
 
 EXIT STATUS
@@ -239,6 +242,7 @@ while getopts ":ht:p:c:g:o:i:" arg; do
         case "$arg" in
         h)
                 _help
+                exit 0
                 ;;
         t)
                 case "$OPTARG" in
