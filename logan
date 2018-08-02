@@ -53,9 +53,11 @@ DESCRIPTION
   (when relevant), or on first 25 description's chars).
 
   From the main menu, user is allowed to perform the following operations:
-  - view all the occurrences of a specific match, with a minimal context;
+  - view all the occurrences of a specific match;
+  - remove a line from the list of matches;
   - view the whole logFile;
-  - toggle on/off the safe-known messages visibility.
+  - toggle on/off the safe-known messages visibility;
+  - re-do log file analysis.
 
   When user requests to view the occurrences of a specific match, a new screen
   is shown with relevant logFile's lines surrounded by minimal context.
@@ -68,7 +70,7 @@ DESCRIPTION
 
   -c pattern   A regex representing the code pattern for each specific match;
 
-  -t tool      The tool that is generating logFile; possible values are:
+  -t tool      The tool that is generating the logFile; possible values are:
                dc      - Synopsys(R) Design Compiler(R);
                pt      - Synopsys(R) PrimeTime(R);
                innovus - Cadence(R) Innovus(TM) Implementation System;
