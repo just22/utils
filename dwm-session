@@ -7,23 +7,28 @@
 # ----------------------------------------------------------------------
 
 # System log
+(sleep 1; pkill xconsole) &
 xterm -title "System log" -e tail -f /var/log/messages &
-
-# Process monitor
-xterm -title "Process monitor" -e top &
 
 # System statistics
 xterm -title "System stats" -e systat &
+
+# Process monitor
+xterm -title "Process monitor" -e top &
 
 # Set the root window background & wallpaper
 xsetroot -solid rgb:58/6E/75
 [ -x ~/.fehbg ] && ~/.fehbg
 
 # Statusbar
-~/bin/dstat trunk0 &
+slstatus &
 
 while :
 do
+
+    # Following apps live in the systray and will die every time dwm exits
+    /usr/local/libexec/tray-app/sound -i &
+
     mv ~/.dwm.log{,.old}
     dwm 2> ~/.dwm.log || exit
 done
