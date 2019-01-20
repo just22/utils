@@ -3,7 +3,7 @@
 # ----------------------------------------------------------------------
 #  $Id$
 #
-#  Simple timer
+#  Keyboard layout switcher
 # ----------------------------------------------------------------------
 
 # No output msgs, please
@@ -24,4 +24,4 @@ _array MENU_ITEMS \
         "us" \
         "it"
 
-setxkbmap "+ $(printf "%s\n" "${MENU_ITEMS[@]}" | dmenu-cust -p Keyboard: "$@")"
+setxkbmap "$(printf "%s\n" "${MENU_ITEMS[@]}" | dmenu-cust -p Keyboard: "$@")"
