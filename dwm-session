@@ -25,10 +25,9 @@ slstatus &
 
 while :
 do
-
     # Following apps live in the systray and will die every time dwm exits
-    /usr/local/libexec/tray-app/sound -i &
 
+    # Start dwm and log errors in ~/.dwm.log
     mv ~/.dwm.log{,.old}
     dwm 2> ~/.dwm.log || exit
 done
