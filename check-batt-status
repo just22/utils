@@ -4,30 +4,28 @@
 #  $Id$
 #
 #  Battery status monitor - Intended for use with cron
+#  (needs operator's privileges at minimum, typically run as root)
 # ----------------------------------------------------------------------
 
-if [ "$(apm -a)" -eq 0 ]; then
-        lt="$(apm -m)"
-        if [ "$lt" -le 5 ]; then
-                msg="Critical battery level, hibernating in 30s..."
+# If A/C adapter is connected, just exit
+[ "$(apm -a)" -eq 0 ] || exit
 
-                logger -t check-batt-status "$msg"
+ble="$(apm -m)"
 
-                echo "$msg" | DISPLAY=$(cat /tmp/X_DISPLAY.$USER) \
-                                xmessage -title "Low battery" -center -buttons "OK":0 -timeout 30 -file -
+# If estimated battery life is > 15', just exit
+[ "$ble" -gt 15 ] && exit
 
-                # Check once again if power supply has been connected;
-                # if not, hibernate the machine
-                [ "$(apm -a)" -eq 0 ] && apm -Z
+# Battery level is critical, let's warn all logged users
+alias logger='logger -t $(basename $0) -p daemon.crit'
+msg="$(apm -m -v)"
+echo $msg | logger
+echo $msg | wall
+pkill -USR1 -fl x-batt-warn
 
-        elif [ "$lt" -le 15 ]; then
-                msg="Low battery level (lifetime: ${lt}m)"
+[ "$ble" -gt 10 ] && exit
 
-                logger -t check-batt-status "$msg"
+# Imminent disaster, force suspend to disk
+sleep 180
+[ "$(apm -a)" -eq 0 ] || exit
+apm -Z
 
-                echo "$msg" | DISPLAY=$(cat /tmp/X_DISPLAY.$USER) \
-                                xmessage -title "Low battery" -center -buttons "OK":0,"Hibernate":2 -timeout 60 -file -
-
-                [ "$?" -eq 2 ] && apm -Z
-        fi
-fi
