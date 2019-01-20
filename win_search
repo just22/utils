@@ -19,7 +19,7 @@ search_win() {
                         END                     {printf("%s %s %s\n", id, c, t)}'
 
         done |
-        dmenu-cust -p Win: -i -l 5 | cut -d " " -f 1
+        dmenu-cust -p Win: -i -l 10 | cut -d " " -f 1
 }
 
 wmctrl -i -a $(search_win)
