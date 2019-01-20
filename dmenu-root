@@ -17,11 +17,11 @@
 #   SUBMENUNAME_MENU dict
 
 dict set ROOT_MENU              "SearchItem..."                 ""
-dict set ROOT_MENU              "Terminal Emulator"             "xterm"
+dict set ROOT_MENU              "Terminal Emulator"             "x-terminal-emulator"
 dict set ROOT_MENU              "tmux Session"                  "xterm -e tmux attach-session -d || tmux new-session"
 dict set ROOT_MENU              "Web Browser"                   "xdg-open http://www.atlantide.t28.net"
 dict set ROOT_MENU              "E-Mail Client"                 "xterm -e mutt"
-dict set ROOT_MENU              "Text Editor"                   "x-editor"
+dict set ROOT_MENU              "Text Editor"                   "x-text-editor"
 dict set ROOT_MENU              "File Manager"                  "x-filemanager"
 dict set ROOT_MENU              "File Browser"                  "dmenu-filebrowser"
 dict set ROOT_MENU              "Removable Devices"             "/usr/bin/doas /usr/local/bin/amount -e sd0"
@@ -150,7 +150,7 @@ dict set SETTINGS_MENU          "xfontsel"                      "xfontsel"
 dict set SETTINGS_MENU          "Xvidtune"                      "xvidtune"
 
 dict set UTILITIES_MENU         "GNU Info"                      "xterm -e info"
-dict set UTILITIES_MENU         "Play URL in clip"              "play-url -g -p"
+dict set UTILITIES_MENU         "Play URL in clip"              "play-url -p"
 dict set UTILITIES_MENU         "Send iCal attachment"          "dmenu-send-ics-remind"
 dict set UTILITIES_MENU         "Set Performance Policy"        "dmenu-perf"
 dict set UTILITIES_MENU         "Screensaver"                   "dmenu-xscreensaver"
