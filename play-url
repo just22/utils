@@ -11,7 +11,7 @@ __usage() {
         echo "Usage: $(basename $0) [-t|-g] [-d] -p|-s|-c|<URL>"
         echo "-h This help message"
         echo "-t Use curl to transfer URL data"
-        echo "-g Use mplayer GUI (smplayer)"
+        echo "-v Use VLC media player"
         echo "-d Force use of youtube-dl"
         echo "-p URL in XA_PRIMARY"
         echo "-s URL in XA_SECONDARY"
@@ -32,8 +32,8 @@ while [ $# -gt 0 ]; do
         -t)
                 USE_CURL=1
                 ;;
-        -g)
-                PLAYER="smplayer"
+        -v)
+                PLAYER="vlc"
                 ;;
         -d)
                 USE_YTDL=1
@@ -57,7 +57,7 @@ done
 URL="${URL-$(xclip -o -selection $URL_IN_CLIP)}"
 [ -n "$USE_YTDL" ] && URL="$(youtube-dl -f best -g $URL)"
 
-PLAYER="${PLAYER-mplayer -cache 4096}"
+PLAYER="${PLAYER-mpv}"
 
 if [ -z "$URL" ]; then
         echo "$(basename $0): No URL in clipboard"
