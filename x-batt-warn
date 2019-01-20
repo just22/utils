@@ -1,0 +1,23 @@
+#!/bin/sh
+
+# ----------------------------------------------------------------------
+#  $Id$
+#
+#  Show a xmessage when battery level is low
+# ----------------------------------------------------------------------
+
+show_msg() {
+        apm -m -v |
+        xmessage -title "Low battery" \
+                 -center \
+                 -buttons "OK":0 \
+                 -file - &
+}
+
+trap "show_msg" USR1
+
+# Daemonize
+while :
+do
+    sleep 15
+done
