@@ -7,15 +7,14 @@
 # ----------------------------------------------------------------------
 
 get_win_ids() {
-        xprop -root _NET_CLIENT_LIST |
-                awk 'BEGIN{FS="#"} {print $2}' |
-                tr -d ","
+        xprop -root _NET_CLIENT_LIST | egrep -o "0x[0-9a-fA-F]+"
 }
 
 get_tmux_win_id() {
-        for WIN_ID in $(get_win_ids); do
-                if $(xprop -id "$WIN_ID" WM_NAME |
-                     grep "$1" > /dev/null 2>&1); then
+        for WIN_ID in $(get_win_ids)
+        do
+                if $(xprop -id "$WIN_ID" WM_NAME | grep "$1" > /dev/null 2>&1)
+                then
                         echo "$WIN_ID"
                         break
                 fi
@@ -30,7 +29,8 @@ search_pane() {
 
 SELECTED_ITEM=$(search_pane)
 
-if [ -n "$SELECTED_ITEM" ]; then
+if [ -n "$SELECTED_ITEM" ]
+then
         SESSION_NAME="$(echo $SELECTED_ITEM |
                         awk 'BEGIN{FS=" / "} {print $1}')"
         WIN_INDEX="$(echo $SELECTED_ITEM |
