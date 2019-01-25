@@ -199,9 +199,12 @@ get_win_actarea() {
 get_win_frame() {
         # Get current window's frame extension)
         #
-        xprop -id ${1:-$(get_actwin_id)} _NET_FRAME_EXTENTS |
-        awk 'BEGIN{FS=" = "} {print $2}' |
-        tr -d ","
+        f="$(xprop -id ${1:-$(get_actwin_id)} _NET_FRAME_EXTENTS |
+            awk 'BEGIN{FS=" = "} {print $2}' |
+            tr -d ",")"
+
+        # For non-EWMH, just return a sane default
+        echo "${f:-2 2 20 2}"
 }
 
 tile() {
@@ -223,6 +226,7 @@ tile() {
         read frame_l frame_r frame_t frame_b <<- EOT
 		$(get_win_frame $win_id)
 	EOT
+
         case $tile_action in
         t)
                 win_x0=$act_x0
