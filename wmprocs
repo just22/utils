@@ -290,7 +290,7 @@ tile() {
                 win_y0=$act_y0
                 win_xdim=$(($act_xdim - $frame_r - $frame_l - $tile_gap / 2))
                 win_ydim=$(($act_ydim / 2 - $frame_t - $frame_b - $tile_gap / 2))
-                xdotool windowmove $win_id x $win_y0 windowsize $win_id $win_xdim $win_ydim
+                xdotool windowmove $win_id $win_x0 $win_y0 windowsize $win_id $win_xdim $win_ydim
 
                 # Other windows
                 _array viswin_ids $(get_viswin_ids $win_id)
