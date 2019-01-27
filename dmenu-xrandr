@@ -30,68 +30,55 @@ _array MENU_ITEMS \
 
 wmrestart() {
         # Clean up statusbar
-        if pkill -x bbpager; then
-                restart_bbpager=1
-        fi
-        if pkill -x dzen2; then
-                restart_bar=1
-        fi
-        if pkill -x space_dapp; then
-                restart_dock_spacer=1
-        fi
-        if pkill -x tint2; then
-                restart_tint2=1
-        fi
-        if pgrep -x pcmanfm; then
-                pcmanfm --desktop-off
-                restart_pcmanfm_desktop=1
+        if pgrep -x fluxbox; then
+                pkill -x bbpager
+                pkill -x space_dapp
+                #pcmanfm --desktop-off
         fi
 
         # Change display layout
         if [ "$run_xrandr" -eq 1 ]; then
                 xrandr $@
 
+                [ "$norestart" -eq 1 ] && return
+
                 # Restart window manager
-                if pgrep -x dwm; then
-                        [ -x ~/.fehbg ] && ~/.fehbg
-                elif pgrep -x jwm; then
-                        jwm -restart
-                elif pgrep -x fluxbox; then
+                if pgrep -x fluxbox; then
                         fluxbox-remote Restart
                         fbsetbg -l
-                elif pgrep -x openbox; then
-                        xsetroot -solid rgb:58/6E/75
-                        openbox --restart
-                        [ -x ~/.fehbg ] && ~/.fehbg
-                elif pgrep -x fvwm2; then
-                        xsetroot -solid rgb:58/6E/75
-                        FvwmCommand Restart
+                        sleep 1
+                elif pgrep -x dwm; then
                         [ -x ~/.fehbg ] && ~/.fehbg
                 fi
         fi
 
-        [ "$restart_dock_spacer"      -eq 1 ] && (sleep 1; space_dapp $((($(screen-width) - 2))) 17) &
-        [ "$restart_bar"              -eq 1 ] && (sleep 2; dstat trunk0 | dzen2-cust -xs "${xs:-1}") &
-        [ "$restart_bbpager"          -eq 1 ] && (sleep 3 && bbpager) &
-        [ "$restart_tint2"            -eq 1 ] && tint2 &
-        [ "$restart_pcmanfm_desktop"  -eq 1 ] && pcmanfm --desktop &
+        if pgrep -x fluxbox; then
+                (sleep 1; space_dapp $((($(screen-width) - 1))) 17) &
+                (sleep 3; dbar -xs "${xs:-1}") &
+                (sleep 4 && bbpager) &
+                #pcmanfm --desktop &
+        fi
 }
 
 
 # main() {
 
-        if [ "$1" == "-a" ]; then
+        if [ "$1" == -a ]; then
                 run_xrandr=0
                 wmrestart
                 exit 0
         else
                 run_xrandr=1
+                if [ "$1" == -d ]; then
+                        norestart=1;
+                        shift
+                fi
         fi
 
-        # If a configuration is passed as parameter, skip all checks
-        if [ "$#" -eq 0 ]; then
-                LVDS="$(xrandr -q | grep -w connected | awk '{print $1}' | grep LVDS)"
-                 VGA="$(xrandr -q | grep -w connected | awk '{print $1}' | grep VGA)"
+        # "Off" and "Only" are used for display init, skip all checks
+        LVDS="$(xrandr -q | grep -w connected | awk '{print $1}' | grep LVDS)"
+         VGA="$(xrandr -q | grep -w connected | awk '{print $1}' | grep VGA)"
+        if [ "$1" != Off && "$1" != Only ]; then
                 if [ -z "$LVDS" ] || [ -z "$VGA" ]; then
                         echo "No dual monitor configuration available" |
                         xmessage -center -title "dmenu-xrandr" \
@@ -102,8 +89,8 @@ wmrestart() {
         fi
 
         case "${1-$(printf "%s\n" "${MENU_ITEMS[@]}" | dmenu-cust -p VGA: "$@")}" in
-        Off*)   xs=1; wmrestart --output "$LVDS" --auto --output "$VGA" --off ;;
-        Only*)  xs=1; wmrestart --output "$LVDS" --off  --output "$VGA" --auto ;;
+        Off*)   [ -n "$LVDS" ] && (xs=1; wmrestart --output "$LVDS" --auto --output "$VGA" --off) ;;
+        Only*)  [ -n "$VGA" ]  && (xs=1; wmrestart --output "$LVDS" --off  --output "$VGA" --auto) ;;
         Left*)  xs=1; wmrestart --output "$LVDS" --auto --output "$VGA" --primary --auto --left-of  "$LVDS" ;;
         Right*) xs=1; wmrestart --output "$LVDS" --primary --auto --output "$VGA" --auto --right-of "$LVDS" ;;
         Below)  xs=2; wmrestart --output "$LVDS" --auto --output "$VGA" --primary --auto --below    "$LVDS" ;;
