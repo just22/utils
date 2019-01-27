@@ -20,11 +20,11 @@ alias logger='logger -t $(basename $0) -p daemon.crit'
 msg="$(apm -m -v)"
 echo $msg | logger
 echo $msg | wall
-pkill -USR1 -fl x-batt-warn
 
+# If there is still enough charge, just exit
 [ "$ble" -gt 10 ] && exit
 
-# Imminent disaster, force suspend to disk
+# Imminent disaster, force suspend to disk within 3m
 sleep 180
 [ "$(apm -a)" -eq 0 ] || exit
 apm -Z
