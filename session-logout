@@ -28,12 +28,14 @@ if [ $RETVAL -eq 0 ]; then
         Logout)
                 # Next login should start from a known display configuration...
                 case "$(xrandr -q | grep -E "[0-9]+x[0-9]+\+[0-9]+\+[0-9]+" | head -n 1 | cut -d" " -f1)" in
-                LVDS*) dmenu-xrandr Off ;;
-                VGA*)  dmenu-xrandr Only ;;
+                LVDS*) dmenu-xrandr -d Off ;;
+                VGA*)  dmenu-xrandr -d Only ;;
                 esac
 
                 case "$XSESSION_CMD" in
                 *fluxbox*)
+                        pkill -P "$(cat /tmp/dbar.pid)"
+                        rm /tmp/dbar.pid
                         fluxbox-remote Exit
                         ;;
                 *xfce*)
