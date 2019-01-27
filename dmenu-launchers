@@ -3,7 +3,7 @@
 # ----------------------------------------------------------------------
 #  $Id$
 #
-#  Basic launcher usign dmenu
+#  Simple launch bar usign dmenu
 # ----------------------------------------------------------------------
 
 # No output msgs, please
@@ -24,7 +24,7 @@ _array MENU_ITEMS \
         "Term" \
         "FileManager" \
         "Browser" \
-        "E-mail" \
+        "Email" \
         "Editor" \
         "Removables" \
         "Play" \
@@ -32,6 +32,7 @@ _array MENU_ITEMS \
         "Keyboard" \
         "Mixer" \
         "Timer" \
+        "Run" \
         "Quit"
 
 sel="$(printf "%s\n" "${MENU_ITEMS[@]}" | dmenu-cust -i -p Menu: "$@")"
@@ -39,7 +40,7 @@ case "$sel" in
 Term)           x-terminal-emulator ;;
 FileManager)    x-filemanager ;;
 Browser)        xdg-open http://www.openbsd.org ;;
-E-mail)         x-email-client ;;
+Email)          x-email-client ;;
 Editor)         x-text-editor ;;
 Removables)     /usr/bin/doas /usr/local/bin/amount -e sd0 ;;
 Play)           play-url -p ;;
@@ -47,6 +48,7 @@ Display)        dmenu-xrandr ;;
 Keyboard)       dmenu-kbd ;;
 Mixer)          x-terminal-emulator -title cmixer -geometry 80x30 -e cmixer ;;
 Timer)          dmenu-timer ;;
+Run)            dmenu_run-cust ;;
 Quit)           dmenu-session-logout ;;
 *)              exit 1 ;;
 esac
