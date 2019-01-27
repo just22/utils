@@ -9,13 +9,13 @@
 
 __usage() {
         echo "Usage: $(basename $0) [-t|-g] [-d] -p|-s|-c|<URL>"
-        echo "-h This help message"
-        echo "-t Use curl to transfer URL data"
-        echo "-v Use VLC media player"
-        echo "-d Force use of youtube-dl"
-        echo "-p URL in XA_PRIMARY"
-        echo "-s URL in XA_SECONDARY"
-        echo "-c URL in XA_CLIPBOARD"
+        echo "-h        Display this message"
+        echo "-t        Use curl to transfer URL data"
+        echo "-m <cmd>  Use an alternate media player (default is mpv)"
+        echo "-d        Force use of youtube-dl"
+        echo "-p        URL in XA_PRIMARY"
+        echo "-s        URL in XA_SECONDARY"
+        echo "-c        URL in XA_CLIPBOARD"
 }
 
 if [[ $# -lt 1 ]] || [[ $# -gt 3 ]]; then
@@ -32,8 +32,9 @@ while [ $# -gt 0 ]; do
         -t)
                 USE_CURL=1
                 ;;
-        -v)
-                PLAYER="vlc"
+        -m)
+                shift
+                PLAYER="$1"
                 ;;
         -d)
                 USE_YTDL=1
