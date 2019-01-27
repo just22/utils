@@ -26,6 +26,7 @@ slstatus &
 while :
 do
     # Following apps live in the systray and will die every time dwm exits
+    radiotray &
 
     # Start dwm and log errors in ~/.dwm.log
     mv ~/.dwm.log{,.old}
