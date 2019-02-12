@@ -7,19 +7,32 @@
 #  Dependencies: dmenu, wmctrl
 # ----------------------------------------------------------------------
 
-search_win() {
-        for WIN_ID in $(xprop -root _NET_CLIENT_LIST |
-                        egrep -o "0x[0-9a-fA-F]+")
-        do
-                xprop -id "$WIN_ID" _NET_WM_WINDOW_TYPE WM_CLASS WM_NAME |
-                awk -v id="$WIN_ID" '
+# No error msg, please!
+exec 2>/dev/null
+
+win() {
+        win_l="$(xprop -root _NET_CLIENT_LIST | egrep -o "0x[0-9a-fA-F]+")"
+        win_c="$(echo $win_l | wc -w)"
+        win_a=$(xprop -root _NET_ACTIVE_WINDOW | awk -F' ' '{ print $NF }')
+        for win_id in $win_l; do
+                [ "$win_id" == "$win_a" ] && tag="*" || tag=" "
+                xprop -id "$win_id" _NET_WM_WINDOW_TYPE WM_CLASS WM_NAME |
+                awk -v id="$win_id" -v tag="$tag" '
                         /^_NET_WM_WINDOW_TYPE/  {if (match($0, "DOCK|DESKTOP")) {exit}}
                         /^WM_CLASS/             {c = $4}
-                        /^WM_NAME/              {t = ""; for(i = 3; i <= NF; ++i) t = (t $i)}
-                        END                     {printf("%s %s %s\n", id, c, t)}'
+                        /^WM_NAME/              {t = ""; for(i = 3; i <= NF; ++i) t = (t $i " ")}
+                        END                     {if (c != "" && t != "")
+                                                        {printf("%s %9.9s %-20.20s %s\n",
+                                                                tag, id,
+                                                                substr(c, 2, length(c) - 2),
+                                                                substr(t, 2, length(t) - 3))}
+                                                }'
 
         done |
-        dmenu-cust -p Win: -i -l 10 | cut -d " " -f 1
+        dmenu-cust -p Win: -i -l "$win_c" | awk '{print $1}'
+        # Note: in case the current active window is selected, this function
+        # returns the wrong field, but that's not a problem, since the
+        # subsequent wmctrl call would be useless (even with the correct arg)
 }
 
-wmctrl -i -a $(search_win)
+wmctrl -i -a "$(win)"
