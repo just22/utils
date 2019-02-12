@@ -15,26 +15,36 @@ FN="-*-dejavu sans mono-medium-r-*-*-12-*-*-*-*-*-*-*"
 H=17
 
 # Use -d option to print module outputs to stderr
-[ "$1" == "-d" ] && DEBUG=1
+if [ "$1" == "-d" ]; then
+        DEBUG=1
+        shift
+fi
 
 # The status bar layout
 layout='cpu_mem load sd0 trunk0 batt'
 
 # Clean up
-pkill -P "$(cat /tmp/dbar.pid)"
-rm /tmp/dbar_p
+if [ -f /tmp/"${USER}".dbar_pid ]; then
+        opid="$(cat /tmp/"${USER}".dbar_pid)"
+        pkill -P "$opid"
+
+fi
+rm /tmp/"${USER}".dbar_pipe 2>/dev/null
+
+# Just in case there are orphan mods still running...
+pkill -P 1 -fl dbar_mod_
 
 echo "Running $(basename $0) with PID $$"
-echo "$$" > /tmp/dbar.pid
+echo "$$" > /tmp/"${USER}".dbar_pid
 
 cd ~/.config/dbar || { echo "~/dbar module dir doesn't exists" >&2; exit 1; }
 
 # Make a pipe to multiplex inputs from the module scripts
-mkfifo /tmp/dbar_p || { echo "Cannot create /tmp/dbar_p" >&2; exit 1; }
+mkfifo /tmp/"${USER}".dbar_pipe || { echo "Cannot create /tmp/${USER}.dbar_pipe" >&2; exit 1; }
 
-# Start modules, piping them to dbar_p
+# Start modules, piping them to dbar_pipe
 for mod in $layout; do
-	unbuffer mod_$mod | unbuffer -p sed "s/^/MODULE $mod /g" > /tmp/dbar_p &
+        unbuffer dbar_mod_$mod | unbuffer -p sed "s/^/MODULE $mod /g" > /tmp/"${USER}".dbar_pipe &
 done
 
 # Main loop
@@ -43,25 +53,26 @@ done
 # The output of print_status_bar is simply the concatenation of all the
 # strings. Output from awk is piped into dzen2.
 awk -v DEBUG="$DEBUG" -v layout_string="$layout" '
-	function print_status_bar() {
-		for (i = 1; i <= mod_no; i++) {
-			s = curr_s[mod_list[i]];
-			sub(/\r/, "", s);
-			printf("  %s", s);
-		}
-		printf("\n");
-		fflush();
-	}
-	BEGIN {
-		mod_no = split(layout_string, mod_list, " ");
-	}
-	/^MODULE/ {
-		if (DEBUG == 1) { print $0 > ("/dev/stderr") }
-		curr_s[$2]=substr($0, length($1 $2) + 3, length($0));
-		print_status_bar();
-	}
-' < /tmp/dbar_p |
+        function print_status_bar() {
+                for (i = 1; i <= mod_no; i++) {
+                        s = curr_s[mod_list[i]];
+                        sub(/\r/, "", s);
+                        printf("  %s", s);
+                }
+                printf("\n");
+                fflush();
+        }
+        BEGIN {
+                mod_no = split(layout_string, mod_list, " ");
+        }
+        /^MODULE/ {
+                if (DEBUG == 1) { print $0 > ("/dev/stderr") }
+                curr_s[$2]=substr($0, length($1 $2) + 3, length($0));
+                print_status_bar();
+        }
+' < /tmp/"${USER}".dbar_pipe |
 dzen2 -title-name dbar \
+      -geometry +0+1 \
       -bg "$BG" -fg "$FG" -fn "$FN" \
       -p -e "" -expand left -dock \
       "$@"
