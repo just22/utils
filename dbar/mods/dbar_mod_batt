@@ -38,5 +38,5 @@ while : ; do
                 warnd=0
         fi
         printf "[Batt: %s%% (%s)]\n" "$bp" "$bl"
-        sleep 60
+        sleep 15
 done
