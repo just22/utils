@@ -11,7 +11,7 @@ _usage() {
         echo "       -h: This help message"
         echo "       <op>:=<checkout|update> Operation to perform"
         echo "       <dir>:=<src|xenocara|ports> Directory to fetch/update"
-        echo "       <tag>:=<OPENBSD_x_x> Tag of stable branch; optional, defaults on current"
+        echo "       <tag>:=<OPENBSD_x_x> Tag of stable branch, current if none"
 }
 
 # Command line positional arguments parsing
