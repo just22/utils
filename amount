@@ -58,7 +58,7 @@ MOUNT_ROOT=/vol
 GROUP=diskmount
 MODE=0775
 EXCLUDED_DEV=""
-FILEMGR="x-filemanager"
+FILEMGR="xfe"
 
 while getopts ":hr:g:m:e:f:" arg; do
         case "$arg" in
