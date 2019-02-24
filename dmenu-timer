@@ -31,4 +31,4 @@ _array MENU_ITEMS \
         "60min"
 
 d="$(printf "%s\n" "${MENU_ITEMS[@]}" | dmenu-cust -p Timer: "$@")"
-[ -n "$d" ] && timer -t "$d"
+[ -n "$d" ] && timer -t "+$d"
