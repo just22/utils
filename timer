@@ -6,6 +6,21 @@
 #  Simple timer (using at and xmessage)
 # ----------------------------------------------------------------------
 
+dmsg() {
+        if gdbus call --session --dest org.freedesktop.DBus \
+                      --object-path /org/freedesktop/Dbus \
+                      --method org.freedesktop.DBus.ListNames
+        then
+                notify-send "Timer" "$(echo "$1")"
+        else
+                echo "$1"|
+                xmessage -title "Timer" \
+                         -center \
+                         -buttons "OK":0 \
+                         -file - >/dev/null 2>&1
+        fi
+}
+
 while [ $# -ne 0 ]; do
         case "$1" in
         -i)
@@ -44,7 +59,7 @@ SNOOZE_TIME=${SNOOZE_TIME:-300}
 SHELL=/bin/sh at "$TIME" 2>/tmp/$USER.timer.$$ <<-EOT
         while true; do
                 echo "$MSG" |
-                DISPLAY="$DISPLAY" xmessage -title "Reminder" -center \
+                DISPLAY="$DISPLAY" xmessage -title "Timer" -center \
                                         -buttons "Got it":0,"Snooze":2 \
                                         -file - >/dev/null 2>&1
                 [ "\$?" -eq 0 ] && break
@@ -53,15 +68,15 @@ SHELL=/bin/sh at "$TIME" 2>/tmp/$USER.timer.$$ <<-EOT
 EOT
 
 if [ "$?" -eq 0 ]; then
-        msg="Reminder set at:\n$(cat /tmp/$USER.timer.$$ |
+        msg="Timeout set at:\n$(cat /tmp/$USER.timer.$$ |
                                  grep "^job" |
                                  awk -F " at " '{print $2}')"
 else
-        msg="Error: wrong time format?\n(Reminder not set)"
+        msg="Error: wrong time format?\n(Timeout not set)"
 fi
 
-echo $msg | xmessage -title "Reminder" -center \
-                     -buttons "OK":0 \
-                     -file - >/dev/null 2>&1
+dmsg "$msg"
+
 rm -r /tmp/$USER.timer.$$
+
 exit 0
