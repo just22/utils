@@ -1,0 +1,13 @@
+#!/bin/sh
+
+# ----------------------------------------------------------------------
+#  $Id$
+#
+#  Update XDG apps fluxbox's menu (depends on xdgmenumaker)
+# ----------------------------------------------------------------------
+
+xdgmenumaker -i -f fluxbox > ~/.fluxbox/menu-xdg_apps
+
+sed -i '$i\
+  [exec] (Update XDG Apps) {update-xdg-apps-fbmenu} </usr/local/share/icons/gnome/16x16/apps/system-software-update.png>
+' ~/.fluxbox/menu-xdg_apps

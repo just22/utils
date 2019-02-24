@@ -1,0 +1,55 @@
+#!/bin/sh
+
+# ----------------------------------------------------------------------
+#  $Id$
+#
+#  xautolock control
+# ----------------------------------------------------------------------
+
+run() {
+        _array() {
+                case "$SH_VERSION" in
+                *KSH*)
+                        a="$1"; shift
+                        set -A "$a" "$@"
+                        ;;
+                *)
+                        eval $1='("${@:2}")'
+                esac
+        }
+
+        _array MENU_ITEMS \
+                "Lock" \
+                "Enable"  \
+                "Disable" \
+                "Restart" \
+                "Launch"  \
+                "Exit"
+
+        case "$(printf "%s\n" "${MENU_ITEMS[@]}" |
+               dmenu-cust -p xautolock: -i "$@")" in
+        Enable)
+                xautolock -enable
+                ;;
+        Disable)
+                xautolock -disable
+                ;;
+        Lock)
+                xautolock -locknow
+                ;;
+        Restart)
+                xautolock -restart
+                ;;
+        Launch)
+                xautolock -detectsleep -time 10 -locker slock
+                ;;
+        Exit)
+                xautolock -exit
+                ;;
+        esac
+}
+
+# main() {
+        outMsg="$(run 2>&1)"
+        [ -n "$outMsg" ] && notify-send xautolock "$outMsg"
+# }

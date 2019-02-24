@@ -1,0 +1,109 @@
+#!/bin/sh
+
+# ----------------------------------------------------------------------
+#  $Id$
+#
+#  This script is aimed to ease the OpenBSD upgrade process:
+#      - download, verify and install bsd.rd;
+#      - save the previous sets and download the new ones.
+# ----------------------------------------------------------------------
+
+# Copyright (c) 2019 Alessandro De Laurenzis <just22@atlantide.t28.net>
+#
+# Permission to use, copy, modify, and distribute this software for any
+# purpose with or without fee is hereby granted, provided that the above
+# copyright notice and this permission notice appear in all copies.
+#
+# THE SOFTWARE IS PROVIDED "AS IS" AND THE AUTHOR DISCLAIMS ALL WARRANTIES
+# WITH REGARD TO THIS SOFTWARE INCLUDING ALL IMPLIED WARRANTIES OF
+# MERCHANTABILITY AND FITNESS. IN NO EVENT SHALL THE AUTHOR BE LIABLE FOR
+# ANY SPECIAL, DIRECT, INDIRECT, OR CONSEQUENTIAL DAMAGES OR ANY DAMAGES
+# WHATSOEVER RESULTING FROM LOSS OF USE, DATA OR PROFITS, WHETHER IN AN
+# ACTION OF CONTRACT, NEGLIGENCE OR OTHER TORTIOUS ACTION, ARISING OUT OF
+# OR IN CONNECTION WITH THE USE OR PERFORMANCE OF THIS SOFTWARE.
+
+save_prev() {
+        mkdir -p ~/obsd-up/previous
+        mv -f ~/obsd-up/{*.tgz,SHA*,bsd*,previous}
+} 2>/dev/null
+
+check_bsdrd() {
+        sig_ok=0
+        for i in 0 1; do
+                key="/etc/signify/openbsd-$(( $SV + $i ))-base.pub"
+                echo "bsd.rd: checking signature $key"
+                if signify -qC -p "$key" -x SHA256.sig bsd.rd; then
+                        sig_ok=1
+                        break
+                fi
+        done >/dev/null 2>&1
+        if [ "$sig_ok" -eq 0 ]; then
+                echo "bsd.rd signature: INVALID"
+                exit 1
+        else
+                echo "bsd.rd signature: OK"
+        fi
+}
+
+run_as_root() {
+        cmd="$1"
+        echo "Running (as root): $cmd"
+        /usr/bin/doas $cmd || exit 1
+}
+
+# main() {
+MIRROR=$(sed -e '/^$/d' -e '/^#/d' -e 'q' /etc/installurl)
+[ -z "$MIRROR" ] && echo "No usable mirror in /etc/installurl" && exit 1
+
+read KV SV CURR <<- EOT
+	$(sysctl -n kern.version |
+	  sed "s/^OpenBSD \([0-9]*\).\([0-9]\)\([^ ]*\).*/\1.\2 \1\2 \3/;q")
+EOT
+
+[ -n "$CURR" ] && KV="snapshots"
+
+URL="$MIRROR/$KV/`machine -a`"
+
+# Show the mirror contents
+if lynx -version >/dev/null 2>&1; then
+        lynx -dump -nolist -width "$(tput cols)" "$URL"
+else
+        echo "Check mirror's contents at $URL before proceeding"
+fi
+printf "\nHit Enter to continue..."; read key
+
+# Save previous sets, if any
+save_prev
+
+# Download all sets
+cd ~/obsd-up
+FL="$URL/INSTALL.`machine -a` \
+    $URL/SHA256.sig \
+    $URL/base${SV}.tgz \
+    $URL/bsd \
+    $URL/bsd.mp \
+    $URL/bsd.rd \
+    $URL/comp$SV.tgz \
+    $URL/game$SV.tgz \
+    $URL/man$SV.tgz \
+    $URL/xbase$SV.tgz \
+    $URL/xfont$SV.tgz \
+    $URL/xserv$SV.tgz \
+    $URL/xshare$SV.tgz"
+ftp -V $FL || exit 1
+
+# Verify bsd.rd (other sets will be verified during upgrade)
+check_bsdrd
+
+# Prepare next boot
+run_as_root "mv -f /{,o}bsd"
+run_as_root "mv -f /{,o}bsd.rd"
+run_as_root "cp -f bsd.rd /"
+
+echo "# ----------------------------------------------------------------------"
+echo "   System is now ready for upgrading."
+echo "   Reboot and type '> boot /bsd.rd' at boot prompt."
+echo "# ----------------------------------------------------------------------"
+
+exit 0
+# } // main
