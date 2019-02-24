@@ -44,18 +44,19 @@ wmrestart() {
 
                 # Restart window manager
                 if pgrep -x fluxbox; then
+                        sleep 2
                         fluxbox-remote Restart
+                        sleep 2
                         fbsetbg -l
-                        sleep 1
                 elif pgrep -x dwm; then
                         [ -x ~/.fehbg ] && ~/.fehbg
                 fi
         fi
 
         if pgrep -x fluxbox; then
-                (sleep 1; space_dapp $((($(screen-width) - 1))) 17) &
-                (sleep 3; dbar -xs "${xs:-1}") &
-                (sleep 4 && bbpager) &
+                space_dapp $((($(screen-width) - 1))) 17 &
+                dbar -xs "${xs:-1}" &
+                sleep 1; bbpager &
                 #pcmanfm --desktop &
         fi
 }
