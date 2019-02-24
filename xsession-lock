@@ -11,17 +11,18 @@
 # No output msgs, please
 exec >/dev/null 2>&1
 
-# Force LVDS-only display layout
-dmenu-xrandr Off
-
-# Start xscreensaver, just in case it has been disabled
-if ! pgrep -u $USER xscreensaver; then
-        xscreensaver &
-        sleep 1
+# Restart/enable xautolock
+if ! pgrep -u $USER xautolock; then
+        xautolock -detectsleep -time 10 -locker slock &
+else
+        xautolock -enable
 fi
 
 # Reset keyboard layout
 setxkbmap it
 
 # Lock the screen
-xscreensaver-command -lock
+xautolock -locknow
+
+# Force LVDS-only display layout
+dmenu-xrandr Off
