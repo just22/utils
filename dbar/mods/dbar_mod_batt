@@ -26,8 +26,8 @@ while : ; do
         esac
 
         bp="$(apm -l)"
-        if [ "$AC" == "-" ]; then
-                bl="$(apm -m)"
+        bl="$(apm -m)"
+        if [[ "$AC" == "-" && "$bl" != unknown ]]; then
                 if [[ "$bl" -le 15 && "$warnd" -eq 0 ]]; then
                         wmsg
                         warnd=1
