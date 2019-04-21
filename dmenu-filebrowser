@@ -6,10 +6,25 @@
 #  Simple filebrowser using dmenu and xdg-open
 # ----------------------------------------------------------------------
 
-NODE=$(pwd)
-while [ -d $NODE ]; do
-        cd $NODE
-        NODE=$((echo ".."; ls -A -1) |
-                dmenu-cust -p $(echo $(pwd) | sed -e "s/ /_/g") -i -l 20) || exit
+LATEST="/tmp/$USER.dmenu-filebrowser.latest"
+touch "$LATEST"
+
+OPWD="$PWD"
+NODE="$PWD"
+while :; do
+        NODE="$(([ "$PWD" == "$OPWD" ] && cat "$LATEST"; echo ".."; ls -AF1) |
+                dmenu-cust -p $(echo "$PWD" | tr " " _) -i -l 20)" || exit
+        NODE="$(echo $NODE | sed "s/[/@*=|]$//")"
+        [ ! -d "$NODE" ] && break || cd "$NODE"
 done
-xdg-open "$NODE"
+
+if [ "$PWD" != "$OPWD" ] && ! grep -Fx "$PWD/" "$LATEST"; then
+        (echo "$PWD/" && cat "$LATEST") | head -5 > "$LATEST".tmp
+        mv -f "$LATEST"{.tmp,}
+fi
+
+
+case "$NODE" in
+*.m2ts) mpv "$NODE" ;;
+     *) xdg-open "$NODE"
+esac
