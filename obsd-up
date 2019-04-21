@@ -24,7 +24,7 @@
 
 save_prev() {
         mkdir -p ~/obsd-up/previous
-        mv -f ~/obsd-up/{*.tgz,SHA*,bsd*,previous}
+        mv -f ~/obsd-up/{*.tgz,bsd*,SHA*,INSTALL*,previous}
 } 2>/dev/null
 
 check_bsdrd() {
@@ -55,12 +55,17 @@ run_as_root() {
 MIRROR=$(sed -e '/^$/d' -e '/^#/d' -e 'q' /etc/installurl)
 [ -z "$MIRROR" ] && echo "No usable mirror in /etc/installurl" && exit 1
 
-read KV SV CURR <<- EOT
+read SV CURR <<- EOT
 	$(sysctl -n kern.version |
-	  sed "s/^OpenBSD \([0-9]*\).\([0-9]\)\([^ ]*\).*/\1.\2 \1\2 \3/;q")
+	  sed "s/^OpenBSD \([0-9]*\).\([0-9]\)\([^ ]*\).*/\1\2 \3/;q")
 EOT
 
-[ -n "$CURR" ] && KV="snapshots"
+if [ -n "$CURR" -o "$1" == -s ]; then
+        KV="snapshots"
+else
+        KV="$(($SV + 1))"
+        KV="$(echo "$KV" | sed "s/^\([0-9]*\)\([0-9]\)$/\1.\2/")"
+fi
 
 URL="$MIRROR/$KV/`machine -a`"
 
@@ -77,28 +82,43 @@ save_prev
 
 # Download all sets
 cd ~/obsd-up
-FL="$URL/INSTALL.`machine -a` \
-    $URL/SHA256.sig \
-    $URL/base${SV}.tgz \
-    $URL/bsd \
-    $URL/bsd.mp \
-    $URL/bsd.rd \
-    $URL/comp$SV.tgz \
-    $URL/game$SV.tgz \
-    $URL/man$SV.tgz \
-    $URL/xbase$SV.tgz \
-    $URL/xfont$SV.tgz \
-    $URL/xserv$SV.tgz \
-    $URL/xshare$SV.tgz"
-ftp -V $FL || exit 1
+ftp_ok=0
+for i in 0 1; do
+        SV="$(( $SV + $i ))"
+        FL="$URL/base${SV}.tgz \
+            $URL/comp$SV.tgz \
+            $URL/game$SV.tgz \
+            $URL/man$SV.tgz \
+            $URL/xbase$SV.tgz \
+            $URL/xfont$SV.tgz \
+            $URL/xserv$SV.tgz \
+            $URL/xshare$SV.tgz
+            $URL/bsd \
+            $URL/bsd.mp \
+            $URL/bsd.rd \
+            $URL/SHA256.sig \
+            $URL/INSTALL.`machine -a`"
+        if ftp -V $FL 2>/dev/null; then
+                ftp_ok=1
+                break
+        fi
+done
+
+if [ "$ftp_ok" -eq 0 ]; then
+        echo "Sets not found on $MIRROR"
+        exit 1
+fi
 
 # Verify bsd.rd (other sets will be verified during upgrade)
 check_bsdrd
 
 # Prepare next boot
-run_as_root "mv -f /{,o}bsd"
-run_as_root "mv -f /{,o}bsd.rd"
 run_as_root "cp -f bsd.rd /"
+
+if [ "$?" -ne 0 ]; then
+        echo "Cannot copy bsd.rd in /"
+        exit 1
+fi
 
 echo "# ----------------------------------------------------------------------"
 echo "   System is now ready for upgrading."
