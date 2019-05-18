@@ -1,0 +1,38 @@
+#!/bin/sh
+
+# ----------------------------------------------------------------------
+#  $Id$
+#
+#  Generate a nospamd file, based on fresh SPF lookups for a specific
+#  list of domains
+# ----------------------------------------------------------------------
+
+if [ -f /etc/mail/nospamd-domains ]; then
+        domains="`cat /etc/mail/nospamd-domains`"
+else
+        echo "${0##*/}: Domain list /etc/nospamd-domains not found"
+        exit 1
+fi
+
+outfile="/etc/mail/nospamd"
+locals="/etc/mail/nospamd-addons"
+
+echo "# ----------------------------------------------------------------------" > $outfile
+echo "#  nospamd file (generated on `date`)" >> $outfile
+echo "# ----------------------------------------------------------------------" >> $outfile
+echo >> $outfile;
+
+for dom in $domains; do
+        echo "Processing $dom"
+        echo "# ----------------------------------------------------------------------" >> $outfile
+        echo "#  $dom" >> $outfile
+        echo "#" >> $outfile
+        echo $dom | smtpctl spf walk >> $outfile
+        echo >> $outfile
+done
+
+echo "Appending local additions from $locals"
+echo "# ----------------------------------------------------------------------" >> $outfile
+echo "#  Local additions" >> $outfile
+echo "#" >> $outfile
+cat $locals >> $outfile 2>/dev/null
