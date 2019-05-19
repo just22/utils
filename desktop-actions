@@ -1,0 +1,19 @@
+#!/bin/sh
+
+# ----------------------------------------------------------------------
+#  $Id$
+#
+#  Link, copy or move files to/from desktop folder
+#  Note: (hard)link this script with a suitable name, in the form:
+#               <action>-{to,from}-desktop
+# ----------------------------------------------------------------------
+
+case "${0##*/}" in
+copy*) cmd="cp" ;;
+move*) cmd="mv" ;;
+link*) cmd="ln -s" ;;
+esac
+
+for f in "$@"; do
+        $cmd "$f" ~/Desktop
+done
