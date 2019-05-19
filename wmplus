@@ -214,7 +214,7 @@ tile_active() {
                 wmctrl -i -r $ACTIVE_WIN_ID -e 0,$X_ORIG,$Y_ORIG,$X_DIM,$Y_DIM
                 ;;
         *)
-                echo "$(basename $0): tile_active: wrong tiling direction"
+                echo "${0##*/}: tile_active: wrong tiling direction"
                 return 1
                 ;;
         esac
@@ -250,7 +250,7 @@ tile_visible() {
                 wmctrl -i -r $ACTIVE_WIN_ID -e 0,$X_ORIG,-1,$X_DIM,-1
                 ;;
         *)
-                echo "$(basename $0): tile_visible: wrong tiling direction"
+                echo "${0##*/}: tile_visible: wrong tiling direction"
                 return 1
                 ;;
         esac
@@ -312,7 +312,7 @@ tile_visible() {
                 done
                 ;;
         *)
-                echo "$(basename $0): tile_visible: wrong tiling direction"
+                echo "${0##*/}: tile_visible: wrong tiling direction"
                 return 1
                 ;;
         esac
@@ -322,7 +322,7 @@ tile_visible() {
 
 # Main
 if [ $# -eq 0 ]; then
-        echo "Usage: $(basename $0) <command> [options...] | help"
+        echo "Usage: ${0##*/} <command> [options...] | help"
         exit 1
 fi
 
@@ -330,14 +330,14 @@ ACTION="$1"
 
 case "$ACTION" in
 help)
-        echo "$(basename $0) <tile_active|tile_visible|raise_and_max|move_win_to_ws_and_activate> [options...]"
+        echo "${0##*/} <tile_active|tile_visible|raise_and_max|move_win_to_ws_and_activate> [options...]"
         ;;
 tile_*)
         if [ $# -ne 4 ]; then
                 [ "$ACTION" == tile_active ] &&
                         OPTS="<top|bot|left|right|tl|tr|bl|br>" ||
                         OPTS="<h|v>"
-                echo "Usage: $(basename $0) $ACTION $OPTS <mainWinFactor> <tileGap>"
+                echo "Usage: ${0##*/} $ACTION $OPTS <mainWinFactor> <tileGap>"
                 exit 2
         fi
         TILE_DIR="$2"
@@ -352,7 +352,7 @@ raise_and_max)
         ;;
 move_win_to_ws_and_activate)
         if [ $# -ne 2 ]; then
-                echo "Usage: $(basename $0) $ACTION <ws>"
+                echo "Usage: ${0##*/} $ACTION <ws>"
                 exit 2
         fi
         WS="$2"

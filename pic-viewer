@@ -7,7 +7,7 @@
 # ----------------------------------------------------------------------
 
 if [ $# -lt 1 ]; then
-        echo "Usage: $(basename $0) <IMG file list>"
+        echo "Usage: ${0##*/} <IMG file list>"
         exit 1
 fi
 
@@ -18,7 +18,7 @@ elif eog $@ 2> /dev/null; then
 elif display $@ 2> /dev/null; then
         :
 else
-        echo "$(basename $0): No suitable viewer found"
+        echo "${0##*/}: No suitable viewer found"
         exit 2
 fi
 

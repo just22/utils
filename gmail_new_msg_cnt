@@ -5,20 +5,20 @@
 # ----------------------------------------------------------------------
 
 if [ $# -ne 1 ]; then
-        echo "Usage: $(basename $0) <userID>"
+        echo "Usage: ${0##*/} <userID>"
         exit 1
 fi
 USERID="$1"
 
 if [ ! -e ~/.passwd ]; then
-        echo "$(basename $0): No passwd file found"
+        echo "${0##*/}: No passwd file found"
         exit 2
 fi
 #PASSWD="$(awk -v USERID="$USERID" '$0 ~ USERID {print $2}' ~/.passwd)"
 PASSWD="$(awk -v USERID="$USERID" '{if ($1 == USERID) {print $2; exit}}' ~/.passwd)"
 
 if [ -z "$PASSWD" ]; then
-        echo "$(basename $0): User '$USERID' not found"
+        echo "${0##*/}: User '$USERID' not found"
         exit 3
 fi
 curl -u "$USERID:$PASSWD" --silent https://mail.google.com/mail/feed/atom |

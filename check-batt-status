@@ -16,7 +16,7 @@ ble="$(apm -m)"
 [ "$ble" -gt 15 ] && exit
 
 # Battery level is critical, let's warn all logged users
-alias logger='logger -t $(basename $0) -p daemon.crit'
+alias logger='logger -t ${0##*/} -p daemon.crit'
 msg="$(apm -m -v)"
 echo $msg | logger
 echo $msg | wall

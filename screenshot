@@ -26,7 +26,7 @@ win|area)
         IMPORT_OPT="-window $(xprop -root _NET_ACTIVE_WINDOW | awk '{print $NF}')"
         ;;
 *)
-        echo "Usage: $(basename $0) [desktop|win|area] "
+        echo "Usage: ${0##*/} [desktop|win|area] "
         exit 1
         ;;
 esac
@@ -40,7 +40,7 @@ elif gnome-screenshot -i $GS_OPT; then
 elif import $IMPORT_OPT $OUT_FILE; then
         pic-viewer $OUT_FILE
 else
-        echo "$(basename $0): No suitable screen grabber found"
+        echo "${0##*/}: No suitable screen grabber found"
         exit 2
 fi
 

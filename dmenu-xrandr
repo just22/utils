@@ -96,7 +96,7 @@ wmrestart() {
         Right*) xs=1; wmrestart --output "$LVDS" --primary --auto --output "$VGA" --auto --right-of "$LVDS" ;;
         Below)  xs=2; wmrestart --output "$LVDS" --auto --output "$VGA" --primary --auto --below    "$LVDS" ;;
         Above)  xs=2; wmrestart --output "$LVDS" --primary --auto --output "$VGA" --auto --above    "$LVDS" ;;
-        *)      echo "$(basename $0): $1: unknown command"; exit 2
+        *)      echo "${0##*/}: $1: unknown command"; exit 2
         esac
 
 # }

@@ -7,7 +7,7 @@
 # ----------------------------------------------------------------------
 
 if [ "$#" -ne 1 ]; then
-        echo "$(basename $0): missing pkg name"
+        echo "${0##*/}: missing pkg name"
         exit 1
 fi
 

@@ -8,7 +8,7 @@
 # ----------------------------------------------------------------------
 
 __usage() {
-        echo "Usage: $(basename $0) [-t|-g] [-d] -p|-s|-c|<URL>"
+        echo "Usage: ${0##*/} [-t|-g] [-d] -p|-s|-c|<URL>"
         echo "-h        Display this message"
         echo "-t        Use curl to transfer URL data"
         echo "-m <cmd>  Use an alternate media player (default is mpv)"
@@ -61,7 +61,7 @@ URL="${URL-$(xclip -o -selection $URL_IN_CLIP)}"
 PLAYER="${PLAYER-mpv}"
 
 if [ -z "$URL" ]; then
-        echo "$(basename $0): No URL in clipboard"
+        echo "${0##*/}: No URL in clipboard"
         exit 1
 fi
 

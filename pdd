@@ -7,7 +7,7 @@
 # ----------------------------------------------------------------------
 
 _usage() {
-        echo "Usage: $(basename $0) source dest"
+        echo "Usage: ${0##*/} source dest"
 }
 
 if [ "$#" -ne 2 ]; then

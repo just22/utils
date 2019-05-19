@@ -7,7 +7,7 @@
 # ----------------------------------------------------------------------
 
 _usage() {
-        echo "Usage: $(basename $0): -h | <op> <dir> [<tag>]"
+        echo "Usage: ${0##*/}: -h | <op> <dir> [<tag>]"
         echo "       -h: This help message"
         echo "       <op>:=<checkout|update> Operation to perform"
         echo "       <dir>:=<src|xenocara|ports> Directory to fetch/update"
@@ -25,7 +25,7 @@ export CVSROOT="anoncvs@anoncvs.fr.openbsd.org:/cvs"
 
 cd /usr/"$2" 2>/dev/null
 if [ "$?" -ne 0 ]; then
-        >&2 echo "$(basename $0): Unknown directory"; exit 1
+        >&2 echo "${0##*/}: Unknown directory"; exit 1
 fi
 
 # Optional stable tag
@@ -34,7 +34,7 @@ fi
 case "$1" in
 checkout) echo $CVSROOT; cd ..; cvs -q get $r_opt -P "$2" ;;
 update)   cvs -q update $r_opt -Pd ;;
-*)        >&2 echo "$(basename $0): Unknown operation"; exit 1
+*)        >&2 echo "${0##*/}: Unknown operation"; exit 1
 esac
 
 exit 0

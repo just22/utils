@@ -82,11 +82,11 @@ while getopts ":hr:g:m:e:f:" arg; do
                 FILEMGR="$OPTARG"
                 ;;
         :)
-                echo "$(basename $0): Option -$OPTARG requires an argument"
+                echo "${0##*/}: Option -$OPTARG requires an argument"
                 exit 1
                 ;;
         \?)
-                echo "$(basename $0): Unknown option: -$OPTARG"
+                echo "${0##*/}: Unknown option: -$OPTARG"
                 exit 1
         esac
 done

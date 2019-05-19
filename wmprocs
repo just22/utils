@@ -401,7 +401,7 @@ getwinid() {
 }
 
 # main() {
-        case "$(basename $0)" in
+        case "${0##*/}" in
         wmprocs)
                 if [ $# -eq 0 ]; then
                         _usage
@@ -412,7 +412,7 @@ getwinid() {
                 fi
                 ;;
         tile | move2ws | winaction | getwinid)
-                command="$(basename $0)"
+                command="${0##*/}"
                 ;;
         *)
                 _usage

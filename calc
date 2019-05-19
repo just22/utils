@@ -7,7 +7,7 @@
 # ----------------------------------------------------------------------
 
 _usage() {
-        echo "Usage: $(basename $0): -h | [-n|-s] [-p <precision>] <expr>"
+        echo "Usage: ${0##*/}: -h | [-n|-s] [-p <precision>] <expr>"
         echo "       -h: This help message"
         echo "       -n: Do not use ENG notation"
         echo "       -s: Use ENG notation with SI prefixes"

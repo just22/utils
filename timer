@@ -39,7 +39,7 @@ while [ $# -ne 0 ]; do
                 SNOOZE_TIME="$1"
                 ;;
         *)
-                echo "Usage: $(basename $0) [-i] | [-t <time>] [-m <msg>] [-s <snoozeTime>]"
+                echo "Usage: ${0##*/} [-i] | [-t <time>] [-m <msg>] [-s <snoozeTime>]"
                 exit 1
                 ;;
         esac

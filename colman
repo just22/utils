@@ -116,7 +116,7 @@ update)
         if [ -d $HOME/.base16/base16-xresources ]; then
                 ( cd $HOME/.base16/base16-xresources; git pull )
         else
-                >&2 echo "$(basename $0): base16 xresources directory not found, please install it first"
+                >&2 echo "${0##*/}: base16 xresources directory not found, please install it first"
                 exit 1
         fi
         ;;
@@ -155,15 +155,15 @@ set)
                         change_color "$res" "$(xrdb -query | grep "XTerm\*$res:" | awk '{print $2}')"
                 done
         else
-                >&2 echo "$(basename $0): Missing or unknown colorscheme"
+                >&2 echo "${0##*/}: Missing or unknown colorscheme"
                 exit 1
         fi
         ;;
 help)
         ;;
 *)
-        >&2 echo "$(basename $0): Missing or unknown command"
-        >&2 echo "Try \"$(basename $0) help\" for more info"
+        >&2 echo "${0##*/}: Missing or unknown command"
+        >&2 echo "Try \"${0##*/} help\" for more info"
 esac
 
 exit 0

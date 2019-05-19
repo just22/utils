@@ -33,7 +33,7 @@ rm /tmp/"${USER}".dbar_pipe 2>/dev/null
 # Just in case there are orphan mods still running...
 pkill -P 1 -fl dbar_mod_
 
-echo "Running $(basename $0) with PID $$"
+echo "Running ${0##*/} with PID $$"
 echo "$$" > /tmp/"${USER}".dbar_pid
 
 cd ~/.config/dbar || { echo "~/dbar module dir doesn't exists" >&2; exit 1; }
