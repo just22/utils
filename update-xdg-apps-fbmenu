@@ -8,6 +8,9 @@
 
 xdgmenumaker -i -f fluxbox > ~/.fluxbox/menu-xdg_apps
 
-sed -i '$i\
-  [exec] (Update XDG Apps) {update-xdg-apps-fbmenu} </usr/local/share/icons/gnome/16x16/apps/system-software-update.png>
-' ~/.fluxbox/menu-xdg_apps
+item="Update XDG Apps"
+cmd="update-xdg-apps-fbmenu"
+icon="/usr/local/share/icons/gnome/16x16/apps/system-software-update.png"
+echo "[exec] ($item) {$cmd} <$icon>" >> ~/.fluxbox/menu-xdg_apps
+
+echo "[separator]" >> ~/.fluxbox/menu-xdg_apps
