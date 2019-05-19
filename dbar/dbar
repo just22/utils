@@ -12,7 +12,6 @@
 BG="#eee8d5"
 FG="#073642"
 FN="-*-dejavu sans mono-medium-r-*-*-12-*-*-*-*-*-*-*"
-H=17
 
 # Use -d option to print module outputs to stderr
 if [ "$1" == "-d" ]; then
@@ -74,6 +73,6 @@ awk -v DEBUG="$DEBUG" -v layout_string="$layout" '
 dzen2 -title-name dbar \
       -geometry +0+1 \
       -bg "$BG" -fg "$FG" -fn "$FN" \
-      -p -e "" -expand left -dock \
+      -p -e "" -expand left \
       "$@"
 
