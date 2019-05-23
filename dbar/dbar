@@ -73,6 +73,6 @@ awk -v DEBUG="$DEBUG" -v layout_string="$layout" '
 dzen2 -title-name dbar \
       -geometry +0+1 \
       -bg "$BG" -fg "$FG" -fn "$FN" \
-      -p -e "" -expand left \
+      -p -e "" -expand left -dock \
       "$@"
 
