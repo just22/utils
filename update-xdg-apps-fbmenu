@@ -12,5 +12,3 @@ item="Update XDG Apps"
 cmd="update-xdg-apps-fbmenu"
 icon="/usr/local/share/icons/gnome/16x16/apps/system-software-update.png"
 echo "[exec] ($item) {$cmd} <$icon>" >> ~/.fluxbox/menu-xdg_apps
-
-echo "[separator]" >> ~/.fluxbox/menu-xdg_apps
