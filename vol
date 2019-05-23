@@ -1,63 +1,146 @@
-#!/usr/bin/env tclsh8.5
+#!/usr/bin/env tclsh8.6
 
 # ----------------------------------------------------------------------
 #  $Id$
 #
-#  Simple volume level manager (specific for OpenBSD)
-#  Dependencies: tcl8.5, tk8.5
+#  Simple volume level control (specific for OpenBSD)
+#  Dependencies: tcl8.6, tk8.6, tktray
 # ----------------------------------------------------------------------
 
 package require Tk
+package require tktray
 
-if {[lindex $argv 0] == "-o"} {
-        wm overrideredirect . 1
-} else {
-        wm title . "Volume level"
+proc drawIcon {level} {
+        if {[exec mixerctl -n outputs.master.mute] == "on"} {
+                set icon_curr $::icon_muted
+        } elseif {$level < 85 } {
+                set icon_curr $::icon_low
+        } elseif {$level > 170} {
+                set icon_curr $::icon_high
+        } else {
+                set icon_curr $::icon_med
+        }
+        catch {image delete ::img::trayicon}
+        set trayicon [image create photo ::img::trayicon -file $icon_curr]
+        catch {tktray::icon .trayicon -image $trayicon}
+
+        bind .trayicon <ButtonRelease-1> {
+                if {[wm state .] == "withdrawn"} {
+                        .ctrl.volLevel set [currLevel]
+                        update
+                        set x [expr [winfo pointerx .] - [winfo reqwidth .]/2]
+                        set y [expr $::root_ydim + $::root_yorig - [winfo reqheight .] - 2]
+                        wm geometry . +$x+$y
+                        wm state . normal
+                } else {
+                        wm state . withdrawn
+                }
+        }
 }
-
-grid [ttk::frame .frame -padding "2 2 2 2"] -column 0 -row 0 -sticky nwes
-grid columnconfigure . 0 -weight 1
-grid rowconfigure . 0 -weight 1
 
 proc setVol {level} {
-        exec mixerctl outputs.master=[expr round($level)]
+
+        switch -glob $level {
+        +*      -
+        -*      {}
+        default {set level [expr round($level)]}
+        }
+        exec mixerctl outputs.master=$level
+        drawIcon $level
 }
 
-grid \
-        [ttk::scale .frame.volLevel \
+proc createCtrlFrame {} {
+        grid [ttk::frame .ctrl -padding "2 2 2 2"] \
+            -column 0 -row 0 -sticky nwes
+
+        grid \
+            [ttk::scale .ctrl.volLevel \
                 -orient vertical \
                 -length 175 \
                 -from 255 -to 0 \
                 -command setVol] \
-        -row 1 -column 1
+            -row 1 -column 1
 
-.frame.volLevel set [exec mixerctl -n outputs.master | cut -d "," -f 1]
-
-grid \
-        [ttk::checkbutton .frame.mute \
+        grid \
+            [ttk::checkbutton .ctrl.mute \
                 -text "Mute" \
                 -command "exec mixerctl -t outputs.master.mute"] \
-        -row 2 -column 1 \
-        -sticky w
+            -row 2 -column 1 \
+            -sticky w
 
-if {[exec mixerctl -n outputs.master.mute] == on} {
-        .frame.mute state selected
+        if {[exec mixerctl -n outputs.master.mute] == on} {
+                .ctrl.mute state selected
+        }
+
+        foreach w [winfo children .ctrl] {
+                grid configure $w -padx 2 -pady 2
+        }
 }
 
-foreach w [winfo children .frame] {
-        grid configure $w -padx 2 -pady 2
+proc currLevel {} {
+        exec mixerctl -n outputs.master | cut -d, -f1
 }
 
-set rootwin_ydim  [exec xprop -root _NET_WORKAREA | cut -d "," -f 4]
-set rootwin_yorig [exec xprop -root _NET_WORKAREA | cut -d "," -f 2]
+# Icons
+set icon_path  "$env(HOME)/.local/share/icons"
+set icon_low   "$icon_path/audio-volume-low.png"
+set icon_med   "$icon_path/audio-volume-medium.png"
+set icon_high  "$icon_path/audio-volume-high.png"
+set icon_muted "$icon_path/audio-volume-muted.png"
 
-update
-set x_pos [expr [winfo pointerx .] - [winfo reqwidth .]/2]
-set y_pos [expr $rootwin_ydim + $rootwin_yorig - [winfo reqheight .] - 1]
+# Top-level win
+wm title . "volctrl"
+wm state . withdrawn
+if {[lindex $argv 0] == "-o"} {
+        wm overrideredirect . 1
+} else {
+        # Keybindings don't work with overrideredirect...
+        bind . <Escape> {wm state . withdrawn}
+        bind . <Return> {
+                .ctrl.mute invoke
+                drawIcon [currLevel]
+        }
+        bind . <space> {
+                .ctrl.mute invoke
+                drawIcon [currLevel]
+        }
+        bind . <Key-Up> {
+                setVol +10
+                drawIcon [currLevel]
+                .ctrl.volLevel set [currLevel]
+                update
+        }
+        bind . <Key-Down> {
+                setVol -10
+                drawIcon [currLevel]
+                .ctrl.volLevel set [currLevel]
+                update
+        }
+}
 
-wm geometry . +${x_pos}+${y_pos}
+proc updateState {} {
+        drawIcon [currLevel]
+        .ctrl.volLevel set [currLevel]
+        if {[exec mixerctl -n outputs.master.mute] == on} {
+                .ctrl.mute state selected
+        } else {
+                .ctrl.mute state !selected
+        }
+        update
+        after 5000 updateState
+}
 
-# Keybindings don't work with overrideredirect...
-bind . <Escape> {destroy .}
-bind . <Return> {.frame.mute invoke}
-bind . <space>  {.frame.mute invoke}
+# Control frame y position
+set root_ydim  [exec xprop -root _NET_WORKAREA | cut -d, -f4]
+set root_yorig [exec xprop -root _NET_WORKAREA | cut -d, -f2]
+
+# Create (hidden) control frame
+createCtrlFrame
+
+# Draw tray icon
+drawIcon [currLevel]
+bind .trayicon <ButtonRelease-2> {exit}
+bind .trayicon <ButtonRelease-3> {exec xterm -geometry 75x30 -e cmixer}
+
+# Daemonize...
+updateState
