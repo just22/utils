@@ -1,0 +1,38 @@
+#!/usr/bin/env tclsh8.6
+
+# ----------------------------------------------------------------------
+#  $Id$
+#
+#  Simple system tray launcher for cmixer
+#  Dependencies: tcl8.6, tk8.6, tktray
+# ----------------------------------------------------------------------
+
+package require Tk
+package require tktray
+
+proc drawIcon {} {
+        set trayicon [image create photo ::img::trayicon -file $::icon]
+        tktray::icon .trayicon -image $trayicon
+}
+
+# Init cmixer PID
+set pid 0
+
+# Icon
+set icon_path   "$env(HOME)/.local/share/icons"
+set icon        "$icon_path/mixer.png"
+
+# We don't need a top-level window...
+wm state . withdrawn
+
+# Draw icon in system tray
+drawIcon
+bind .trayicon <ButtonRelease-1> {
+        if {!$pid || [catch {exec kill $pid}]} {
+                set pid [exec xterm -geometry 110x30 -e cmixer &]
+        } else {
+                set pid 0
+        }
+}
+bind .trayicon <ButtonRelease-2> {exit}
+
