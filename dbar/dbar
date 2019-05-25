@@ -1,13 +1,17 @@
 #!/bin/sh
 
-# Relies on 'unbuffer' command (OpenBSD package: expect)
+# ----------------------------------------------------------------------
+#  $Id$
 #
-# This script is a module-based dzen2 master script. The modules push their
-# changes to dzen2 when a change occurs, triggering a redraw. No redraws
-# happen unless a module pushes a change. Modules are just programs of any
-# kind. To add your own module, write a script that produces output for dzen2
-# and put it in ~/.config/dbar directory.
+#  This is a simple module-based dzen2 starusbar.
+#  Modules (just programs of any kind) push their changes to dzen2 when
+#  a change occurs, triggering a redraw.
+#  To add your own module, write a script that produces output for dzen2
+#  and put it in ~/.config/dbar directory.
 #
+#  Dependencies: unbuffer(1) (OpenBSD package: expect)
+# ----------------------------------------------------------------------
+
 # dzen2 customization
 BG="#eee8d5"
 FG="#073642"
@@ -30,21 +34,33 @@ if [ -f /tmp/"${USER}".dbar_pid ]; then
 fi
 rm /tmp/"${USER}".dbar_pipe 2>/dev/null
 
+if ! cd ~/.config/dbar 2>/dev/null; then
+    echo "~/.config/dbar module dir doesn't exists" >&2
+    exit 1
+fi
+
+# Make a pipe to multiplex inputs from the module scripts
+if ! mkfifo /tmp/"${USER}".dbar_pipe 2>/dev/null; then
+    echo "Cannot create /tmp/${USER}.dbar_pipe" >&2
+    exit 1
+fi
+
 # Just in case there are orphan mods still running...
 pkill -P 1 -fl dbar_mod_
 
 echo "Running ${0##*/} with PID $$"
 echo "$$" > /tmp/"${USER}".dbar_pid
 
-cd ~/.config/dbar || { echo "~/dbar module dir doesn't exists" >&2; exit 1; }
-
-# Make a pipe to multiplex inputs from the module scripts
-mkfifo /tmp/"${USER}".dbar_pipe || { echo "Cannot create /tmp/${USER}.dbar_pipe" >&2; exit 1; }
-
 # Start modules, piping them to dbar_pipe
 for mod in $layout; do
-        unbuffer dbar_mod_$mod | unbuffer -p sed "s/^/MODULE $mod /g" > /tmp/"${USER}".dbar_pipe &
+        unbuffer dbar_mod_$mod |
+        unbuffer -p sed "s/^/MODULE $mod /g" > /tmp/"${USER}".dbar_pipe &
 done
+
+# This is a bad hack!!! Some WMs don't manage dock apps properly
+(sleep 1;
+ xprop -name dbar -f _NET_WM_STATE 32a \
+     -set _NET_WM_STATE '_NET_WM_STATE_SKIP_PAGER') &
 
 # Main loop
 # A simple associative array (curr_s) keeps track of the last string
