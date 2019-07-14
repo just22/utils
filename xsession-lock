@@ -11,12 +11,9 @@
 # No output msgs, please
 exec >/dev/null 2>&1
 
-# Restart/enable xautolock
-if ! pgrep -u $USER xautolock; then
-        xautolock -detectsleep -time 10 -locker slock &
-else
-        xautolock -enable
-fi
+# Restart xautolock
+pkill -u $USER xautolock
+xautolock -detectsleep -time 10 -locker slock &
 
 # Reset keyboard layout
 setxkbmap it
