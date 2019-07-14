@@ -1,0 +1,32 @@
+#!/usr/bin/env tclsh8.6
+
+# ----------------------------------------------------------------------
+#  $Id$
+#
+#  Simple system tray launcher for calendar
+#  Dependencies: tcl8.6, tk8.6, tktray
+# ----------------------------------------------------------------------
+
+package require Tk
+package require tktray
+
+proc drawIcon {} {
+        set trayicon [image create photo ::img::trayicon -file $::icon]
+        tktray::icon .trayicon -image $trayicon
+}
+
+# Init cmixer PID
+set pid 0
+
+# Icon
+set icon_path   "~/.local/share/icons"
+set icon        "$icon_path/calendar.png"
+
+# We don't need a top-level window...
+wm state . withdrawn
+
+# Draw icon in system tray
+drawIcon
+bind .trayicon <ButtonRelease-1> {exec gsimplecal &}
+bind .trayicon <ButtonRelease-2> {exit}
+
