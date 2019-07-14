@@ -39,18 +39,7 @@ wmrestart() {
         # Change display layout
         if [ "$run_xrandr" -eq 1 ]; then
                 xrandr $@
-
                 [ "$norestart" -eq 1 ] && return
-
-                # Restart window manager
-                if pgrep -x fluxbox; then
-                        sleep 2
-                        fluxbox-remote Restart
-                        sleep 2
-                        fbsetbg -l
-                elif pgrep -x dwm; then
-                        [ -x ~/.fehbg ] && ~/.fehbg
-                fi
         fi
 
         if pgrep -x fluxbox; then
