@@ -21,71 +21,30 @@ _array() {
 }
 
 _array MENU_ITEMS \
-        "Off (LVDS-only)" \
-        "Only (LVDS-off)" \
-        "Left-of" \
-        "Right-of" \
-        "Above" \
-        "Below"
-
-wmrestart() {
-        # Clean up statusbar
-        if pgrep -x fluxbox; then
-                pkill -x bbpager
-                pkill -x space_dapp
-                #pcmanfm --desktop-off
-        fi
-
-        # Change display layout
-        if [ "$run_xrandr" -eq 1 ]; then
-                xrandr $@
-                [ "$norestart" -eq 1 ] && return
-        fi
-
-        if pgrep -x fluxbox; then
-                space_dapp $((($(screen-width) - 1))) 17 &
-                dbar -xs "${xs:-1}" &
-                sleep 1; bbpager &
-                #pcmanfm --desktop &
-        fi
-}
-
+    $(for f in ~/.screenlayout/*; do  f=${f##*/}; echo ${f%%.*}; done) \
+    Custom
 
 # main() {
 
-        if [ "$1" == -a ]; then
-                run_xrandr=0
-                wmrestart
-                exit 0
-        else
-                run_xrandr=1
-                if [ "$1" == -d ]; then
-                        norestart=1;
-                        shift
-                fi
-        fi
-
-        # "Off" and "Only" are used for display init, skip all checks
         LVDS="$(xrandr -q | grep -w connected | awk '{print $1}' | grep LVDS)"
          VGA="$(xrandr -q | grep -w connected | awk '{print $1}' | grep VGA)"
-        if [ "$1" != Off && "$1" != Only ]; then
-                if [ -z "$LVDS" ] || [ -z "$VGA" ]; then
-                        echo "No dual monitor configuration available" |
-                        xmessage -center -title "dmenu-xrandr" \
-                                -buttons "Close":0,"Reset Display":2 -file -
-                        [ "$?" -eq 2 ] && wmrestart --auto
-                        exit 1
-                fi
+        HDMI="$(xrandr -q | grep -w connected | awk '{print $1}' | grep HDMI)"
+          DP="$(xrandr -q | grep -w connected | awk '{print $1}' | grep DP)"
+        if [ -z "$VGA" ] && [ -z "$HDMI" ] && [ -z "$DP" ]; then
+                echo "No dual monitor configuration available" |
+                xmessage -center -title "dmenu-xrandr" \
+                        -buttons "Close":0,"Reset Display":2 -file -
+                [ "$?" -eq 2 ] && xrandr --auto
+                exit 1
         fi
 
-        case "${1-$(printf "%s\n" "${MENU_ITEMS[@]}" | dmenu-cust -p VGA: "$@")}" in
-        Off*)   [ -n "$LVDS" ] && (xs=1; wmrestart --output "$LVDS" --auto --output "$VGA" --off) ;;
-        Only*)  [ -n "$VGA" ]  && (xs=1; wmrestart --output "$LVDS" --off  --output "$VGA" --auto) ;;
-        Left*)  xs=1; wmrestart --output "$LVDS" --auto --output "$VGA" --primary --auto --left-of  "$LVDS" ;;
-        Right*) xs=1; wmrestart --output "$LVDS" --primary --auto --output "$VGA" --auto --right-of "$LVDS" ;;
-        Below)  xs=2; wmrestart --output "$LVDS" --auto --output "$VGA" --primary --auto --below    "$LVDS" ;;
-        Above)  xs=2; wmrestart --output "$LVDS" --primary --auto --output "$VGA" --auto --above    "$LVDS" ;;
-        *)      echo "${0##*/}: $1: unknown command"; exit 2
+        cmd="$(printf "%s\n" "${MENU_ITEMS[@]}" | dmenu-cust -p "Screen Layout:" "$@")"
+        case "$cmd" in
+        Custom)
+                exec arandr ;;
+        *)
+                exec ~/.screenlayout/${cmd}.sh
         esac
 
 # }
+
