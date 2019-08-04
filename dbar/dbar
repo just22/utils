@@ -15,7 +15,7 @@
 # dzen2 customization
 BG="#eee8d5"
 FG="#073642"
-FN="-*-dejavu sans mono-medium-r-*-*-12-*-*-*-*-*-*-*"
+FN="DejaVu Sans Mono:size=9"
 
 # Use -d option to print module outputs to stderr
 if [ "$1" == "-d" ]; then
