@@ -6,6 +6,11 @@
 #  dmenu launcher with custom default settings
 # ----------------------------------------------------------------------
 
+NB="#EEE8D5"
+NF="#293A1A"
+SB="#2AA198"
+SF="#FDF6E3"
+
 case "$XSESSION_CMD" in
 *xfce*)
         NB="#DCDCDC"
@@ -13,11 +18,8 @@ case "$XSESSION_CMD" in
         SB="#404040"
         SF="#DCDCDC"
         ;;
-*)
-        NB="#EEE8D5"
-        NF="#293A1A"
-        SB="#2AA198"
-        SF="#FDF6E3"
+*fluxbox*)
+        MONITOR="-m 0"
         ;;
 esac
 
@@ -28,4 +30,5 @@ CMD="$(basename ${0%-cust})"
        -nf "$NF" \
        -sb "$SB" \
        -sf "$SF" \
+       $MONITOR  \
        "$@"
