@@ -16,19 +16,27 @@ xterm -title "System stats" -e systat &
 # Process monitor
 xterm -title "Process monitor" -e top &
 
-# Set the root window background & wallpaper
+# Set root window background & wallpaper
 xsetroot -solid rgb:58/6E/75
-[ -x ~/.fehbg ] && ~/.fehbg
+nitrogen --restore
+
+# Restore wallpaper image upon resolution change
+pkill -x xeventbind; xeventbind resolution wprestore &
 
 # Statusbar
 slstatus &
 
+# Tray apps
+vol-tray &
+cal-tray &
+
 while :
 do
-    # Following apps live in the systray and will die every time dwm exits
-    radiotray &
+        # Following apps live in the systray and will die every time dwm exits
+        radiotray &
 
-    # Start dwm and log errors in ~/.dwm.log
-    mv ~/.dwm.log{,.old}
-    dwm 2> ~/.dwm.log || exit
+        # Start dwm and log errors in ~/.dwm.log
+        mv ~/.dwm.log{,.old}
+        dwm 2> ~/.dwm.log || exit
 done
+
