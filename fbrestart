@@ -1,0 +1,22 @@
+#!/bin/sh
+
+# ----------------------------------------------------------------------
+#  $Id$
+#
+#  Restart fluxbox apps (typically after a screen resolution change)
+# ----------------------------------------------------------------------
+
+# Clean up statusbar
+pkill -x bbpager
+pkill -x space_dapp
+#pcmanfm --desktop-off
+
+sleep 2
+space_dapp $((($(screen-width) - 1))) 17 &
+dbar -xs "${xs:-1}" &
+sleep 1; bbpager &
+
+nitrogen --restore
+
+#pcmanfm --desktop &
+
