@@ -30,9 +30,7 @@ _array MENU_ITEMS \
         "Play" \
         "Display" \
         "Keyboard" \
-        "Mixer" \
         "Timer" \
-        "Run" \
         "Quit"
 
 sel="$(printf "%s\n" "${MENU_ITEMS[@]}" | dmenu-cust -i -p Menu: "$@")"
@@ -46,9 +44,7 @@ Removables)     /usr/bin/doas /usr/local/bin/amount -e sd0 ;;
 Play)           play-url -p ;;
 Display)        dmenu-xrandr ;;
 Keyboard)       dmenu-kbd ;;
-Mixer)          x-terminal-emulator -title cmixer -geometry 80x30 -e cmixer ;;
 Timer)          dmenu-timer ;;
-Run)            dmenu_run-cust ;;
 Quit)           dmenu-session-logout ;;
 *)              exit 1 ;;
 esac
