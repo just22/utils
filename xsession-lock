@@ -22,4 +22,4 @@ setxkbmap it
 xautolock -locknow
 
 # Force LVDS-only display layout
-dmenu-xrandr Off
+~/.screenlayout/lvds-only.sh
