@@ -31,25 +31,23 @@ _array MENU_ITEMS \
 case "$(printf "%s\n" "${MENU_ITEMS[@]}" |
         dmenu-cust -p "Exit Session:" "$@")" in
 Logout)
-        case "$XSESSION_CMD" in
-        dwm*)
+        if pgrep -x dwm; then
                 pkill -x dwm
-                ;;
-        *fluxbox*)
+        elif pgrep -x fluxbox; then
                 pkill -P "$(cat /tmp/dbar.pid)"
                 rm /tmp/dbar.pid
                 fluxbox-remote Exit
-                ;;
-        cwm|twm)
-                pkill "$XSESSION_CMD"
-                ;;
-        *xfce*)
+        elif pgrep -x cwm; then
+                pkill -P "$(cat /tmp/dbar.pid)"
+                rm /tmp/dbar.pid
+                pkill -x cwm
+        elif pgrep -x xfwm4; then
                 xfce4-session-logout --logout --fast
-                ;;
-        *openbox*)
+        elif pgrep -x openbox; then
                 openbox --exit
-                ;;
-        esac
+        else
+                pkill -x twm
+        fi
         ;;
 Suspend)
         /usr/sbin/zzz
