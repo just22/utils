@@ -1,0 +1,25 @@
+#!/bin/sh
+
+# ----------------------------------------------------------------------
+#  $Id$
+#
+#  Select the X session to start
+#  (link this executable to ~/.start-xsession when needed)
+# ----------------------------------------------------------------------
+
+exec `Xdialog --buttons-style text                \
+              --no-close                          \
+              --no-cancel                         \
+              --no-tags                           \
+              --screen-center                     \
+              --stdout                            \
+              --menubox                           \
+                  "Select the X session"          \
+                  195x151                         \
+                  4                               \
+                  "dwm-session"         "dwm"     \
+                  "cwm-session"         "cwm"     \
+                  "startfluxbox"        "fluxbox" \
+                  "twm"                 "twm"`    ||
+exec twm
+

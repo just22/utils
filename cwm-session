@@ -1,0 +1,53 @@
+#!/bin/sh
+
+# ----------------------------------------------------------------------
+#  $Id$
+#
+#  cwm session manager
+# ----------------------------------------------------------------------
+
+# Restore wallpaper image upon resolution change
+if ! pgrep -x xeventbind; then
+        xeventbind resolution cwm-session &
+fi
+
+# Statusbar
+BG="#eee8d5"
+FG="#073642"
+FN="DejaVu Sans Mono:size=9"
+
+pkill -x slstatus
+xs=0
+for act_geom in $(xrandr -q |
+               grep -w connected |
+               grep -Eo "[0-9]+x[0-9]+\+[0-9]+\+[0-9]+"); do
+        xs="$(($xs + 1))"
+        slstatus -s |
+        dzen2 -title-name dbar \
+              -geometry +0+1 -h 16 \
+              -bg "$BG" -fg "$FG" -fn "$FN" \
+              -e "" -ta r -xs "$xs" &
+done
+
+# System tray and tray apps
+sleep 2
+pkill -x stalonetray; stalonetray &
+
+pkill -f radiotray; radiotray &
+
+pkill -f vol-tray; vol-tray &
+
+sed -i "s/mainwindow_xoffset = 10000/mainwindow_xoffset = 0/" \
+    ~/.config/gsimplecal/config
+pkill -f cal-tray; cal-tray &
+
+# Set root window background & wallpaper
+xsetroot -solid rgb:58/6E/75
+nitrogen --restore
+
+# If cwm isn't already running, start it
+if ! pgrep -x cwm; then
+        mv ~/.cwm.log{,.old}
+        cwm 2> ~/.cwm.log
+fi
+
