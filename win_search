@@ -16,23 +16,23 @@ win() {
         win_a=$(xprop -root _NET_ACTIVE_WINDOW | awk -F' ' '{ print $NF }')
         for win_id in $win_l; do
                 [ "$win_id" == "$win_a" ] && tag="*" || tag=" "
-                xprop -id "$win_id" _NET_WM_WINDOW_TYPE WM_CLASS WM_NAME |
+                xprop -id "$win_id" |
                 awk -v id="$win_id" -v tag="$tag" '
                         /^_NET_WM_WINDOW_TYPE/  {if (match($0, "DOCK|DESKTOP")) {exit}}
+                        /window state/          {if (match($0, "Iconic")) {tag = "h"}}
                         /^WM_CLASS/             {c = $4}
                         /^WM_NAME/              {t = ""; for(i = 3; i <= NF; ++i) t = (t $i " ")}
+                        /^_NET_WM_DESKTOP/      {d = "("$3")"}
                         END                     {if (c != "" && t != "")
-                                                        {printf("%s %9.9s %-20.20s %s\n",
-                                                                tag, id,
+                                                        {printf("%9.9s %s %s %-20.20s %s\n",
+                                                                id, d, tag,
                                                                 substr(c, 2, length(c) - 2),
                                                                 substr(t, 2, length(t) - 3))}
                                                 }'
 
-        done |
+        done | sort -k2,2nr |
         dmenu-cust -p Win: -i -l "$win_c" | awk '{print $1}'
-        # Note: in case the current active window is selected, this function
-        # returns the wrong field, but that's not a problem, since the
-        # subsequent wmctrl call would be useless (even with the correct arg)
 }
 
-wmctrl -i -a "$(win)"
+wmctrl -i ${1--a} "$(win)"
+
