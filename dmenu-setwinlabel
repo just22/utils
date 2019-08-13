@@ -1,0 +1,27 @@
+#!/bin/sh
+
+# ----------------------------------------------------------------------
+#  $Id$
+#
+#  Set a label for current window (inspired by cwm)
+# ----------------------------------------------------------------------
+
+# No error msg, please!
+exec 2>/dev/null
+
+# Get active window id (in hex)
+winId="$(xprop -root _NET_ACTIVE_WINDOW | egrep -o "0x[0-9a-fA-F]{2,}")"
+
+# Current label
+label="$(xprop -id "$winId" CUST_WM_LABEL |
+         grep -Ev "not found|no such atom" |
+         cut -d \" -f 2)"
+
+sel="$(echo "/remove/" | dmenu-cust -p "Label (${label:-none}):")"
+
+if [ -n "$sel" ]; then
+        [ "$sel" == "/remove/" ] &&
+                xprop -id "$winId" -remove CUST_WM_LABEL ||
+                xprop -id "$winId" -format CUST_WM_LABEL 8s -set CUST_WM_LABEL "$sel"
+fi
+
