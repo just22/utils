@@ -30,6 +30,7 @@ _array MENU_ITEMS \
         "Play" \
         "Display" \
         "Keyboard" \
+        "Print" \
         "Timer" \
         "Quit"
 
@@ -44,6 +45,7 @@ Removables)     /usr/bin/doas /usr/local/bin/amount -e sd0 ;;
 Play)           play-url -p ;;
 Display)        dmenu-xrandr ;;
 Keyboard)       dmenu-kbd ;;
+Print)          dmenu-lpr ;;
 Timer)          dmenu-timer ;;
 Quit)           dmenu-session-logout ;;
 *)              exit 1 ;;
