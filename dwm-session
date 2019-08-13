@@ -3,7 +3,7 @@
 # ----------------------------------------------------------------------
 #  $Id$
 #
-#  Dwm session manager
+#  dwm session manager
 # ----------------------------------------------------------------------
 
 # System log
@@ -28,6 +28,8 @@ slstatus &
 
 # Tray apps
 vol-tray &
+sed -i "s/mainwindow_xoffset = 0/mainwindow_xoffset = 10000/" \
+    ~/.config/gsimplecal/config
 cal-tray &
 
 while :
