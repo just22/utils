@@ -3,13 +3,15 @@
 # ----------------------------------------------------------------------
 #  $Id$
 #
-#  Restart fluxbox apps (typically after a screen resolution change)
+#  Restart fluxbox and apps (typically after a screen resolution change)
 # ----------------------------------------------------------------------
 
 # Clean up statusbar
 pkill -x bbpager
 pkill -x space_dapp
 #pcmanfm --desktop-off
+
+fluxbox-remote Restart
 
 sleep 2
 space_dapp $((($(screen-width) - 1))) 17 &
