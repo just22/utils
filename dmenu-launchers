@@ -9,32 +9,21 @@
 # No output msgs, please
 exec >/dev/null 2>&1
 
-_array() {
-        case "$SH_VERSION" in
-        *KSH*)
-                a="$1"; shift
-                set -A "$a" "$@"
-                ;;
-        *)
-                eval $1='("${@:2}")'
-        esac
-}
+MENU_ITEMS="\
+Term\n\
+FileManager\n\
+Browser\n\
+Email\n\
+Editor\n\
+Removables\n\
+Play\n\
+Display\n\
+Keyboard\n\
+Print\n\
+Timer\n\
+Quit"
 
-_array MENU_ITEMS \
-        "Term" \
-        "FileManager" \
-        "Browser" \
-        "Email" \
-        "Editor" \
-        "Removables" \
-        "Play" \
-        "Display" \
-        "Keyboard" \
-        "Print" \
-        "Timer" \
-        "Quit"
-
-sel="$(printf "%s\n" "${MENU_ITEMS[@]}" | dmenu-cust -i -p Menu: "$@")"
+sel="$(echo $MENU_ITEMS | dmenu-cust -i -p Menu: "$@")"
 case "$sel" in
 Term)           x-terminal-emulator ;;
 FileManager)    x-filemanager ;;

@@ -9,42 +9,29 @@
 # No output msgs, please
 exec >/dev/null 2>&1
 
-_array() {
-        case "$SH_VERSION" in
-        *KSH*)
-                a="$1"; shift
-                set -A "$a" "$@"
-                ;;
-        *)
-                eval $1='("${@:2}")'
-        esac
-}
+MENU_ITEMS="\
+$(for f in ~/.screenlayout/*; do
+        f=${f##*/}; printf "%s\\n\\\n" ${f%%.*}
+done)\
+Custom"
 
-_array MENU_ITEMS \
-    $(for f in ~/.screenlayout/*; do  f=${f##*/}; echo ${f%%.*}; done) \
-    Custom
+LVDS="$(xrandr -q | grep -w connected | awk '{print $1}' | grep LVDS)"
+ VGA="$(xrandr -q | grep -w connected | awk '{print $1}' | grep VGA)"
+HDMI="$(xrandr -q | grep -w connected | awk '{print $1}' | grep HDMI)"
+  DP="$(xrandr -q | grep -w connected | awk '{print $1}' | grep DP)"
+if [ -z "$VGA" ] && [ -z "$HDMI" ] && [ -z "$DP" ]; then
+        echo "No dual monitor configuration available" |
+        xmessage -center -title "dmenu-xrandr" \
+                -buttons "Close":0,"Reset Display":2 -file -
+        [ "$?" -eq 2 ] && xrandr --auto
+        exit 1
+fi
 
-# main() {
-
-        LVDS="$(xrandr -q | grep -w connected | awk '{print $1}' | grep LVDS)"
-         VGA="$(xrandr -q | grep -w connected | awk '{print $1}' | grep VGA)"
-        HDMI="$(xrandr -q | grep -w connected | awk '{print $1}' | grep HDMI)"
-          DP="$(xrandr -q | grep -w connected | awk '{print $1}' | grep DP)"
-        if [ -z "$VGA" ] && [ -z "$HDMI" ] && [ -z "$DP" ]; then
-                echo "No dual monitor configuration available" |
-                xmessage -center -title "dmenu-xrandr" \
-                        -buttons "Close":0,"Reset Display":2 -file -
-                [ "$?" -eq 2 ] && xrandr --auto
-                exit 1
-        fi
-
-        cmd="$(printf "%s\n" "${MENU_ITEMS[@]}" | dmenu-cust -p "Screen Layout:" "$@")"
-        case "$cmd" in
-        Custom)
-                exec arandr ;;
-        *)
-                exec ~/.screenlayout/${cmd}.sh
-        esac
-
-# }
+cmd="$(echo $MENU_ITEMS | dmenu-cust -p "Screen Layout:" "$@")"
+case "$cmd" in
+Custom)
+        exec arandr ;;
+*)
+        exec ~/.screenlayout/${cmd}.sh
+esac
 

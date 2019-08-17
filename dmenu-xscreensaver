@@ -9,26 +9,14 @@
 # No output msgs, please
 exec >/dev/null 2>&1
 
-_array() {
-        case "$SH_VERSION" in
-        *KSH*)
-                a="$1"; shift
-                set -A "$a" "$@"
-                ;;
-        *)
-                eval $1='("${@:2}")'
-        esac
-}
+MENU_ITEMS="\
+Enable\n\
+Disable\n\
+Lock Screen\n\
+Restart\n\
+Settings"
 
-_array MENU_ITEMS \
-        "Enable" \
-        "Disable" \
-        "Lock Screen" \
-        "Restart" \
-        "Settings"
-
-case "$(printf "%s\n" "${MENU_ITEMS[@]}" |
-        dmenu-cust -p XScreensaver: -i "$@")" in
+case "$(echo $MENU_ITEMS | dmenu-cust -p XScreensaver: -i "$@")" in
 Enable)
         xscreensaver
         ;;

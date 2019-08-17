@@ -9,21 +9,11 @@
 # No output msgs, please
 exec >/dev/null 2>&1
 
-_array() {
-        case "$SH_VERSION" in
-        *KSH*)
-                a="$1"; shift
-                set -A "$a" "$@"
-                ;;
-        *)
-                eval $1='("${@:2}")'
-        esac
-}
+MENU_ITEMS="\
+auto\n\
+high"
 
-_array MENU_ITEMS \
-        "auto" \
-        "high"
-
-POL=$(printf "%s\n" "${MENU_ITEMS[@]}" | dmenu-cust -p PerfPolicy[$(sysctl -n hw.perfpolicy)]: -i "$@")
+POL=$(echo $MENU_ITEMS |
+    dmenu-cust -p PerfPolicy[$(sysctl -n hw.perfpolicy)]: -i "$@")
 
 [ -n "$POL" ] && /usr/bin/doas /sbin/sysctl hw.perfpolicy="$POL"

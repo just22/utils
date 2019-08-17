@@ -9,22 +9,11 @@
 # No output msgs, please
 exec >/dev/null 2>&1
 
-_array() {
-        case "$SH_VERSION" in
-        *KSH*)
-                a="$1"; shift
-                set -A "$a" "$@"
-                ;;
-        *)
-                eval $1='("${@:2}")'
-        esac
-}
+MENU_ITEMS="\
+Whole Desktop\n\
+Selected Window/Area"
 
-_array MENU_ITEMS \
-        "Whole Desktop" \
-        "Selected Window/Area"
-
-[ "$(printf "%s\n" "${MENU_ITEMS[@]}" |
+[ "$(echo $MENU_ITEMS |
      dmenu-cust -p Screenshot: -i "$@")" == "Whole Desktop" ] && ARG="desktop"
 
 screenshot $ARG

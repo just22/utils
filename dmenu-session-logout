@@ -10,25 +10,14 @@
 # No output msgs, please
 exec >/dev/null 2>&1
 
-_array() {
-        case "$SH_VERSION" in
-        *KSH*)
-                a="$1"; shift
-                set -A "$a" "$@"
-                ;;
-        *)
-                eval $1='("${@:2}")'
-        esac
-}
+MENU_ITEMS="\
+Logout\n\
+Suspend\n\
+Hibernate\n\
+Reboot\n\
+Poweroff"
 
-_array MENU_ITEMS \
-        "Logout" \
-        "Suspend" \
-        "Hibernate" \
-        "Reboot" \
-        "Poweroff"
-
-case "$(printf "%s\n" "${MENU_ITEMS[@]}" |
+case "$(echo $MENU_ITEMS |
         dmenu-cust -p "Exit Session:" "$@")" in
 Logout)
         if pgrep -x dwm; then

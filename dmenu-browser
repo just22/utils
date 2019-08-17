@@ -6,21 +6,10 @@
 #  Select browser using dmenu
 # ----------------------------------------------------------------------
 
-_array() {
-        case "$SH_VERSION" in
-        *KSH*)
-                a="$1"; shift
-                set -A "$a" "$@"
-                ;;
-        *)
-                eval $1='("${@:2}")'
-        esac
-}
+MENU_ITEMS="\
+firefox\n\
+chrome\n\
+surf-launcher"
 
-_array MENU_ITEMS \
-        "firefox" \
-        "chrome" \
-        "surf-launcher"
-
-printf "%s\n" "${MENU_ITEMS[@]}" |
-        dmenu-cust -p "Network browser:" "$@" | ${SHELL:-/bin/sh}
+echo $MENU_ITEMS |
+    dmenu-cust -p "Network browser:" "$@" | ${SHELL:-/bin/sh}

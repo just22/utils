@@ -7,27 +7,7 @@
 # ----------------------------------------------------------------------
 
 run() {
-        _array() {
-                case "$SH_VERSION" in
-                *KSH*)
-                        a="$1"; shift
-                        set -A "$a" "$@"
-                        ;;
-                *)
-                        eval $1='("${@:2}")'
-                esac
-        }
-
-        _array MENU_ITEMS \
-                "Lock" \
-                "Enable"  \
-                "Disable" \
-                "Restart" \
-                "Launch"  \
-                "Exit"
-
-        case "$(printf "%s\n" "${MENU_ITEMS[@]}" |
-               dmenu-cust -p xautolock: -i "$@")" in
+        case "$(echo $MENU_ITEMS | dmenu-cust -p xautolock: -i "$@")" in
         Enable)
                 xautolock -enable
                 ;;
@@ -49,7 +29,13 @@ run() {
         esac
 }
 
-# main() {
-        outMsg="$(run 2>&1)"
-        [ -n "$outMsg" ] && notify-send xautolock "$outMsg"
-# }
+MENU_ITEMS="\
+Lock\n\
+Enable\n\
+Disable\n\
+Restart\n\
+Launch\n\
+Exit"
+
+outMsg="$(run 2>&1)"
+[ -n "$outMsg" ] && notify-send xautolock "$outMsg"

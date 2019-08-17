@@ -21,26 +21,15 @@ wmsg() {
         fi
 }
 
-_array() {
-        case "$SH_VERSION" in
-        *KSH*)
-                a="$1"; shift
-                set -A "$a" "$@"
-                ;;
-        *)
-                eval $1='("${@:2}")'
-        esac
-}
+MENU_ITEMS="\
+draft\n\
+normal\n\
+hq\n\
+draft-color\n\
+normal-color\n\
+hq-color"
 
-_array MENU_ITEMS    \
-        draft        \
-        normal       \
-        hq           \
-        draft-color  \
-        normal-color \
-        hq-color
-
-q="${1-$(printf "%s\n" "${MENU_ITEMS[@]}" | dmenu-cust -p "Print to lpr:" -i "$@")}"
+q="${1-$(echo $MENU_ITEMS | dmenu-cust -p "Print to lpr:" -i "$@")}"
 
 if [ -n "$q" ]; then
         f="$(find /tmp -maxdepth 1 -type f -user $USER |
