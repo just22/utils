@@ -12,14 +12,15 @@ if [ "$#" -ne 1 ]; then
 fi
 
 _array() {
-        case "$SH_VERSION" in
-        *KSH*)
+        if [[ -n "$KSH_VERSION" || "$SH_VERSION" == *KSH* ]]; then
                 a="$1"; shift
                 set -A "$a" "$@"
-                ;;
-        *)
+        elif [ -n "$BASH_VERSION" ]; then
                 eval $1='("${@:2}")'
-        esac
+        else
+                >&2 echo "${0##*/}: Error: This shell doesn't support arrays"
+                exit 1
+        fi
 }
 
 find_req() {
