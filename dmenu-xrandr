@@ -11,7 +11,7 @@ exec >/dev/null 2>&1
 
 MENU_ITEMS="\
 $(for f in ~/.screenlayout/*; do
-        f=${f##*/}; printf "%s\\n\\\n" ${f%%.*}
+        f=${f##*/}; printf "%s\\\n" ${f%%.*}
 done)\
 Custom"
 
