@@ -13,4 +13,8 @@ MENU_ITEMS="\
 us\n\
 it"
 
-setxkbmap "$(echo $MENU_ITEMS | dmenu-cust -p Keyboard: "$@")"
+cl="$(setxkbmap -query | grep layout)"
+nl="$(echo $MENU_ITEMS | dmenu-cust -p "Keyboard [${cl##* }]:" "$@")"
+
+[ -n "$nl" ] && setxkbmap "$nl"
+
