@@ -81,37 +81,39 @@ _array() {
         fi
 }
 
-get_actwin_id() {
-        # Get active window id (in hex)
-        #
-        xprop -root _NET_ACTIVE_WINDOW |
-        egrep -o "0x[0-9a-fA-F]{2,}"
+get_root_win_props() {
+        xprop -root _NET_CLIENT_LIST _NET_ACTIVE_WINDOW _NET_CURRENT_DESKTOP |&
+        while read -p line; do
+                case "$line" in
+                *_NET_CLIENT_LIST*)     WIN_IDS="$(echo ${line##*#} | tr -d ",")" ;;
+                *_NET_ACTIVE_WINDOW*)   ACTWIN_ID="${line##*#}" ;;
+                *_NET_CURRENT_DESKTOP*) CURR_WS="${line##* }" ;;
+                esac
+        done
 }
 
-get_win_ids() {
-        # List X clients
-        #
-        xprop -root _NET_CLIENT_LIST |
-        egrep -o "0x[0-9a-fA-F]+"
-}
-
-get_curr_ws() {
-        # Get current ws id
-        #
-        xprop -root _NET_CURRENT_DESKTOP |
-        egrep -o "[0-9]+"
+get_curr_win_props() {
+        xprop -id "$1" _NET_WM_DESKTOP _NET_WM_WINDOW_TYPE WM_STATE |&
+        while read -p line; do
+                case "$line" in
+                *_NET_WM_DESKTOP*)     CURR_WIN_WS="${line##* }" ;;
+                *_NET_WM_WINDOW_TYPE*) CURR_WIN_TYPE="${line##* }" ;;
+                *WM_STATE*) ;;
+                esac
+        done
 }
 
 get_viswin_ids() {
         # Get visible window ids from current workspace (or set of
         # active groups/tags) and screen, excluding docks and panels
-        actwin_id=${1:-$(get_actwin_id)}
-        curr_ws="$(get_curr_ws)"
-        for win_id in $(get_win_ids)
+        actwin_id="$1"
+        curr_ws="$CURR_WS"
+        for win_id in $WIN_IDS
         do
                 read wo_x0 wo_y0 <<- EOT
 			$(get_win_orig $win_id)
 		EOT
+                #get_curr_win_props "$actwin_id"
                 if [ "$win_id" != "$actwin_id" ] &&
                    (pgrep -x cwm >/dev/null ||
                     [ "$(xprop -id $win_id _NET_WM_DESKTOP | egrep -o "[0-9]+")" = "$curr_ws" ]) &&
@@ -128,7 +130,7 @@ get_viswin_ids() {
 get_win_orig() {
         # Get window's origin coordinates
         #
-        xwininfo -id ${1:-$(get_actwin_id)} |
+        xwininfo -id ${1:-$ACTWIN_ID} |
         grep "Absolute upper-left" |
         tail -n 2 |
         awk '{print $4}' |
@@ -149,7 +151,7 @@ get_win_output_geom() {
                 # window's origin
                 #
                 read w_x0 w_y0 <<- EOT
-			$(get_win_orig ${1:-$(get_actwin_id)})
+			$(get_win_orig ${1:-$ACTWIN_ID})
 		EOT
                 for output_geom in \
                         $(xrandr -q |
@@ -177,7 +179,7 @@ get_win_actarea() {
         # (i.e. geometry, excluded docks, panels, ...)
         #
         IFS="x+" read output_xdim output_ydim output_x0 output_y0 <<- EOT
-		$(get_win_output_geom ${1:-$(get_actwin_id)})
+		$(get_win_output_geom ${1:-$ACTWIN_ID})
 	EOT
         read work_x0 work_y0 work_xdim work_ydim DISCARD <<- EOT
 		$(xprop -root _NET_WORKAREA |
@@ -205,7 +207,7 @@ get_win_actarea() {
 get_win_frame() {
         # Get current window's frame extension)
         #
-        f="$(xprop -id ${1:-$(get_actwin_id)} _NET_FRAME_EXTENTS |
+        f="$(xprop -id ${1:-$ACTWIN_ID} _NET_FRAME_EXTENTS |
             awk 'BEGIN{FS=" = "} {print $2}' |
             tr -d ",")"
 
@@ -222,9 +224,10 @@ tile() {
         #       "-e" option (but the dimension does't consider the
         #       frame extension) - Using xdotool because more reliable
         #
+        get_root_win_props
         tile_action=${1:-t}
         tile_gap=${2:-2}
-        win_id=${3:-$(get_actwin_id)}
+        win_id=${3:-$ACTWIN_ID}
         read act_x0 act_y0 act_xdim act_ydim <<- EOT
 		$(get_win_actarea $win_id)
 	EOT
@@ -350,12 +353,13 @@ tile() {
 move2ws() {
         # Move window to workspace (and optionally activate it)
         #
-        ws=${1:-$(get_curr_ws)}
+        get_root_win_props
+        ws=${1:-$CURR_WS}
         if env test "$ws" -lt $(xprop -root _NET_NUMBER_OF_DESKTOPS |
                                 awk 'BEGIN{FS=" = "} {print $2}') 2>/dev/null
         then
                 activate=${2:-0}
-                win_id="${3:-$(get_actwin_id)}"
+                win_id="${3:-$ACTWIN_ID}"
                 wmctrl -i -r $win_id -t $ws
                 [ "$activate" = 1 ] && wmctrl -i -a $win_id
         else
@@ -365,8 +369,9 @@ move2ws() {
 }
 
 winaction() {
+        get_root_win_props
         action="${1:-max}"
-        win_id="${2:-$(get_actwin_id)}"
+        win_id="${2:-$ACTWIN_ID}"
         case "$action" in
         *max*)
                 # Toggle maximized state of window (and optionally raise it)
@@ -392,7 +397,7 @@ winaction() {
 
 getwinid() {
         if [ -n "$1" ]; then
-                for win_id in $(get_win_ids); do
+                for win_id in $WIN_IDS; do
                         if xprop -id $win_id WM_NAME WM_CLASS |
                            grep "$1" >/dev/null 2>&1
                         then
