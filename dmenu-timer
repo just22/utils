@@ -19,5 +19,5 @@ MENU_ITEMS="\
 45min\n\
 60min"
 
-d="$(echo $MENU_ITEMS | dmenu-cust -p Timer: "$@")"
+d="$(echo -e $MENU_ITEMS | dmenu-cust -p Timer: "$@")"
 [ -n "$d" ] && timer -t "+$d"

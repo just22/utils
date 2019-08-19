@@ -7,7 +7,7 @@
 # ----------------------------------------------------------------------
 
 run() {
-        case "$(echo $MENU_ITEMS | dmenu-cust -p xautolock: -i "$@")" in
+        case "$(echo -e $MENU_ITEMS | dmenu-cust -p xautolock: -i "$@")" in
         Enable)
                 xautolock -enable
                 ;;

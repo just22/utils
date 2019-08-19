@@ -11,5 +11,5 @@ firefox\n\
 chrome\n\
 surf-launcher"
 
-echo $MENU_ITEMS |
+echo -e $MENU_ITEMS |
     dmenu-cust -p "Network browser:" "$@" | ${SHELL:-/bin/sh}

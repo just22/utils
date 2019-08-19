@@ -13,7 +13,7 @@ MENU_ITEMS="\
 Whole Desktop\n\
 Selected Window/Area"
 
-[ "$(echo $MENU_ITEMS |
+[ "$(echo -e $MENU_ITEMS |
      dmenu-cust -p Screenshot: -i "$@")" == "Whole Desktop" ] && ARG="desktop"
 
 screenshot $ARG

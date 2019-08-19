@@ -20,14 +20,14 @@ LVDS="$(xrandr -q | grep -w connected | awk '{print $1}' | grep LVDS)"
 HDMI="$(xrandr -q | grep -w connected | awk '{print $1}' | grep HDMI)"
   DP="$(xrandr -q | grep -w connected | awk '{print $1}' | grep DP)"
 if [ -z "$VGA" ] && [ -z "$HDMI" ] && [ -z "$DP" ]; then
-        echo "No dual monitor configuration available" |
+        echo -e "No dual monitor configuration available" |
         xmessage -center -title "dmenu-xrandr" \
                 -buttons "Close":0,"Reset Display":2 -file -
         [ "$?" -eq 2 ] && xrandr --auto
         exit 1
 fi
 
-cmd="$(echo $MENU_ITEMS | dmenu-cust -p "Screen Layout:" "$@")"
+cmd="$(echo -e $MENU_ITEMS | dmenu-cust -p "Screen Layout:" "$@")"
 case "$cmd" in
 Custom)
         exec arandr ;;

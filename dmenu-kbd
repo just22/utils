@@ -14,7 +14,7 @@ us\n\
 it"
 
 cl="$(setxkbmap -query | grep layout)"
-nl="$(echo $MENU_ITEMS | dmenu-cust -p "Keyboard [${cl##* }]:" "$@")"
+nl="$(echo -e $MENU_ITEMS | dmenu-cust -p "Keyboard [${cl##* }]:" "$@")"
 
 [ -n "$nl" ] && setxkbmap "$nl"
 

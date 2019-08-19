@@ -17,7 +17,7 @@ Hibernate\n\
 Reboot\n\
 Poweroff"
 
-case "$(echo $MENU_ITEMS |
+case "$(echo -e $MENU_ITEMS |
         dmenu-cust -p "Exit Session:" "$@")" in
 Logout)
         if pgrep -x dwm; then
