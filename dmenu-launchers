@@ -21,6 +21,7 @@ Display\n\
 Keyboard\n\
 Print\n\
 Timer\n\
+Screenshot\n\
 Quit"
 
 sel="$(echo -e $MENU_ITEMS | dmenu-cust -i -p Menu: "$@")"
@@ -36,6 +37,7 @@ Display)        dmenu-xrandr ;;
 Keyboard)       dmenu-kbd ;;
 Print)          dmenu-lpr ;;
 Timer)          dmenu-timer ;;
+Screenshot)     dmenu-screenshot ;;
 Quit)           dmenu-session-logout ;;
 *)              exit 1 ;;
 esac
