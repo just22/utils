@@ -7,7 +7,6 @@
 #  using Xdialog
 # ----------------------------------------------------------------------
 
-echo $XSESSION_CMD
 DIALOG=Xdialog
 
 $DIALOG --title "Exit Session" \
