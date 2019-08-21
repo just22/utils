@@ -150,13 +150,6 @@ get_win_orig() {
 get_win_output_geom() {
         # Get the geometry of screen where current window is placed in
         #
-        case $(xrandr -v | grep "RandR version" | awk '{print $NF}') in
-        1.0|1.1)
-                # Extend not supported, just report the output geometry
-                # with +0+0 origin
-                xrandr -q | grep "^*" | awk '{printf "%dx%d+0+0", $2, $4}'
-                ;;
-        *)
                 # Get geometry of the screen output containing current
                 # window's origin
                 #
@@ -164,9 +157,18 @@ get_win_output_geom() {
 			$(get_win_orig ${1:-$_ACTWIN_ID})
 		EOT
                 for output_geom in \
-                        $(xrandr -q |
-                          egrep "\<connected\>" |
-                          egrep -o "[0-9]+x[0-9]+\+[0-9]+\+[0-9]+")
+                    $(xrandr -q |
+                      awk '
+                          /\<connected\>/
+                          {for(i=1; i<=NF; i++) {
+                               g=match($i, /[0-9]+x[0-9]+\+[0-9]+\+[0-9]+/)
+                               if(g) print $i }
+                          }
+                          # RandR v1.0|1.1: Extend not supported
+                          # (just report the output geometry with +0+0 origin)
+                          /^\*/
+                          {printf "%dx%d+0+0", $2, $4}
+                      ')
                 do
                         IFS="x+" read xdim ydim x0 y0 <<- EOT
 				$(echo $output_geom)
@@ -180,8 +182,6 @@ get_win_output_geom() {
                                 break
                         fi
                 done
-                ;;
-        esac
 }
 
 get_win_actarea() {
