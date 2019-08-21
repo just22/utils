@@ -156,15 +156,13 @@ get_win_output_geom() {
         for output_geom in \
             $(xrandr -q |
               awk '
-                  /\<connected\>/
-                  {for(i=1; i<=NF; i++) {
-                       g=match($i, /[0-9]+x[0-9]+\+[0-9]+\+[0-9]+/)
-                       if(g) print $i }
+                  /\<connected\>/ {for(i=1; i<=NF; i++) {
+                                        g=match($i, /[0-9]+x[0-9]+\+[0-9]+\+[0-9]+/)
+                                        if(g) print $i }
                   }
                   # RandR v1.0|1.1: Extend not supported
                   # (just report the output geometry with +0+0 origin)
-                  /^\*/
-                  {printf "%dx%d+0+0", $2, $4}
+                  /^\*/ {printf "%dx%d+0+0", $2, $4}
               ')
         do
                 IFS="x+" read xdim ydim x0 y0 <<- EOT
