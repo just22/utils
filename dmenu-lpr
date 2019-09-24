@@ -32,8 +32,8 @@ hq-color"
 q="${1-$(echo -e $MENU_ITEMS | dmenu-cust -p "Print to lpr:" -i "$@")}"
 
 if [ -n "$q" ]; then
-        f="$(find /tmp -maxdepth 1 -type f -user $USER |
-             xargs ls -1tr | grep "\.pdf$" | tail -n 1)"
+        f="$(find /tmp -maxdepth 1 -type f -name "*.pdf" -user $USER -print0 |
+             xargs -0 ls -1tr | tail -n 1)"
         if [ -n "$f" ]; then
                 outMsg="$(lpr -P"lp-$q" "$f" 2>&1)"
                 [ -z "$outMsg" ] && outMsg="File $f sent to lp-$q queue"
