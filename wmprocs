@@ -249,14 +249,30 @@ get_win_actarea() {
                 [ $work_x0   -ge $output_x0 ]   && act_x0=$work_x0 || act_x0=$output_x0
                 [ $work_y0   -ge $output_y0 ]   && act_y0=$work_y0 || act_y0=$output_y0
                 if [ $work_xdim -le $output_xdim ]; then
-                        act_xdim=$(($work_xdim - ($_DESK_XDIM - $output_xdim)))
+			if pgrep -x fluxbox; then
+				act_xdim=$(($work_xdim - ($_DESK_XDIM - $output_xdim)))
+			else
+				act_xdim=$work_xdim
+			fi
                 else
-                        act_xdim=$(($output_xdim - ($_DESK_XDIM - $work_xdim)))
+			if pgrep -x fluxbox; then
+				act_xdim=$(($output_xdim - ($_DESK_XDIM - $work_xdim)))
+			else
+				act_xdim=$output_xdim
+			fi
                 fi
                 if [ $work_ydim -le $output_ydim ]; then
-                        act_ydim=$(($work_ydim - ($_DESK_YDIM - $output_ydim)))
+			if pgrep -x fluxbox; then
+				act_ydim=$(($work_ydim - ($_DESK_YDIM - $output_ydim)))
+			else
+				act_ydim=$work_ydim
+			fi
                 else
-                        act_ydim=$(($output_ydim - ($_DESK_YDIM - $work_ydim)))
+			if pgrep -x fluxbox; then
+				act_ydim=$(($output_ydim - ($_DESK_YDIM - $work_ydim)))
+			else
+				act_ydim=$output_ydim
+			fi
                 fi
         else
                 act_x0=$output_x0
