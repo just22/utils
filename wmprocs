@@ -111,8 +111,6 @@ get_root_win_props() {
 			EOT
                 esac
         done
-        FORBIDDEN_XDIM=$(($_DESK_XDIM - _WORK_XDIM))
-        FORBIDDEN_YDIM=$(($_DESK_YDIM - _WORK_YDIM))
 
         if [ "$DEBUG" -eq 1 ]; then
                 >&2 echo "Executing function \"get_root_win_props\":"
@@ -257,14 +255,18 @@ get_win_actarea() {
         # Practical assumption: if there are panels/docks, they are all
         # on the "primary" monitor (or the one in (0,0) if no "primary"
         # attribute is defined)
-        if [ $output_x0 -eq $px0 ] && [ $output_y0 -eq $py0 ]
-        then
-                [ $_WORK_X0 -ge $output_x0 ] && act_x0=$_WORK_X0 || act_x0=$output_x0
-                [ $_WORK_Y0 -ge $output_y0 ] && act_y0=$_WORK_Y0 || act_y0=$output_y0
-                act_x0=$(($output_x0 + $_WORK_X0))
-                act_y0=$(($output_y0 + $_WORK_Y0))
-                act_xdim=$(($output_xdim - $FORBIDDEN_XDIM))
-                act_ydim=$(($output_ydim - $FORBIDDEN_YDIM))
+        if [ $output_x0 -eq $px0 ] && [ $output_y0 -eq $py0 ]; then
+                if pgrep -x fluxbox; then
+                        act_x0=$(($output_x0 + $_WORK_X0))
+                        act_y0=$(($output_y0 + $_WORK_Y0))
+                        act_xdim=$(($output_xdim - ($_DESK_XDIM - $_WORK_XDIM)))
+                        act_ydim=$(($output_ydim - ($_DESK_YDIM - $_WORK_YDIM)))
+                else
+                        [ $output_x0 -ge $_WORK_X0 ] &&  act_x0=$output_x0 || act_x0=$_WORK_X0
+                        [ $output_y0 -ge $_WORK_Y0 ] &&  act_y0=$output_y0 || act_y0=$_WORK_Y0
+                        [ $output_xdim -le $_WORK_XDIM ] &&  act_xdim=$output_xdim || act_xdim=$_WORK_XDIM
+                        [ $output_ydim -le $_WORK_YDIM ] &&  act_ydim=$output_ydim || act_ydim=$_WORK_YDIM
+                fi
         else
                 act_x0=$output_x0
                 act_xdim=$output_xdim
