@@ -82,7 +82,12 @@ _array() {
 }
 
 get_root_win_props() {
-        xprop -root _NET_CLIENT_LIST _NET_ACTIVE_WINDOW _NET_CURRENT_DESKTOP  _NET_DESKTOP_GEOMETRY |&
+        xprop -root \
+            _NET_CLIENT_LIST      \
+            _NET_ACTIVE_WINDOW    \
+            _NET_CURRENT_DESKTOP  \
+            _NET_DESKTOP_GEOMETRY \
+            _NET_WORKAREA         |&
         while read -p line; do
                 case "$line" in
                 *_NET_CLIENT_LIST*)
@@ -100,8 +105,15 @@ get_root_win_props() {
 				$(echo ${line##*=})
 			EOT
                         ;;
+                *_NET_WORKAREA*)
+                        IFS="," read _WORK_X0 _WORK_Y0 _WORK_XDIM _WORK_YDIM DISCARD <<- EOT
+				$(echo ${line##*=})
+			EOT
                 esac
         done
+        FORBIDDEN_XDIM=$(($_DESK_XDIM - _WORK_XDIM))
+        FORBIDDEN_YDIM=$(($_DESK_YDIM - _WORK_YDIM))
+
         if [ "$DEBUG" -eq 1 ]; then
                 >&2 echo "Executing function \"get_root_win_props\":"
                 >&2 echo "  _WIN_IDS = $_WIN_IDS"
@@ -109,6 +121,10 @@ get_root_win_props() {
                 >&2 echo "  _CURR_WS = $_CURR_WS"
                 >&2 echo "_DESK_XDIM = $_DESK_XDIM"
                 >&2 echo "_DESK_YDIM = $_DESK_YDIM"
+                >&2 echo "  _WORK_X0 = $_WORK_X0"
+                >&2 echo "  _WORK_Y0 = $_WORK_Y0"
+                >&2 echo "_WORK_XDIM = $_WORK_XDIM"
+                >&2 echo "_WORK_YDIM = $_WORK_YDIM"
                 >&2 echo ""
         fi
 }
@@ -169,7 +185,6 @@ get_viswin_ids() {
                         >&2 echo "          wo_y0 = $wo_y0"
                         >&2 echo "         act_y0 = $act_y0"
                         >&2 echo "       act_ydim = $act_ydim"
-                        >&2 echo ""
                 fi
 
                 if [ "$win_id" != "$actwin_id" ] &&
@@ -179,14 +194,17 @@ get_viswin_ids() {
                    [ $wo_x0 -ge $act_x0 ] && [ $wo_x0 -lt $(($act_x0 + $act_xdim)) ] &&
                    [ $wo_y0 -ge $act_y0 ] && [ $wo_y0 -lt $(($act_y0 + $act_ydim)) ]
                 then
+                        [ "$DEBUG" -eq 1 ] && >&2 echo "Window is visible"
                         echo $win_id
                 fi
+                [ "$DEBUG" -eq 1 ] && >&2 echo ""
         done
 }
 
 get_primary_monitor_orig() {
         # Get primary monitor origin
         # (return (0,0) in case no primary monitor is set)
+        # FIXME: What if no monitor is in (0,0)?
         IFS="x+" read pxdim pydim px0 py0 <<- EOT
 		$(xrandr -q | grep " primary " |
 		  grep -Eo "[0-9]+x[0-9]+\+[0-9]+\+[0-9]+")
@@ -235,45 +253,18 @@ get_win_actarea() {
         IFS="x+" read output_xdim output_ydim output_x0 output_y0 <<- EOT
 		$(get_win_output_geom ${1:-$_ACTWIN_ID})
 	EOT
-        read work_x0 work_y0 work_xdim work_ydim DISCARD <<- EOT
-		$(xprop -root _NET_WORKAREA |
-		awk 'BEGIN{FS=" = "} {print $2}' |
-		tr -d ",")
-	EOT
 
         # Practical assumption: if there are panels/docks, they are all
         # on the "primary" monitor (or the one in (0,0) if no "primary"
         # attribute is defined)
         if [ $output_x0 -eq $px0 ] && [ $output_y0 -eq $py0 ]
         then
-                [ $work_x0   -ge $output_x0 ]   && act_x0=$work_x0 || act_x0=$output_x0
-                [ $work_y0   -ge $output_y0 ]   && act_y0=$work_y0 || act_y0=$output_y0
-                if [ $work_xdim -le $output_xdim ]; then
-			if pgrep -x fluxbox; then
-				act_xdim=$(($work_xdim - ($_DESK_XDIM - $output_xdim)))
-			else
-				act_xdim=$work_xdim
-			fi
-                else
-			if pgrep -x fluxbox; then
-				act_xdim=$(($output_xdim - ($_DESK_XDIM - $work_xdim)))
-			else
-				act_xdim=$output_xdim
-			fi
-                fi
-                if [ $work_ydim -le $output_ydim ]; then
-			if pgrep -x fluxbox; then
-				act_ydim=$(($work_ydim - ($_DESK_YDIM - $output_ydim)))
-			else
-				act_ydim=$work_ydim
-			fi
-                else
-			if pgrep -x fluxbox; then
-				act_ydim=$(($output_ydim - ($_DESK_YDIM - $work_ydim)))
-			else
-				act_ydim=$output_ydim
-			fi
-                fi
+                [ $_WORK_X0 -ge $output_x0 ] && act_x0=$_WORK_X0 || act_x0=$output_x0
+                [ $_WORK_Y0 -ge $output_y0 ] && act_y0=$_WORK_Y0 || act_y0=$output_y0
+                act_x0=$(($output_x0 + $_WORK_X0))
+                act_y0=$(($output_y0 + $_WORK_Y0))
+                act_xdim=$(($output_xdim - $FORBIDDEN_XDIM))
+                act_ydim=$(($output_ydim - $FORBIDDEN_YDIM))
         else
                 act_x0=$output_x0
                 act_xdim=$output_xdim
@@ -289,10 +280,6 @@ get_win_actarea() {
                 >&2 echo "output_ydim = $output_ydim"
                 >&2 echo "  output_x0 = $output_x0"
                 >&2 echo "  output_y0 = $output_y0"
-                >&2 echo "    work_x0 = $work_x0"
-                >&2 echo "    work_y0 = $work_y0"
-                >&2 echo "  work_xdim = $work_xdim"
-                >&2 echo "  work_ydim = $work_ydim"
                 >&2 echo "     act_x0 = $act_x0"
                 >&2 echo "     act_y0 = $act_y0"
                 >&2 echo "   act_xdim = $act_xdim"
@@ -420,6 +407,7 @@ tile() {
                 # Other windows
                 _array viswin_ids $(get_viswin_ids $win_id)
                 viswin_no=${#viswin_ids[@]}
+                [ "$DEBUG" -eq 1 ] && echo "viswin_no = $viswin_no"
                 win_xdim=$((($act_xdim - \
                              $tile_gap * ($viswin_no - 1) - \
                              ($frame_l + $frame_r) * $viswin_no) / $viswin_no))
@@ -445,6 +433,7 @@ tile() {
                 # Other windows
                 _array viswin_ids $(get_viswin_ids $win_id)
                 viswin_no=${#viswin_ids[@]}
+                [ "$DEBUG" -eq 1 ] && echo "viswin_no = $viswin_no"
                 win_x0=$(($act_x0 + $act_xdim / 2 + $tile_gap / 2))
                 win_xdim=$(($act_xdim / 2 - $frame_l - $frame_r - $tile_gap / 2))
                 win_ydim=$((($act_ydim - \
