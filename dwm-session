@@ -6,6 +6,9 @@
 #  dwm session manager
 # ----------------------------------------------------------------------
 
+# Fix problems with JDK assuming a reparenting window manager
+wmname LG3D 2>/dev/null
+
 # System log
 (sleep 1; pkill xconsole) &
 xterm -title "System log" -e tail -f /var/log/messages &
@@ -16,26 +19,20 @@ xterm -title "System stats" -e systat &
 # Process monitor
 xterm -title "Process monitor" -e top &
 
-# Set root window background & wallpaper
+# Set root window background
 xsetroot -solid rgb:58/6E/75
-nitrogen --restore
-
-# Restore wallpaper image upon resolution change
-pkill -x xeventbind; xeventbind resolution wprestore &
 
 # Statusbar
-slstatus &
+if ! pgrep -x slstatus; then
+        slstatus &
 
-# Tray apps
-vol-tray &
-sed -i "s/mainwindow_xoffset = 0/mainwindow_xoffset = 10000/" \
-    ~/.config/gsimplecal/config
-cal-tray &
+# Site specific init file
+[ -f ~/.dwm-session-init ] && . ~/.dwm-session-init
 
 while :
 do
-        # Following apps live in the systray and will die every time dwm exits
-        radiotray &
+        # Site specific startup file
+        [ -f ~/.dwm-session-startup ] && . ~/.dwm-session-startup
 
         # Start dwm and log errors in ~/.dwm.log
         mv ~/.dwm.log{,.old}
