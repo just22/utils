@@ -9,22 +9,13 @@
 # Fix problems with JDK assuming a reparenting window manager
 wmname LG3D 2>/dev/null
 
-# System log
-(sleep 1; pkill xconsole) &
-xterm -title "System log" -e tail -f /var/log/messages &
-
-# System statistics
-xterm -title "System stats" -e systat &
-
-# Process monitor
-xterm -title "Process monitor" -e top &
-
 # Set root window background
 xsetroot -solid rgb:58/6E/75
 
 # Statusbar
 if ! pgrep -x slstatus; then
         slstatus &
+fi
 
 # Site specific init file
 [ -f ~/.dwm-session-init ] && . ~/.dwm-session-init
