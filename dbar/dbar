@@ -58,6 +58,7 @@ for mod in $layout; do
 done
 
 # This is a bad hack!!! Some WMs don't manage dock apps properly
+# Note: xprop is unable to set multiple fields for a property...
 (sleep 1;
  xprop -name dbar -f _NET_WM_STATE 32a \
      -set _NET_WM_STATE '_NET_WM_STATE_SKIP_PAGER') &
@@ -72,7 +73,7 @@ awk -v DEBUG="$DEBUG" -v layout_string="$layout" '
                 for (i = 1; i <= mod_no; i++) {
                         s = curr_s[mod_list[i]];
                         sub(/\r/, "", s);
-                        printf("  %s", s);
+                        printf(" %s ", s);
                 }
                 printf("\n");
                 fflush();
