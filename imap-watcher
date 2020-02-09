@@ -1,0 +1,115 @@
+#!/bin/sh
+
+# ----------------------------------------------------------------------
+#  $Id$
+#  Start IMAP IDLE connections
+# ----------------------------------------------------------------------
+
+trap restart  USR1
+trap LOOP=0 INT QUIT TRAP ABRT TERM
+
+atlantide_conn() {
+        PASSWORD="$passwd_atlantide" \
+        imap-idle.pl \
+            -o Server=atlantide.mooo.com \
+            -o User=just22@atlantide.mooo.com \
+            -o Port=993 \
+            --folder "INBOX" \
+            --fingerprint 'sha256$3577FE3A0191F514600E3D19F185DC1000854099A97B4BFA48214BB7FBD79AD2' \
+            --cmd "mbsync sync-just22-atlantide-INBOX" &
+        echo "$!" >> "$pidfile"
+
+        PASSWORD="$passwd_atlantide" \
+        imap-idle.pl \
+            -o Server=atlantide.mooo.com \
+            -o User=just22@atlantide.mooo.com \
+            -o Port=993 \
+            --folder "lists/OpenBSD/bugs" \
+            --fingerprint 'sha256$3577FE3A0191F514600E3D19F185DC1000854099A97B4BFA48214BB7FBD79AD2' \
+            --cmd "mbsync sync-just22-atlantide-obsd-bugs" &
+        echo "$!" >> "$pidfile"
+
+        PASSWORD="$passwd_atlantide" \
+        imap-idle.pl \
+            -o Server=atlantide.mooo.com \
+            -o User=just22@atlantide.mooo.com \
+            -o Port=993 \
+            --folder "lists/OpenBSD/misc" \
+            --fingerprint 'sha256$3577FE3A0191F514600E3D19F185DC1000854099A97B4BFA48214BB7FBD79AD2' \
+            --cmd "mbsync sync-just22-atlantide-obsd-misc" &
+        echo "$!" >> "$pidfile"
+
+        PASSWORD="$passwd_atlantide" \
+        imap-idle.pl \
+            -o Server=atlantide.mooo.com \
+            -o User=just22@atlantide.mooo.com \
+            -o Port=993 \
+            --folder "lists/OpenBSD/ports" \
+            --fingerprint 'sha256$3577FE3A0191F514600E3D19F185DC1000854099A97B4BFA48214BB7FBD79AD2' \
+            --cmd "mbsync sync-just22-atlantide-obsd-ports" &
+        echo "$!" >> "$pidfile"
+
+        PASSWORD="$passwd_atlantide" \
+        imap-idle.pl \
+            -o Server=atlantide.mooo.com \
+            -o User=just22@atlantide.mooo.com \
+            -o Port=993 \
+            --folder "lists/OpenBSD/tech" \
+            --fingerprint 'sha256$3577FE3A0191F514600E3D19F185DC1000854099A97B4BFA48214BB7FBD79AD2' \
+            --cmd "mbsync sync-just22-atlantide-obsd-tech" &
+        echo "$!" >> "$pidfile"
+}
+
+gmail_conn() {
+        PASSWORD="$passwd_gmail" \
+        imap-idle.pl \
+            -o Server=imap.gmail.com \
+            -o User=sandro.delaurenzis@gmail.com \
+            -o Port=993 \
+            -o Ssl=1 \
+            --folder "INBOX" \
+            --cmd "mbsync sync-sandro.delaurenzis-gmail-INBOX" &
+        echo "$!" >> "$pidfile"
+}
+
+kill_all_conn() {
+        for pid in `cat "$pidfile"`; do
+                kill -KILL "$pid"
+        done
+        cat /dev/null > "$pidfile"
+}
+
+restart() {
+        kill_all_conn
+        atlantide_conn
+        gmail_conn
+}
+
+# main {
+
+        # Passwords
+        gpg2 --quiet --no-tty --batch --decrypt ~/.credentials.gpg |&
+        while read -p line; do
+                case "$line" in
+                just22@atlantide.mooo.com*)
+                        passwd_atlantide="$(echo $line | cut -d" " -f2)"
+                        ;;
+                sandro.delaurenzis@gmail.com*)
+                        passwd_gmail="$(echo $line | cut -d" " -f2)"
+                        ;;
+                esac
+        done
+
+        LOOP=1
+        pidfile="/tmp/$USER.imap-conn.pids"
+        touch "$pidfile"
+        restart
+
+        # Daemonize
+        while [ "$LOOP" -eq 1 ]; do
+                sleep 10
+        done
+
+        # Kill subprocesses on exit
+        kill_all_conn
+# }

@@ -1,0 +1,16 @@
+#!/bin/sh
+
+# ----------------------------------------------------------------------
+#  $Id$
+#
+#  Get password from ~/.credentials using gpg
+# ----------------------------------------------------------------------
+
+if [ "$#" -ne 1 -o "$1" == -h ]; then
+        echo "Usage: ${0##*/} <uid>"
+        exit
+fi
+
+echo "$(gpg2 --quiet --no-tty --batch --decrypt ~/.credentials.gpg |
+            awk -v uid="$1" '$0 ~ uid {print $2}')"
+

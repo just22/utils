@@ -1,0 +1,41 @@
+#!/bin/sh
+
+# ----------------------------------------------------------------------
+#  $Id$
+#
+#  Wait for changes to a directory tree (typically a maildir) usign
+#  inotifywait (dep: inotify-tools)
+# ----------------------------------------------------------------------
+
+while getopts ":hd:c:n" opt; do
+        case "$opt" in
+        h)  echo "Usage: ${0##*/} -h | [-d <path>] [-c \"<string>\"]"
+            exit 0
+            ;;
+        d)  root="$OPTARG"
+            ;;
+        c)  cmd="$OPTARG"
+            ;;
+        n)  notify=1
+            ;;
+        :)  echo "${0##*/}: Option -$OPTARG requires an argument"
+            ;;
+        \?) echo "${0##*/}: Unknown option: -$OPTARG"
+            exit 1
+            ;;
+        esac
+done
+
+root=${root:-.}
+if [ ! -d "$root" ]; then
+        >&2 echo "${0##*/}: $root isn't a directory"
+        exit 1
+fi
+
+>&2 echo "Watching dir $(readlink -f $root)..."
+
+inotifywait -m -e modify,move,create,delete "$root" |
+while read line; do
+        [ -n "$cmd" ] && $cmd "$line" || echo "$line"
+done
+

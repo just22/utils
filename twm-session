@@ -1,0 +1,26 @@
+#!/bin/sh
+
+# ----------------------------------------------------------------------
+#  $Id$
+#
+#  twm session manager
+# ----------------------------------------------------------------------
+
+# System tray
+stalonetray --geometry 1x1+0-1 --icon-size 17 &
+
+# Statusbar
+pkill -x slstatus
+slstatus -s |
+dzen2 -title-name slstatus \
+      -bg "#eee8d5" -fg "#073642" \
+      -fn "DejaVu Sans Mono:size=9" \
+      -e "" -expand l -dock &
+
+# Set wallpaper (or root window background)
+nitrogen --restore || xsetroot -solid rgb:58/6E/75
+
+# Start twm
+mv ~/.twm/twm.log{,.old}
+twm 2> ~/.twm/twm.log
+

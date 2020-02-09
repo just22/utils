@@ -1,0 +1,33 @@
+#!/bin/sh
+
+# ----------------------------------------------------------------------
+#  $Id$
+#
+#  Notify new email message arrival
+# ----------------------------------------------------------------------
+
+# Split input string (from inotifywait) into single fields
+set $1
+dir="$1"
+action="$2"
+f="$3"
+
+# Exit if no new file has been created
+[ "$action" != CREATE ] && exit
+
+# File with absolute path
+fp="$dir$f"
+
+# Maildir (note: always specify the absolute path of observed dir)
+maildir="${dir#$HOME/mail/}"
+maildir="${maildir%/new/}"
+
+# Extract relevant headers from msg
+from="$(grep "^From:" "$fp")"
+subject="$(grep "^Subject: " "$fp" | sed "s/^Subject: //")"
+
+# Send notification
+summary="New message in $maildir"
+body="$(printf "%s\n%s" "$from" "$subject")"
+notify-send "$summary" "$body"
+
