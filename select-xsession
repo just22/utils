@@ -15,11 +15,10 @@ exec `Xdialog --buttons-style text                \
               --stdout                            \
               --menubox                           \
                   "Select the X session"          \
-                  195x151                         \
-                  4                               \
+                  195x133                         \
+                  3                               \
                   "dwm-session"         "dwm"     \
-                  "cwm-session"         "cwm"     \
                   "startfluxbox"        "fluxbox" \
-                  "twm"                 "twm"`    ||
+                  "twm-session"         "twm"`    ||
 exec twm
 
