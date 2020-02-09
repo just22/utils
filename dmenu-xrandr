@@ -27,10 +27,43 @@ if [ -z "$VGA" ] && [ -z "$HDMI" ] && [ -z "$DP" ]; then
         exit 1
 fi
 
-cmd="$(echo -e $MENU_ITEMS | dmenu-cust -p "Screen Layout:" "$@")"
+if [ -n "$1" ]; then
+        cmd="$1"
+else
+        cmd="$(echo -e $MENU_ITEMS | dmenu-cust -p "Screen Layout:" "$@")"
+fi
+
 case "$cmd" in
 Custom)
         exec arandr ;;
+LVDS)
+        xrandr \
+            --output "$LVDS" --auto \
+            --output "$VGA" --off \
+            --output "$HDMI" --off \
+            --output "DP" --off
+        ;;
+VGA)
+        xrandr \
+            --output "$LVDS" --off \
+            --output "$VGA" --auto \
+            --output "$HDMI" --off \
+            --output "DP" --off
+        ;;
+HDMI)
+        xrandr \
+            --output "$LVDS" --off \
+            --output "$VGA" --off \
+            --output "$HDMI" --auto \
+            --output "DP" --off
+        ;;
+DP)
+        xrandr \
+            --output "$LVDS" --off \
+            --output "$VGA" --off \
+            --output "$HDMI" --off \
+            --output "DP" --auto
+        ;;
 *)
         exec ~/.screenlayout/${cmd}.sh
 esac
