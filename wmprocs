@@ -8,10 +8,10 @@
 # ----------------------------------------------------------------------
 
 _sinopsys() {
-        echo "wmprocs tile [<tile_action>] [-g <tile_gap>] [-w <win_id>]"
-        echo "wmprocs move2ws [<ws>] [-a] [-w <win_id>]"
-        echo "wmprocs winaction [<win_action>] [-w <win_id>]"
-        echo "wmprocs getwinid <searchStr>"
+        echo "wmprocs tile [<tile_action>] [-d] [-g <tile_gap>] [-w <win_id>]"
+        echo "wmprocs move2ws [<ws>] [-d] [-a] [-w <win_id>]"
+        echo "wmprocs winaction [<win_action>] [-d] [-w <win_id>]"
+        echo "wmprocs getwinid <searchStr> [-d]"
         echo "wmprocs mk_links|rm_links"
         echo "wmprocs help"
 }
@@ -255,8 +255,8 @@ get_win_actarea() {
         # Practical assumption: if there are panels/docks, they are all
         # on the "primary" monitor (or the one in (0,0) if no "primary"
         # attribute is defined)
-        if [ $output_x0 -eq $px0 ] && [ $output_y0 -eq $py0 ]; then
-                if pgrep -x fluxbox; then
+        if [ $output_x0 -eq $px0 -a $output_y0 -eq $py0 ]; then
+                if pgrep -x fluxbox > /dev/null 2>&1; then
                         act_x0=$(($output_x0 + $_WORK_X0))
                         act_y0=$(($output_y0 + $_WORK_Y0))
                         act_xdim=$(($output_xdim - ($_DESK_XDIM - $_WORK_XDIM)))
