@@ -9,7 +9,7 @@
 if [ "$1" == -q ]; then
         pkill -QUIT -f /usr/local/bin/offlineimap
         offlineimap -s -u quiet -c ~/.offlineimaprc.d/sandro.delaurenzis@gmail.com.rc &
-        offlineimap -s -u quiet -c ~/.offlineimaprc.d/just22@atlantide.t28.net.rc &
+        offlineimap -s -u quiet -c ~/.offlineimaprc.d/just22@atlantide.mooo.com.rc &
 else
         pkill -USR1 -f /usr/local/bin/offlineimap
 fi
