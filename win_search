@@ -35,7 +35,7 @@ win() {
                 awk -v d_inc="${d_inc:-0}" -v id="$win_id" -v tag="$tag" '
                         /^_NET_WM_WINDOW_TYPE/  {if (match($0, "DOCK|DESKTOP")) {exit}}
                         /window state/          {if (match($0, "Iconic")) {tag = "h"}}
-                        /^WM_CLASS/             {c = $4}
+                        /^WM_CLASS/             {if (match($0, "FvwmButtons")) {exit} {c = $4}}
                         /^WM_NAME/              {t = ""; for(i = 3; i <= NF; ++i) t = (t $i " ")}
                         /^_NET_WM_DESKTOP/      {d = "(" $3 + d_inc ")"}
                         /^CUST_WM_LABEL/        {split($3, l, /"/)}
