@@ -31,9 +31,9 @@ if [ $RETVAL -eq 0 ]; then
                         pkill -P "$(cat /tmp/dbar.pid)"
                         rm /tmp/dbar.pid
                         fluxbox-remote Exit
+                elif pgrep -x fvwm2; then
+                        FvwmCommand Quit
                 elif pgrep -x cwm; then
-                        pkill -P "$(cat /tmp/dbar.pid)"
-                        rm /tmp/dbar.pid
                         pkill -x cwm
                 elif pgrep -x xfwm4; then
                         xfce4-session-logout --logout --fast
