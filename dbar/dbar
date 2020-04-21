@@ -88,7 +88,6 @@ awk -v DEBUG="$DEBUG" -v layout_string="$layout" '
         }
 ' < /tmp/"${USER}".dbar_pipe |
 dzen2 -title-name dbar \
-      -geometry +0+1 \
       -bg "$BG" -fg "$FG" -fn "$FN" \
       -p -e "" -expand left -dock \
       "$@"
