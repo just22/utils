@@ -15,7 +15,7 @@ fluxbox-remote Restart
 
 sleep 2
 space_dapp $((($(screen-width) - 1))) 17 &
-dbar -xs "${xs:-1}" &
+dbar -geometry +0+1 -xs "${xs:-1}" &
 sleep 1; bbpager &
 
 nitrogen --restore || fbsetbg -l
