@@ -12,10 +12,10 @@ if [ $# != 1 ]; then
     exit 1
 fi
 
-usbdevs -dv | awk -v deviceName=$1 '
+usbdevs -v | awk -v deviceName=$1 '
     BEGIN {
         found=0;
-        pattern="^[\t ]+"deviceName"$"
+        pattern="^[\t ]+driver: "deviceName"$"
     }
     found==1 {
         printf "Device name: %s\nController: %s\n%s\n", deviceName, controller, portAddr;
@@ -25,7 +25,7 @@ usbdevs -dv | awk -v deviceName=$1 '
         controller=$2;
         sub(":$", "", controller)
     }
-    /port [0-9]+ addr [0-9]+: / {
+    /addr [0-9]+: / {
         portAddr=$0;
         sub("^[\t ]+", "", portAddr)
     }
