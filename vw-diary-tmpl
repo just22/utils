@@ -1,0 +1,25 @@
+#!/bin/sh
+
+# ----------------------------------------------------------------------
+#  $Id$
+#
+#  Template for new vimwiki diary page
+# ----------------------------------------------------------------------
+
+# Initial date is in YYYY-MM-DD format
+date="$(echo ${1}0000 | tr -d "-")"
+
+# Convert date in a longer format
+case "uname -s" in
+Linux) fmt_date="$(date -d "$date" +"%A, %d %B %Y")" ;;
+*)     fmt_date="$(date -j +"%A, %d %B %Y" "$date")"
+esac
+
+echo "= $fmt_date ="
+echo
+echo "== Daily checklist =="
+echo "- [ ] "
+echo
+echo "== TODO =="
+echo
+echo "== Notes =="
