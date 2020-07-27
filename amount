@@ -12,12 +12,11 @@ NAME
 
 SYNOPSIS
   amount -h
-  amount [-r <root_dir>] [-g <group>] [-m <mode>] [-e <exclude_dev>] [-f <fileManager>]
+  amount [-r dir] [-g group] [-m mode] [-e device] [-f program]
 
 DESCRIPTION
-
-  Mounts partitions of removable devices through a menu, then
-  (optionally) opens a filemanager window
+  This script (un)mounts partitions of removable devices through a menu,
+  then (optionally) opens a filemanager window.
   Notes:
   - specific for OpenBSD;
   - special permissions are needed for some commands (mount, fsck,
@@ -34,7 +33,7 @@ DESCRIPTION
 
   -e device    Do not manage these devices;
 
-  -f string    Filemanager to be opened after mounting a partition
+  -f program   Filemanager to be opened after mounting a partition
 
 EXIT STATUS
   amount exits with one of the following values:
@@ -187,9 +186,13 @@ if [ -n "$SEL" ]; then
                         MOUNT_OPT="-t ext2fs -o rw,nodev,nosuid,noatime"
                         RUN_FSCK=1
                         ;;
+                UDF)
+                        MOUNT_OPT="-t udf"
+                        RUN_FSCK=0
+                        ;;
                 esac
 
-                [ "$RUN_FSCK" == 1 ] && fsck -p -y /dev/"${DEV}${PART_NAME}"
+                [ "$RUN_FSCK" == 1 ] && fsck -p -y /dev/"${DEV}${PART_NAME}" || true
                 if [ $? -ne 0 ]; then
                         Xdialog \
                                 --buttons-style text \
@@ -204,7 +207,7 @@ if [ -n "$SEL" ]; then
                 fi
 
                 # $FILEMGR, when set, must be invoked as unprivileged user
-                [ -n "$FILEMGR" ] && su ${SUDO_USER:-$USER} -c "$FILEMGR \"$MOUNT_DIR\" &"
+                [ -n "$FILEMGR" ] && su ${DOAS_USER:-$USER} -c "$FILEMGR \"$MOUNT_DIR\" &"
                 ;;
 
         unmount)
