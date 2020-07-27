@@ -1,0 +1,39 @@
+#!/bin/sh
+
+# ----------------------------------------------------------------------
+#  $Id$
+#  Start a new mutt e-mail client session
+# ----------------------------------------------------------------------
+
+# No error msgs, please!
+# exec 2>/dev/null
+
+trap cleanup INT QUIT TRAP ABRT TERM
+
+# If a session is already running, attach it and exit
+[ xterm -e tmux attach -d -t mutt-session 2>/dev/null ] && exit 0
+
+# Start the mutt email client (and kill the tmux session on exit);
+# then, start IMAP IDLE connections and new msg notifications
+tmux new-session -d -s mutt-session \
+    'mutt; \
+     pkill -KILL -q -fl imap-watcher; \
+     pkill -KILL -q -fl imap-idle.pl; \
+     pkill -KILL -q inotifywait; \
+     tmux kill-session -t mutt-session'
+tmux rename-window -t mutt-session:1 mutt
+
+tmux new-window -d -t mutt-session:2 \
+    'dir-watch -c notify-new-msg -d ~/mail/sandro.delaurenzis-gmail/INBOX/new &       \
+     dir-watch -c notify-new-msg -d ~/mail/just22-atlantide/INBOX/new &               \
+     dir-watch -c notify-new-msg -d ~/mail/just22-atlantide/lists/OpenBSD/bugs/new &  \
+     dir-watch -c notify-new-msg -d ~/mail/just22-atlantide/lists/OpenBSD/misc/new &  \
+     dir-watch -c notify-new-msg -d ~/mail/just22-atlantide/lists/OpenBSD/ports/new & \
+     dir-watch -c notify-new-msg -d ~/mail/just22-atlantide/lists/OpenBSD/tech/new &  \
+     imap-watcher'
+tmux rename-window -t mutt-session:2 imap-watcher
+
+xterm -e tmux attach-session -d -t mutt-session
+
+exit 0
+

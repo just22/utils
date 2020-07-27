@@ -1,0 +1,69 @@
+#!/bin/sh
+
+# ----------------------------------------------------------------------
+#  $Id$
+#
+#  twm session manager
+# ----------------------------------------------------------------------
+
+if [ "$1" != "-r" ]; then
+
+        # dunst notification system
+        mkdir -p "${XDG_DATA_HOME:-$HOME/.local/share}/dbus-1/services"
+        ln -sf \
+            "/usr/local/share/dbus-1/services/org.knopwob.dunst.service" \
+            "${XDG_DATA_HOME:-$HOME/.local/share}/dbus-1/services/org.freedesktop.Notifications.service"
+
+        # Start a session bus instance of dbus-daemon
+        if [ -x /usr/local/bin/dbus-launch -a -z "${DBUS_SESSION_BUS_ADDRESS}" ]; then
+                eval `dbus-launch --sh-syntax --exit-with-x11`
+        fi
+
+        # Screen locker
+        xautolock -time 10 -locker slock &
+
+        # Process monitor
+        xterm -title "Process monitor" -e top &
+
+        # System statistics
+        xterm -title "System stats" -e systat &
+
+        # System log
+        sleep 1
+        xkill -id $(xwininfo -name xconsole |
+                    egrep -o "Window id: 0x[0-9a-fA-F]+" |
+                    cut -d: -f2) && \
+        xterm -title "System log" -e "tail -f /var/log/messages" &
+
+        # Compositor manager
+        # xcompmgr &
+
+        # Desktop management
+        #(sleep 1; dbus-launch pcmanfm --desktop) &
+fi
+
+# Wallpaper
+nitrogen --restore
+
+# Statusbar
+dbar -k
+xs=0
+for act_geom in $(xrandr -q | grep -Eo "[0-9]+x[0-9]+\+[0-9]+\+[0-9]+")
+do
+        xs="$(($xs + 1))"
+        dbar -m cpu_mem -m load -m sd0 -m trunk0 -m mixer -m batt -m time -- \
+             -ta r -xs "$xs" &
+done
+
+# Tray apps
+# sleep 1; /usr/local/libexec/tray-app/sound -i &
+# sleep 2; cal-tray &
+
+# Start twm
+if [ "$1" != "-r" ]; then
+        mv ~/.ctwm.log{,.old}
+        exec ctwm -W 2> ~/.twm/twm.log
+else
+        pkill -HUP ctwm
+fi
+

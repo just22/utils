@@ -1,0 +1,66 @@
+#!/bin/sh
+
+# ----------------------------------------------------------------------
+#  $Id$
+#
+#  Logout from current X session (or suspend/reboot/poweroff the
+#  machine) using Xdialog/dmenu
+# ----------------------------------------------------------------------
+
+if [ $# -gt 1 ] || [ -n "$1" -a "$1" != -g ]; then
+        echo "Usage: ${0##*/} [-g]"
+        exit 1
+fi
+
+if [ "$1" == -g ]; then
+        DIALOG=Xdialog
+        $DIALOG --title "Exit Session" \
+                --radiolist "Please select an action:" 18 50 0 \
+                        "Logout"        "Exit from current X session"   off \
+                        "Suspend"       "Suspend to RAM"                off \
+                        "Hibernate"     "Suspend to disk"               ON  \
+                        "Reboot"        "Reboot the system"             off \
+                        "Poweroff"      "Shut down the computer"        off \
+                2>/tmp/$USER.$$.checklist
+
+        [ $? -eq 0 ] && CHOICE=`cat /tmp/$USER.$$.checklist`
+        rm -f /tmp/$USER.$$.checklist
+else
+        MENU_ITEMS="Logout\nSuspend\nHibernate\nReboot\nPoweroff"
+        CHOICE="$(echo -e $MENU_ITEMS |
+                  dmenu-cust -p "Exit Session:" "$@")"
+fi
+
+case "$CHOICE" in
+Logout)
+        dbar -k
+        if pgrep -x dwm; then
+                pkill -x dwm
+        elif pgrep -x fluxbox; then
+                fluxbox-remote Exit
+        elif pgrep -x fvwm2; then
+                FvwmCommand Quit
+        elif pgrep -x cwm; then
+                pkill -x cwm
+        elif pgrep -x xfwm4; then
+                xfce4-session-logout --logout --fast
+        elif pgrep -x openbox; then
+                openbox --exit
+        else
+                pkill -x twm
+        fi
+        ;;
+Suspend)
+        /usr/bin/doas /usr/sbin/zzz
+        ;;
+Hibernate)
+        /usr/bin/doas /usr/sbin/ZZZ
+        ;;
+Reboot)
+        /usr/bin/doas /sbin/reboot
+        ;;
+Poweroff)
+        /usr/bin/doas /sbin/shutdown -p now
+        ;;
+esac
+

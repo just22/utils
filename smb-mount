@@ -1,0 +1,29 @@
+#!/bin/sh
+
+# ----------------------------------------------------------------------
+#  $Id$
+#
+#  Mount or unmount all Samba shares
+# ----------------------------------------------------------------------
+
+_usage() {
+        echo "Usage: ${0##*/} [-u]"
+}
+
+if [ $# -ge 1 ] && [ "$1" != -u ]; then
+        _usage
+        exit 1
+fi
+
+if [ "$1" != -u ]; then
+        doas usmb -c ~/.usmb.conf datavol01
+        doas usmb -c ~/.usmb.conf sys_backup
+        doas usmb -c ~/.usmb.conf homes
+        x-filemanager ~/smb &
+else
+        doas usmb -c ~/.usmb.conf -u datavol01
+        doas usmb -c ~/.usmb.conf -u sys_backup
+        doas usmb -c ~/.usmb.conf -u homes
+fi
+
+exit 0

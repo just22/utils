@@ -1,0 +1,42 @@
+#!/bin/sh
+
+# ----------------------------------------------------------------------
+#  $Id$
+#
+#  Startup file for Xfce4 session
+# ----------------------------------------------------------------------
+
+# Notification system
+mkdir -p "${XDG_DATA_HOME:-$HOME/.local/share}/dbus-1/services"
+ln -sf \
+    "/usr/local/share/dbus-1/services/org.xfce.xfce4-notifyd.Notifications.service" \
+    "${XDG_DATA_HOME:-$HOME/.local/share}/dbus-1/services/org.freedesktop.Notifications.service"
+
+# Gnome keyring could be launched also enabling GNOME services, but
+# xfce4_session would launch it with ssh component, which interferes
+# with LibreSSH's ssh_agent
+gnome-keyring-daemon --replace --daemonize --components=pkcs11,secrets,gpg
+
+# Process monitor
+xterm -title "Process monitor" -e top &
+
+# System statistics
+xterm -title "System stats" -e systat &
+
+# System log
+sleep 1
+xkill -id $(xwininfo -name xconsole |
+            egrep -o "Window id: 0x[0-9a-fA-F]+" |
+            cut -d: -f2) 2>/dev/null
+xterm -title "System log" -e "tail -f /var/log/messages" &
+
+# Move system monitors to appropriate workspace
+sleep 1
+wmctrl -r "Process monitor" -t 6
+wmctrl -r "System stats" -t 6
+wmctrl -r "System log" -t 6
+
+# Status bar
+dbar -k
+dbar -- -expand left -xs 1 -dock &
+

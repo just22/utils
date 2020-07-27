@@ -1,0 +1,16 @@
+#!/bin/sh
+
+# ----------------------------------------------------------------------
+#  $Id$
+#
+#  Restart problematic apps in Xfce
+# ----------------------------------------------------------------------
+
+# Statusbar
+dbar -k
+dbar -- -expand left -xs 1 -dock &
+
+# Sound tray app
+pkill -x sound
+/usr/local/libexec/tray-app/sound -i &
+

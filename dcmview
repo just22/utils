@@ -1,0 +1,14 @@
+#!/bin/sh
+
+# ----------------------------------------------------------------------
+#  $Id$
+#
+#  Simple DICOM image viewer, based on dcmtk
+# ----------------------------------------------------------------------
+
+inFile="$1"
+outFile=/tmp/dcm.png
+
+dcm2pnm "$inFile" "$outFile"
+geeqie "$outFile"
+rm "$outFile"

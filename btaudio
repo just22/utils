@@ -1,0 +1,23 @@
+#!/bin/sh
+
+# ----------------------------------------------------------------------
+#  $Id$
+#
+#  Switch from internal to bluetooth audio
+# ----------------------------------------------------------------------
+
+_usage() {
+        echo "Usage: ${0##*/} on|off"
+}
+
+if [ $# -ne 1 ] || ([ "$1" != on ] && [ "$1" != off ]); then
+        _usage
+        exit 1
+fi
+
+doas rcctl stop sndiod
+doas pkill sndiod
+
+[ "$1" == on ] && doas sndiod -f rsnd/1 || doas sndiod -f rsnd/0
+
+exit 0
