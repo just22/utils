@@ -6,23 +6,51 @@
 #  Automatic MOUNTer for OpenBSD
 # ----------------------------------------------------------------------
 
+# ----------------------------------------------------------------------------
+# Copyright 2015-2020 Alessandro De Laurenzis
+#
+# Redistribution and use in source and binary forms, with or without
+# modification, are permitted provided that the following conditions are met:
+#
+# 1. Redistributions of source code must retain the above copyright notice,
+# this list of conditions and the following disclaimer.
+#
+# 2. Redistributions in binary form must reproduce the above copyright notice,
+# this list of conditions and the following disclaimer in the documentation
+# and/or other materials provided with the distribution.
+#
+# THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS"
+# AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE
+# IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE
+# ARE DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT HOLDER OR CONTRIBUTORS BE
+# LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR
+# CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF
+# SUBSTITUTE GOODS OR SERVICES; LOSS OF USE, DATA, OR PROFITS; OR BUSINESS
+# INTERRUPTION) HOWEVER CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN
+# CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE)
+# ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE
+# POSSIBILITY OF SUCH DAMAGE.
+# ----------------------------------------------------------------------------
+
 _help() { less << __HELP__
 NAME
   amount - Automatic MOUNTer
 
 SYNOPSIS
   amount -h
-  amount [-r dir] [-g group] [-m mode] [-e device] [-f program]
+  amount [-k] [-r dir] [-g group] [-m mode] [-o opt] [-e device ...]
 
 DESCRIPTION
-  This script (un)mounts partitions of removable devices through a menu,
-  then (optionally) opens a filemanager window.
-  Notes:
-  - specific for OpenBSD;
-  - special permissions are needed for some commands (mount, fsck,
-    chgrp, chmod), so it should be run through /usr/bin/doas
+  amount is an OpenBSD specific, POSIX compliant shell script to manage
+  removable devices; it presents a list of available partitions, and
+  (un)mount them upon user request. Optionally, it opens a filemanager
+  window after mount operations.
+  A few commands used by amount require special permissions (disklabel(8),
+  {u,}mount(8), fsck(8), ...), so it should be run through doas(1).
 
   The following options are available:
+
+  -k           Keep error messages until a key is pressed
 
   -r dir       Mount root dir; it must exist and have the proper
                permissions (defaults to /vol);
@@ -31,17 +59,9 @@ DESCRIPTION
 
   -m mode      Mount dir will have these permissions;
 
-  -e device    Do not manage these devices;
+  -o opt       Mount options (defaults to rw,nodev,nosuid,noatime);
 
-  -f program   Filemanager to be opened after mounting a partition
-
-EXIT STATUS
-  amount exits with one of the following values:
-    0: Script completed with no error;
-    1: Unknown option or missing argument;
-    2: No removable devices;
-    3: Cannot create mount dir;
-    4: Unexpected fsck error.
+  -e device    Do not manage this device.
 
 AUTHOR
   Alessandro De Laurenzis, <just22@atlantide.mooo.com>
@@ -49,177 +69,164 @@ __HELP__
 }
 
 # ----------------------------------------------------------------------
+# Defaults
+#
+mroot=/vol
+mgroup=diskmount
+mmode=0775
+mopt=rw,nodev,nosuid,noatime
+exdev=
+
+# ----------------------------------------------------------------------
+# Helpers
+#
+gsub() {
+        s="$1"; p="$2"; v="$3"
+        while [ "${s#*$p}" != "$s" ]; do
+                s="${s%%$p*}$v${s#*$p}"
+        done
+        echo "$s"
+}
+
+err() {
+        if [ "$1" == -r ]; then
+                rm -r "$mdir"
+                shift
+        fi
+        [ -n "$1" ] && echo "amount: $1"
+        if [ -n "${keep+set}" ]; then
+                stty raw
+                dd bs=1 count=1 2>/dev/null
+                stty -raw
+        fi
+        exit 1
+}
+
+
+# ----------------------------------------------------------------------
 # Command line argument parsing
 #
-
-# Defaults
-MOUNT_ROOT=/vol
-GROUP=diskmount
-MODE=0775
-EXCLUDED_DEV=""
-FILEMGR="xfe"
-
-while getopts ":hr:g:m:e:f:" arg; do
+while getopts ":hkr:g:m:o:e:" arg; do
         case "$arg" in
-        h)
-                _help
-                exit 0
-                ;;
-        r)
-                MOUNT_ROOT="$OPTARG"
-                ;;
-        g)
-                GROUP="$OPTARG"
-                ;;
-        m)
-                MODE="$OPTARG"
-                ;;
-        e)
-                EXCLUDED_DEV="$OPTARG"
-                ;;
-        f)
-                FILEMGR="$OPTARG"
-                ;;
-        :)
-                echo "${0##*/}: Option -$OPTARG requires an argument"
-                exit 1
-                ;;
-        \?)
-                echo "${0##*/}: Unknown option: -$OPTARG"
-                exit 1
+         k)    keep= ;;
+         r)   mroot="$OPTARG" ;;
+         g)  mgroup="$OPTARG" ;;
+         m)   mmode="$OPTARG" ;;
+         o)    mopt="$OPTARG" ;;
+         e)   exdev="$OPTARG $exdev" ;;
+         h) _help; exit 0 ;;
+         :) echo "${0##*/}: Option -$OPTARG requires an argument"; exit 1 ;;
+        \?) echo "${0##*/}: Unknown option: -$OPTARG"; exit 1
         esac
 done
+shift $(($OPTIND - 1))
+
+
 # ----------------------------------------------------------------------
+# Variable description:
+#   diskn = Disk name (dev:duid)
+#     dev = Device name
+#    desc = Disk description
+#  diskid = Disk identifier (desc + label)
+#   partf = Found (at least) a partition for a certain diskid
+#   partn = Partition name
+#   partt = Partition type
+#  action = Mount/unmount
+#
 
-NPART=0
-for DISKNAME in $(sysctl -n hw.disknames | tr "," " "); do
-        DEV=${DISKNAME%:*}
-        if [ "${EXCLUDED_DEV#*$DEV}" == "$EXCLUDED_DEV" ]; then
-                disklabel "$DEV" 2>/dev/null |&
-                while read -p line; do
-                        case "$line" in
-                        disk:*)
-                                # Mind: this way, there will be a leading space,
-                                # but we need to preserve matching even when property
-                                # is not defined (no chars after ":")
-                                DISK="${line#disk:}"
-                                ;;
-                        label:*)
-                                # Same as above
-                                LABEL="${line#label:}"
-                                ;;
-                        a:*|d:*|e:*|f:*|g:*|h:*|i:*|j:*|k:*|l:*|m:*|n:*|o:*|p:*)
-                                let ++NPART
+# Redirect stdout to stderr by default, and use >&3 to return mount dir
+exec 3>&1 1>&2
 
-                                # DEV_NAME is the dev's label (or disk name if the former is unset)
-                                # (get rid of the leading space!)
-                                DEV_NAME[$DEV]=${LABEL[$DEV]:-${DISK[$DEV]}}
-                                DEV_NAME[$DEV]=${DEV_NAME[$DEV]# }
+actno=0
+for diskn in $(gsub $(sysctl -n hw.disknames) "," " "); do
+        dev=${diskn%:*}
+        [ "${exdev#*$dev}" == "$exdev" ] || continue
 
-                                PART_NAME=${line%:*}
-                                PART_TYPE="$(echo $line | awk '{print $4}')"
+        unset partf
+        disklabel -h "$dev" 2>/dev/null |&
+        while read -p line; do
+                case "$line" in
+                disk:*)
+                        desc="${line#disk:}"
+                        ;;
+                label:*)
+                        diskid="${line#label:}${desc}"
+                        diskid="${diskid## }"
+                        echo "Disk Id: $diskid ($dev)"
+                        ;;
+                a:*|d:*|e:*|f:*|g:*|h:*|i:*|j:*|k:*|l:*|m:*|n:*|o:*|p:*)
+                        partf=
+                        partn=${line%:*}
+                        partd="$(echo $line | awk '{print $2}')"
+                        partt="$(echo $line | awk '{print $4}')"
 
-                                if [ "$PART_TYPE" != "unknown" ]; then
-                                        if mount | grep -q "${DEV}${PART_NAME}"; then
-                                                PART_ACTION="unmount"
-                                        else
-                                                PART_ACTION="mount"
-                                        fi
-                                        PART[$NPART]="$DEV,$DEV_NAME,$PART_NAME,$PART_TYPE,$PART_ACTION"
-                                        ITEM[2*$NPART-1]="$NPART"
-                                        ITEM[2*$NPART]="$DEV_NAME ($DEV) - Partition $PART_NAME ($PART_TYPE): $PART_ACTION"
+                        if [ "$partt" != "unknown" ]; then
+                                let ++actno
+                                if mount | grep -q "${dev}${partn}"; then
+                                        action="Unmount"
+                                else
+                                        action="  Mount"
                                 fi
-                                ;;
-                        esac
-                done
-        fi
-done
 
-if [ ${#PART[*]} -eq 0 ]; then
-        Xdialog \
-                --buttons-style text \
-                --screen-center \
-                --title "Removable volume manager" \
-                --msgbox "No removable devices \
-                          or insufficient permissions" 5 60
-        exit 2
-fi
-
-SEL=$(Xdialog \
-        --buttons-style text \
-        --rc-file /usr/local/share/Xdialog/fixed-font.rc \
-        --no-tags \
-        --screen-center \
-        --stdout \
-        --title "Removable volume manager" \
-        --menubox "Select an action on available partitions" 15 90 1 "${ITEM[@]}")
-
-if [ -n "$SEL" ]; then
-        IFS="," read DEV DEV_NAME PART_NAME PART_TYPE PART_ACTION <<- EOT
-		$(echo ${PART[$SEL]})
-	EOT
-        MOUNT_DIR="${MOUNT_ROOT}/${DEV_NAME}.${PART_NAME}"
-        case "$PART_ACTION" in
-        mount)
-                [ -d "$MOUNT_DIR" ] || mkdir -m "$MODE" -p "$MOUNT_DIR" 2>/dev/null
-                chgrp "$GROUP" "$MOUNT_DIR" 2>/dev/null
-                if [ $? -ne 0 ]; then
-                        Xdialog \
-                                --buttons-style text \
-                                --screen-center \
-                                --left \
-                                --title "Removable volume manager" \
-                                --msgbox "Cannot create $MOUNT_DIR\nInsufficient permissions?" 7 60
-                        exit 3
-                fi
-
-                case "$PART_TYPE" in
-                4.2BSD)
-                        MOUNT_OPT="-t ffs -o rw,nodev,nosuid,noatime"
-                        RUN_FSCK=1
-                        ;;
-                MSDOS)
-                        MOUNT_OPT="-t msdos -o rw,nodev,nosuid,noatime"
-                        RUN_FSCK=0
-                        ;;
-                ext2fs)
-                        MOUNT_OPT="-t ext2fs -o rw,nodev,nosuid,noatime"
-                        RUN_FSCK=1
-                        ;;
-                UDF)
-                        MOUNT_OPT="-t udf"
-                        RUN_FSCK=0
+                                menuitem="$(printf "%2d:" "$actno") $action"
+                                menuitem="$menuitem ${dev}${partn} $partt $partd"
+                                echo "$menuitem"
+                                set -- "$@" "$menuitem"
+                        fi
                         ;;
                 esac
+        done
+        [ -n "${partf+set}" ] && echo
+done
 
-                [ "$RUN_FSCK" == 1 ] && fsck -p -y /dev/"${DEV}${PART_NAME}" || true
-                if [ $? -ne 0 ]; then
-                        Xdialog \
-                                --buttons-style text \
-                                --screen-center \
-                                --left \
-                                --title "Removable volume manager" \
-                                --msgbox "/dev/${DEV}${PART_NAME}: unexpected inconsistency\nPlease run fsck manually" 7 45
-                        rm -r "$MOUNT_DIR"
-                        exit 4
-                else
-                        mount $MOUNT_OPT /dev/"${DEV}${PART_NAME}" "$MOUNT_DIR"
-                fi
-
-                # $FILEMGR, when set, must be invoked as unprivileged user
-                [ -n "$FILEMGR" ] && su ${DOAS_USER:-$USER} -c "$FILEMGR \"$MOUNT_DIR\" &"
-                ;;
-
-        unmount)
-                for pid in $(fstat | grep "$MOUNT_DIR" | awk '{print $3}' | sort -u); do
-                        kill -KILL "$pid"
-                done
-                umount "$MOUNT_DIR"
-                rm -r "$MOUNT_DIR"
-                ;;
-
-        esac
-
+if [ $# -eq 0 ]; then
+        err "No devices or insufficient permissions"
 fi
 
-exit 0
+echo -n "Select an action: "; read partsel
+
+[ -z "$partsel" ] && exit 0
+
+read foo action devpart partt foo <<- EOT
+        $(eval "echo \${$partsel}")
+EOT
+
+mdir="${mroot}/${devpart}"
+case "$action" in
+ *Mount)
+        [ -d "$mdir" ] || mkdir -m "$mmode" -p "$mdir"
+        chgrp "$mgroup" "$mdir"
+        [ $? -ne 0 ] && err
+
+        case "$partt" in
+         4.2BSD) mopt="-t ffs -o $mopt"; run_fsck= ;;
+          MSDOS) mopt="-t msdos -o $mopt" ;;
+         ext2fs) mopt="-t ext2fs -o $mopt" ;;
+            UDF) mopt="-t udf" ;;
+        ISO9660) mopt="-t cd9660" ;;
+              *) err "Mount of $partt not supported"
+        esac
+
+        if [ -n "${run_fsck+set}" ]; then
+                [ ! fsck -p -y /dev/"$devpart" ] && err -r
+        fi
+
+        mount $mopt /dev/"$devpart" "$mdir"
+        [ $? -ne 0 ] && err -r
+
+        # Return the mount dir path
+        echo "$mdir" >&3
+
+        ;;
+
+Unmount)
+        umount "$mdir"
+        [ $? -ne 0 ] && err
+
+        rm -r "$mdir"
+        ;;
+
+      *)
+        exit 0
+esac
+
