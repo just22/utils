@@ -74,17 +74,13 @@ set -e
 export PATH=/usr/bin:/bin/:/usr/sbin:/sbin
 
 # Defaults
-mroot=/vol
-mgroup=diskmount
-mmode=0775
-mopt=rw,nodev,nosuid,noatime
-exdev=
+MROOT=/vol
+MGROUP=diskmount
+MMODE=0775
+MOPT=rw,nodev,nosuid,noatime
+EXDEV=
 
 err() {
-        if [ "$1" == -r ]; then
-                rm -r "$mdir"
-                shift
-        fi
         [ -n "$1" ] && echo "${0##*/}: $1"
         return ${2:-1}
 }
@@ -112,11 +108,11 @@ echotty() {
 #
 while getopts ":hr:g:m:o:e:" arg; do
         case "$arg" in
-         r)  mroot="$OPTARG" ;;
-         g) mgroup="$OPTARG" ;;
-         m)  mmode="$OPTARG" ;;
-         o)   mopt="$OPTARG" ;;
-         e)  exdev="$OPTARG $exdev" ;;
+         r)  MROOT="$OPTARG" ;;
+         g) MGROUP="$OPTARG" ;;
+         m)  MMODE="$OPTARG" ;;
+         o)   MOPT="$OPTARG" ;;
+         e)  EXDEV="$OPTARG $EXDEV" ;;
          h) usage ;;
          :) err "Option -$OPTARG requires an argument" ;;
         \?) err "Unknown option: -$OPTARG"
@@ -144,7 +140,7 @@ shift $(($OPTIND - 1))
 actno=0
 for diskn in $(gsub $(sysctl -n hw.disknames) , \ ); do
         dev=${diskn%:*}
-        [ "${exdev#*$dev}" == "$exdev" ] || continue
+        [ "${EXDEV#*$dev}" == "$EXDEV" ] || continue
 
         unset partf
 
@@ -193,28 +189,32 @@ read action devpart partt foo <<- EOT
 	$(eval "echo \$$partsel")
 EOT
 
-mdir="${mroot}/${devpart}"
+mdir="${MROOT}/${devpart}"
 case "$action" in
 *Mount)
-        [ -d "$mdir" ] || mkdir -m "$mmode" -p "$mdir"
-        chgrp "$mgroup" "$mdir"
-        [ $? -ne 0 ] && err
+        [ -d "$mdir" ] || mkdir -m "$MMODE" -p "$mdir"
+        chgrp "$MGROUP" "$mdir"
 
         case "$partt" in
-         4.2BSD) mopt="-t ffs -o $mopt"; run_fsck= ;;
-          MSDOS) mopt="-t msdos -o $mopt" ;;
-         ext2fs) mopt="-t ext2fs -o $mopt" ;;
-            UDF) mopt="-t udf" ;;
-        ISO9660) mopt="-t cd9660" ;;
+         4.2BSD) MOPT="-t ffs -o $MOPT"; RUN_FSCK= ;;
+          MSDOS) MOPT="-t msdos -o $MOPT" ;;
+         ext2fs) MOPT="-t ext2fs -o $MOPT" ;;
+            UDF) MOPT="-t udf" ;;
+        ISO9660) MOPT="-t cd9660" ;;
               *) err "Mount of $partt not supported"
         esac
 
-        if [ -n "${run_fsck+set}" ]; then
-                if ! fsck -p -y /dev/"$devpart"; then  err -r; fi
+        if [ -n "${RUN_FSCK+set}" ]; then
+                if ! fsck -p -y /dev/"$devpart"; then
+                        rm -r "$mdir"
+                        err
+                fi
         fi
 
-        mount $mopt /dev/"$devpart" "$mdir"
-        [ $? -ne 0 ] && err -r
+        if ! mount $MOPT /dev/"$devpart" "$mdir"; then
+                rm -r "$mdir"
+                err
+        fi
 
         # Return the mount point
         echo "$mdir"
@@ -222,7 +222,6 @@ case "$action" in
 
 Unmount)
         umount "$mdir"
-        [ $? -ne 0 ] && err
         rm -r "$mdir"
 
         # Return the mount point
