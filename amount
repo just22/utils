@@ -38,7 +38,7 @@ NAME
 
 SYNOPSIS
   amount -h
-  amount [-l | -x string] [-r path] [-g group] [-m mode] [-o opt] [-e device ...]
+  amount [-r path] [-g group] [-m mode] [-o opt] [-e device ...]
 
 DESCRIPTION
   amount is an OpenBSD specific, POSIX compliant shell script to manage
@@ -48,14 +48,11 @@ DESCRIPTION
   A few commands used by amount require special permissions (disklabel(8),
   {u,}mount(8), fsck(8), ...), so it should be run through doas(1).
 
-  After a successful mount operation, amount returns the path of the
-  mount directory on stdout, enabling the usage of a filemanager.
+  After a successful operation, amount returns the path of the
+  mount point on stdout (for unmount operations, the directory is
+  removed before exiting and no longer exists).
 
   The following options are available:
-
-  -l           List mode: output a list of actions and exit;
-
-  -x string    Exec mode: perform the operation described in string;
 
   -r path      Mount root dir; it must exist and have the proper
                permissions (defaults to /vol);
@@ -73,18 +70,30 @@ AUTHOR
 __HELP__
 }
 
-# ----------------------------------------------------------------------
+set -e
+export PATH=/usr/bin:/bin/:/usr/sbin:/sbin
+
 # Defaults
-#
 mroot=/vol
 mgroup=diskmount
 mmode=0775
 mopt=rw,nodev,nosuid,noatime
 exdev=
 
-# ----------------------------------------------------------------------
-# Helpers
-#
+err() {
+        if [ "$1" == -r ]; then
+                rm -r "$mdir"
+                shift
+        fi
+        [ -n "$1" ] && echo "${0##*/}: $1"
+        return ${2:-1}
+}
+
+usage() {
+        _help
+        return 1
+}
+
 gsub() {
         s="$1"; p="$2"; v="$3"
         while [ "${s#*$p}" != "$s" ]; do
@@ -93,36 +102,27 @@ gsub() {
         echo "$s"
 }
 
-err() {
-        if [ "$1" == -r ]; then
-                rm -r "$mdir"
-                shift
-        fi
-        [ -n "$1" ] && echo "amount: $1"
-        exit 1
+echotty() {
+        echo "$@" >/dev/tty
 }
 
 
 # ----------------------------------------------------------------------
 # Command line argument parsing
 #
-while getopts ":hlx:r:g:m:o:e:" arg; do
+while getopts ":hr:g:m:o:e:" arg; do
         case "$arg" in
-         l)    list= ;;
-         x) partsel="$OPTARG" ;;
-         r)   mroot="$OPTARG" ;;
-         g)  mgroup="$OPTARG" ;;
-         m)   mmode="$OPTARG" ;;
-         o)    mopt="$OPTARG" ;;
-         e)   exdev="$OPTARG $exdev" ;;
-         h) _help; exit 0 ;;
-         :) echo "${0##*/}: Option -$OPTARG requires an argument"; exit 1 ;;
-        \?) echo "${0##*/}: Unknown option: -$OPTARG"; exit 1
+         r)  mroot="$OPTARG" ;;
+         g) mgroup="$OPTARG" ;;
+         m)  mmode="$OPTARG" ;;
+         o)   mopt="$OPTARG" ;;
+         e)  exdev="$OPTARG $exdev" ;;
+         h) usage ;;
+         :) err "Option -$OPTARG requires an argument" ;;
+        \?) err "Unknown option: -$OPTARG"
         esac
 done
 shift $(($OPTIND - 1))
-
-[ -z "${list+set}" ] && [ -z "${partsel+set}" ] && tui=
 
 
 # ----------------------------------------------------------------------
@@ -137,79 +137,65 @@ shift $(($OPTIND - 1))
 #  action = Mount/unmount
 #
 
-# Redirect stdout to stderr by default, and use >&3 to return the results
-exec 3>&1 1>&2
+# Redirect stdout to stderr by default, and use >&3 to return mdir
+# exec 3>&1 1>&2
+# exec 3>&1 1>/dev/tty
 
-if [ -n "${list+set}" -o -n "${tui+set}" ]; then
-        actno=0
-        for diskn in $(gsub $(sysctl -n hw.disknames) "," " "); do
-                dev=${diskn%:*}
-                [ "${exdev#*$dev}" == "$exdev" ] || continue
+actno=0
+for diskn in $(gsub $(sysctl -n hw.disknames) , \ ); do
+        dev=${diskn%:*}
+        [ "${exdev#*$dev}" == "$exdev" ] || continue
 
-                unset partf
-                disklabel -h "$dev" 2>/dev/null |&
-                while read -p line; do
-                        case "$line" in
-                        disk:*)
-                                desc="${line#disk:}"
-                                ;;
-                        label:*)
-                                diskid="${line#label:}${desc}"
-                                diskid="${diskid## }"
-                                [ -n "${tui+set}" ] && echo "Disk Id: $diskid ($dev)"
-                                ;;
-                        a:*|d:*|e:*|f:*|g:*|h:*|i:*|j:*|k:*|l:*|m:*|n:*|o:*|p:*)
-                                partf=
-                                partn=${line%:*}
-                                partd="$(echo $line | awk '{print $2}')"
-                                partt="$(echo $line | awk '{print $4}')"
+        unset partf
 
-                                if [ "$partt" != "unknown" ]; then
-                                        let ++actno
-                                        if mount | grep -q "${dev}${partn}"; then
-                                                action="Unmount"
-                                        else
-                                                action="  Mount"
-                                        fi
+        disklabel -h "$dev" |&
+        while read -p line; do
+                case "$line" in
+                disk:*)
+                        desc="${line#disk:}"
+                        ;;
+                label:*)
+                        diskid="${line#label:}${desc}"
+                        diskid="${diskid## }"
+                        echotty "Disk Id: $diskid ($dev)"
+                        ;;
+                a:*|d:*|e:*|f:*|g:*|h:*|i:*|j:*|k:*|l:*|m:*|n:*|o:*|p:*)
+                        partf=
+                        partn=${line%:*}
+                        partd="$(echo $line | awk '{print $2}')"
+                        partt="$(echo $line | awk '{print $4}')"
 
-                                        menuitem="$action ${dev}${partn} $partt $partd"
+                        if [ "$partt" != "unknown" ]; then
+                                let ++actno
+                                mnt="$(mount)"
+                                [ "${mnt#*${dev}${partn}}" != "$mnt" ] &&
+                                    action="Unmount" ||
+                                    action="  Mount"
 
-                                        [ -n "${tui+set}" ] &&
-                                            echo "$(printf "%2d:" "$actno") $menuitem" ||
-                                            menuitem="$menuitem ($diskid)"
-
-                                        set -- "$@" "$menuitem\n"
-                                fi
-                                ;;
-                        esac
-                done
-                [ -n "${tui+set}" -a -n "${partf+set}" ] && echo
+                                menuitem="$action ${dev}${partn} $partt $partd"
+                                echotty "$(printf "%2d:" "$actno") $menuitem"
+                                set -- "$@" "$menuitem"
+                        fi
+                        ;;
+                esac
         done
+        if [ -n "${partf+set}" ]; then echotty; fi
+done
 
-        if [ $# -eq 0 ]; then
-                err "No devices or insufficient permissions"
-        fi
+if [ $# -eq 0 ]; then
+        err "No devices"
 fi
 
-if [ -n "${list+set}" ]; then
-        echo "$@" >&3
-        exit
-fi
-
-if [ -n "${tui+set}" ]; then
-        echo -n "Select an action: "
-        read partsel
-        [ -z "$partsel" ] && exit 0
-        partsel="$(eval "echo \${$partsel}")"
-fi
+echotty -n "Select an action: "
+read partsel
 
 read action devpart partt foo <<- EOT
-        $(echo "$partsel")
+	$(eval "echo \$$partsel")
 EOT
 
 mdir="${mroot}/${devpart}"
 case "$action" in
- *Mount)
+*Mount)
         [ -d "$mdir" ] || mkdir -m "$mmode" -p "$mdir"
         chgrp "$mgroup" "$mdir"
         [ $? -ne 0 ] && err
@@ -224,22 +210,22 @@ case "$action" in
         esac
 
         if [ -n "${run_fsck+set}" ]; then
-                [ ! fsck -p -y /dev/"$devpart" ] && err -r
+                if ! fsck -p -y /dev/"$devpart"; then  err -r; fi
         fi
 
         mount $mopt /dev/"$devpart" "$mdir"
         [ $? -ne 0 ] && err -r
 
-        # Return the mount dir path
-        echo "$mdir" >&3
-
+        # Return the mount point
+        echo "$mdir"
         ;;
 
 Unmount)
         umount "$mdir"
         [ $? -ne 0 ] && err
-
         rm -r "$mdir"
+
+        # Return the mount point
+        echo "$mdir"
         ;;
 esac
-
