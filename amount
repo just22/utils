@@ -80,15 +80,15 @@ MMODE=0775
 MOPT=rw,nodev,nosuid,noatime
 EXDEV=
 
-err() {
-        [ -n "$1" ] && echo "${0##*/}: $1"
-        return ${2:-1}
-}
-
 usage() { cat 1>&2 << __USAGE__
 usage: ${0##*/} [-r path] [-g group] [-m mode] [-o opts] [-e dev ...]
 __USAGE__
         return 1
+}
+
+err() {
+        [ -n "$1" ] && echo "${0##*/}: $1"
+        return ${2:-1}
 }
 
 gsub() {
@@ -134,10 +134,6 @@ shift $(($OPTIND - 1))
 #  action = Mount/unmount
 #
 
-# Redirect stdout to stderr by default, and use >&3 to return mdir
-# exec 3>&1 1>&2
-# exec 3>&1 1>/dev/tty
-
 actno=0
 for diskn in $(gsub $(sysctl -n hw.disknames) , \ ); do
         dev=${diskn%:*}
@@ -158,9 +154,10 @@ for diskn in $(gsub $(sysctl -n hw.disknames) , \ ); do
                         ;;
                 a:*|d:*|e:*|f:*|g:*|h:*|i:*|j:*|k:*|l:*|m:*|n:*|o:*|p:*)
                         partf=
-                        partn=${line%:*}
-                        partd="$(echo $line | awk '{print $2}')"
-                        partt="$(echo $line | awk '{print $4}')"
+                        read partn partd _discard partt _discard <<- EOT
+				$(echo "$line")
+			EOT
+                        partn=${partn%:*}
 
                         if [ "$partt" != "unknown" ]; then
                                 let ++actno
@@ -186,7 +183,7 @@ fi
 echotty -n "Select an action: "
 read partsel
 
-read action devpart partt foo <<- EOT
+read action devpart partt _discard <<- EOT
 	$(eval "echo \$$partsel")
 EOT
 
