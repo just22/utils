@@ -75,14 +75,11 @@ export PATH=/usr/bin:/bin/:/usr/sbin:/sbin
 
 # Defaults
 MROOT=/vol
-MGROUP=diskmount
-MMODE=0775
 MOPT=rw,nodev,nosuid,noatime
 EXDEV=
 
-usage() { cat 1>&2 << __USAGE__
-usage: ${0##*/} [-r path] [-g group] [-m mode] [-o opts] [-e dev ...]
-__USAGE__
+usage() {
+        _help
         return 1
 }
 
@@ -101,6 +98,10 @@ gsub() {
 
 echotty() {
         echo "$@" >/dev/tty
+}
+
+ret_mdir() {
+        echo "$mdir"
 }
 
 
@@ -178,6 +179,8 @@ done
 
 if [ $# -eq 0 ]; then
         err "No devices"
+elif [ $# -gt 9 ]; then
+        err "Too many partitions"
 fi
 
 echotty -n "Select an action: "
@@ -190,8 +193,7 @@ EOT
 mdir="${MROOT}/${devpart}"
 case "$action" in
 *Mount)
-        [ -d "$mdir" ] || mkdir -m "$MMODE" -p "$mdir"
-        chgrp "$MGROUP" "$mdir"
+        [ -d "$mdir" ] || mkdir -p "$mdir"
 
         case "$partt" in
          4.2BSD) MOPT="-t ffs -o $MOPT"; RUN_FSCK= ;;
@@ -213,16 +215,16 @@ case "$action" in
                 rm -r "$mdir"
                 err
         fi
+        [ -n "$MGROUP" ] && chgrp "$MGROUP" "$mdir"
+        [ -n "$MMODE" ]  && chmod "$MMODE"  "$mdir"
 
-        # Return the mount point
-        echo "$mdir"
+        ret_mdir
         ;;
 
 Unmount)
         umount "$mdir"
         rm -r "$mdir"
 
-        # Return the mount point
-        echo "$mdir"
+        ret_mdir
         ;;
 esac
