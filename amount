@@ -61,9 +61,9 @@ DESCRIPTION
 
   -m mode      Mount dir will have these permissions;
 
-  -o opt       Mount options (defaults to rw,nodev,nosuid,noatime);
+  -o opts      Mount options (defaults to rw,nodev,nosuid,noatime);
 
-  -e device    Do not manage this device.
+  -e dev       Do not manage this device.
 
 AUTHOR
   Alessandro De Laurenzis, <just22@atlantide.mooo.com>
@@ -85,8 +85,9 @@ err() {
         return ${2:-1}
 }
 
-usage() {
-        _help
+usage() { cat 1>&2 << __USAGE__
+usage: ${0##*/} [-r path] [-g group] [-m mode] [-o opts] [-e dev ...]
+__USAGE__
         return 1
 }
 
