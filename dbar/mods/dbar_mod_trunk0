@@ -6,5 +6,5 @@
 #  trunk0 I/O statistics module for dbar
 # ----------------------------------------------------------------------
 
-ifstat -n -i trunk0 2 |
-awk '{printf("[trunk0:  ↓ %3.1f MB/s  ↑ %3.1f MB/s]\n", $1 / 1000, $2 / 1000)}'
+ifstat -n -b -i trunk0 2 |
+awk '{printf("[trunk0:  ↓%2.0f Mb/s  ↑%2.0f Mb/s]\n", $1 / 1000, $2 / 1000)}'
