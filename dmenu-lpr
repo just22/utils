@@ -15,7 +15,6 @@ wmsg() {
         else
                 echo -e "$1" |
                 xmessage -title "Print to lpr" \
-                         -center \
                          -buttons "OK":0 \
                          -file - &
         fi

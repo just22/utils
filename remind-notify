@@ -44,7 +44,7 @@ fi
 
 [ -z "$NOWARN" ] &&
 echo -e "${MSG}${WHEN}" |
-xmessage -title "Remind" -center -buttons "Got it":0"${SNZ}" -file -
+xmessage -title "Remind" -buttons "Got it":0"${SNZ}" -file -
 
 # "Got it" selected, no other warnings please!
 [ "$?" -eq 0 ] && [ -n "$SNZ" ] && echo "$TAG" >> ~/.reminders-nowarn

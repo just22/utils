@@ -9,7 +9,6 @@
 show_msg() {
         apm -m -v |
         xmessage -title "Low battery" \
-                 -center \
                  -buttons "OK":0 \
                  -file - &
 }
