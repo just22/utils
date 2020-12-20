@@ -17,10 +17,6 @@ usbdevs -v | awk -v deviceName=$1 '
         found=0;
         pattern="^[\t ]+driver: "deviceName"$"
     }
-    found==1 {
-        printf "Device name: %s\nController: %s\n%s\n", deviceName, controller, portAddr;
-        exit
-    }
     /Controller/ {
         controller=$2;
         sub(":$", "", controller)
@@ -31,6 +27,8 @@ usbdevs -v | awk -v deviceName=$1 '
     }
     $0 ~ pattern {
         found=1
+        printf "Device name: %s\nController: %s\n%s\n", deviceName, controller, portAddr;
+        exit
     }
     END {
         if (found==0) {print "Not found"}

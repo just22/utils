@@ -6,8 +6,14 @@
 #  Change display settings using dmenu
 # ----------------------------------------------------------------------
 
-# No output msgs, please
-exec >/dev/null 2>&1
+err() {
+        echo "$1" |
+        xmessage -title "dmenu-xrandr" \
+            -buttons "Close":0,"Reset Display":2 -file -
+
+        [ "$?" -eq 2 ] && xrandr --auto
+        exit 1
+}
 
 MENU_ITEMS="\
 $(for f in ~/.screenlayout/*; do
@@ -15,56 +21,83 @@ $(for f in ~/.screenlayout/*; do
 done)\
 Custom"
 
-LVDS="$(xrandr -q | grep -w connected | awk '{print $1}' | grep LVDS)"
- VGA="$(xrandr -q | grep -w connected | awk '{print $1}' | grep VGA)"
-HDMI="$(xrandr -q | grep -w connected | awk '{print $1}' | grep HDMI)"
-  DP="$(xrandr -q | grep -w connected | awk '{print $1}' | grep DP)"
-if [ -z "$VGA" ] && [ -z "$HDMI" ] && [ -z "$DP" ]; then
-        echo -e "No dual monitor configuration available" |
-        xmessage -center -title "dmenu-xrandr" \
-                -buttons "Close":0,"Reset Display":2 -file -
-        [ "$?" -eq 2 ] && xrandr --auto
-        exit 1
-fi
+xrandr -q |&
+while read -p line; do
+        case "$line" in
+        *\ connected*)
+                head=${line%% *}
+                case $head in
+                LVDS*) LVDS=$head ;;
+                 VGA*)  VGA=$head ;;
+                HDMI*) HDMI=$head ;;
+                  DP*)   DP=$head ;;
+                esac
+                ;;
+        esac
+done
 
-if [ -n "$1" ]; then
-        cmd="$1"
-else
-        cmd="$(echo -e $MENU_ITEMS | dmenu-cust -p "Screen Layout:" "$@")"
-fi
+[ -z "$VGA" ] && [ -z "$HDMI" ] && [ -z "$DP" ] && [ "$1" != LVDS] &&
+    err "No dual monitor configuration available"
+
+[ -n "$1" ] &&
+    cmd="$1" ||
+    cmd="$(echo -e $MENU_ITEMS | dmenu-cust -p "Screen Layout:" "$@")"
 
 case "$cmd" in
 Custom)
-        exec arandr ;;
-LVDS)
-        xrandr \
-            --output "$LVDS" --auto \
-            --output "$VGA" --off \
-            --output "$HDMI" --off \
-            --output "DP" --off
+        arandr
         ;;
-VGA)
+
+*LVDS*|*VGA*|*HDMI*|*DP*)
+        LVDS_switches=--off
+        VGA_switches=--off
+        HDMI_switches=--off
+        DP_switches=--off
+
+        if [ "${cmd#*-}" != "$cmd" ]; then
+                primary="${cmd%-*}"
+                other="${cmd#*-}"
+                other_pos="--right-of"
+        elif [ "${cmd#*+}" != "$cmd" ]; then
+                primary="${cmd%+*}"
+                other="${cmd#*+}"
+                other_pos="--below"
+        else
+                primary="${cmd}"
+                other=none
+                other_pos=none
+        fi
+
+        # When LVDS is selected, make it the primary display
+        if [ "$other" == LVDS ]; then
+                other="$primary"
+                primary=LVDS
+        fi
+
+        eval ${primary}_switches="\"--primary --auto\""
+
+        [ "$other" != none ] &&
+            eval ${other}_switches="\"--auto $other_pos \$$primary\""
+
+        eval p_val=\$$primary
+        eval o_val=\$$other
+        [ -z "$p_val" -o -z "$o_val" -a "$other" != "none" ] &&
+                err "Display configuration not available"
+
         xrandr \
-            --output "$LVDS" --off \
-            --output "$VGA" --auto \
-            --output "$HDMI" --off \
-            --output "DP" --off
+            --output $LVDS $LVDS_switches \
+            --output $VGA  $VGA_switches \
+            --output $HDMI $HDMI_switches \
+            --output $DP   $DP_switches
         ;;
-HDMI)
-        xrandr \
-            --output "$LVDS" --off \
-            --output "$VGA" --off \
-            --output "$HDMI" --auto \
-            --output "DP" --off
-        ;;
-DP)
-        xrandr \
-            --output "$LVDS" --off \
-            --output "$VGA" --off \
-            --output "$HDMI" --off \
-            --output "DP" --auto
-        ;;
+
 *)
-        exec ~/.screenlayout/${cmd}.sh
+        ~/.screenlayout/${cmd}.sh
 esac
 
+# Restart WM
+if pgrep -x fluxbox; then
+        fbrestart
+fi
+
+exit 0
