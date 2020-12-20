@@ -10,14 +10,14 @@
 exec >/dev/null 2>&1
 
 MENU_ITEMS="\
-5min\n\
-10min\n\
-15min\n\
-20min\n\
-25min\n\
-30min\n\
-45min\n\
-60min"
++5min\n\
++10min\n\
++15min\n\
++20min\n\
++25min\n\
++30min\n\
++45min\n\
++60min"
 
 d="$(echo -e $MENU_ITEMS | dmenu-cust -p Timer: "$@")"
-[ -n "$d" ] && timer -t "+$d"
+[ -n "$d" ] && timer -t "$d"
