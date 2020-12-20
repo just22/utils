@@ -25,11 +25,10 @@ rm -f /tmp/checklist.tmp.$$
 if [ $RETVAL -eq 0 ]; then
         case "$CHOICE" in
         Logout)
+                dbar -k
                 if pgrep -x dwm; then
                         pkill -x dwm
                 elif pgrep -x fluxbox; then
-                        pkill -P "$(cat /tmp/dbar.pid)"
-                        rm /tmp/dbar.pid
                         fluxbox-remote Exit
                 elif pgrep -x fvwm2; then
                         FvwmCommand Quit
@@ -44,10 +43,10 @@ if [ $RETVAL -eq 0 ]; then
                 fi
                 ;;
         Suspend)
-                /usr/sbin/zzz
+                /usr/bin/doas /usr/sbin/zzz
                 ;;
         Hibernate)
-                /usr/sbin/ZZZ
+                /usr/bin/doas /usr/sbin/ZZZ
                 ;;
         Reboot)
                 /usr/bin/doas /sbin/reboot
