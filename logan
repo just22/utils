@@ -19,10 +19,6 @@
 # this list of conditions and the following disclaimer in the documentation
 # and/or other materials provided with the distribution.
 #
-# 3. Neither the name of the copyright holder nor the names of its
-# contributors may be used to endorse or promote products derived from this
-# software without specific prior written permission.
-#
 # THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS"
 # AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE
 # IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE
@@ -79,6 +75,8 @@ DESCRIPTION
   -g string    Grep utility command name (defaults to "grep");
 
   -o string    Non-POSIX grep's options (defaults to "--color=always -T");
+
+  -u string    Uniq utility command name (defaults to "uniq")
 
   -i file      A file containing a list of codes to be ignored, one per line.
 
@@ -177,10 +175,10 @@ match() {
         m_nocode=$(echo "$m_sorted" | grep "^N/A ")
 
         # Classified lines: uniq based on code
-        [ -n "$m_coded" ]  && echo "$m_coded" | uniq -c -w 15
+        [ -n "$m_coded" ]  && echo "$m_coded" | ${uniqCmd-uniq} -c -w 15
 
         # Unclassified lines: uniq based on description's first 25 chars
-        [ -n "$m_nocode" ] && echo "$m_nocode" | uniq -c -w 41
+        [ -n "$m_nocode" ] && echo "$m_nocode" | ${uniqCmd-uniq} -c -w 41
 }
 
 list() {
@@ -240,7 +238,7 @@ show() {
 #
 
 # Command line non-positional arguments parsing
-while getopts ":ht:p:c:g:o:i:" arg; do
+while getopts ":ht:p:c:g:o:u:i:" arg; do
         case "$arg" in
         h)
                 _help
@@ -282,6 +280,9 @@ while getopts ":ht:p:c:g:o:i:" arg; do
                 ;;
         o)
                 grepOpt="$OPTARG"
+                ;;
+        u)
+                uniqCmd="$OPTARG"
                 ;;
         i)
                 ignoreFile="$OPTARG"
