@@ -1,0 +1,42 @@
+#!/bin/sh
+
+# ----------------------------------------------------------------------
+#  $Id$
+#
+#  Battery module for dbar (it displays a warn message when level is
+#  critically low)
+# ----------------------------------------------------------------------
+
+wmsg() {
+        apm -m -v |
+        xmessage -title "Low battery" \
+                 -center \
+                 -buttons "OK":0 \
+                 -file - &
+}
+
+warnd=0
+
+while : ; do
+        case "$(apm -a)" in
+        0) AC="-"   ;;
+        1) AC="A/C" ;;
+        2) AC="2nd" ;;
+        *) AC="???" ;;
+        esac
+
+        bp="$(apm -l)"
+        bl="$(apm -m)"
+        if [[ "$AC" == "-" && "$bl" != unknown ]]; then
+                if [[ "$bl" -le 15 && "$warnd" -eq 0 ]]; then
+                        wmsg
+                        warnd=1
+                fi
+                bl="$(printf "%d:%02d" "$(($bl / 60))" "$(($bl % 60))")"
+        else
+                bl="$AC"
+                warnd=0
+        fi
+        printf "[B:%s%% (%s)]\n" "$bp" "$bl"
+        sleep 15
+done
