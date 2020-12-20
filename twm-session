@@ -6,21 +6,29 @@
 #  twm session manager
 # ----------------------------------------------------------------------
 
-# System tray
-stalonetray --geometry 1x1+0-1 --icon-size 17 &
+# Screen locker
+xautolock -time 10 -locker slock &
+
+# dunst notification system
+mkdir -p "${XDG_DATA_HOME:-$HOME/.local/share}/dbus-1/services"
+ln -sf \
+    "/usr/local/share/dbus-1/services/org.knopwob.dunst.service" \
+    "${XDG_DATA_HOME:-$HOME/.local/share}/dbus-1/services/org.freedesktop.Notifications.service"
+
+# Start a session bus instance of dbus-daemon
+if [ -x /usr/local/bin/dbus-launch -a -z "${DBUS_SESSION_BUS_ADDRESS}" ]; then
+        eval `dbus-launch --sh-syntax --exit-with-x11`
+fi
 
 # Statusbar
-pkill -x slstatus
-slstatus -s |
-dzen2 -title-name slstatus \
-      -bg "#eee8d5" -fg "#073642" \
-      -fn "DejaVu Sans Mono:size=9" \
-      -e "" -expand l -dock &
+dbar -k
+dbar -m cpu_mem -m load -m sd0 -m trunk0 -m mixer -m batt -m time -- \
+     -ta r -xs "$xs" &
 
 # Set wallpaper (or root window background)
 nitrogen --restore || xsetroot -solid rgb:58/6E/75
 
 # Start twm
 mv ~/.twm/twm.log{,.old}
-twm 2> ~/.twm/twm.log
+exec twm 2> ~/.twm/twm.log
 

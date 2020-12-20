@@ -9,13 +9,25 @@
 # Fix problems with JDK assuming a reparenting window manager
 wmname LG3D 2>/dev/null
 
+# Screen locker
+xautolock -time 10 -locker slock &
+
+# dunst notification system
+mkdir -p "${XDG_DATA_HOME:-$HOME/.local/share}/dbus-1/services"
+ln -sf \
+    "/usr/local/share/dbus-1/services/org.knopwob.dunst.service" \
+    "${XDG_DATA_HOME:-$HOME/.local/share}/dbus-1/services/org.freedesktop.Notifications.service"
+
+# Start a session bus instance of dbus-daemon
+if [ -x /usr/local/bin/dbus-launch -a -z "${DBUS_SESSION_BUS_ADDRESS}" ]; then
+        eval `dbus-launch --sh-syntax --exit-with-x11`
+fi
+
 # Set root window background
 xsetroot -solid rgb:58/6E/75
 
 # Statusbar
-if ! pgrep -x slstatus; then
-        slstatus &
-fi
+dbar -c ~/.config/dbar-dwm -x -m cpu_mem -m sd0 -m trunk0 -m batt -m time &
 
 # Site specific init file
 [ -f ~/.dwm-session-init ] && . ~/.dwm-session-init

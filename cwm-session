@@ -6,40 +6,54 @@
 #  cwm session manager
 # ----------------------------------------------------------------------
 
+# Screen locker
+xautolock -time 10 -locker slock &
+
+# Start a session bus instance of dbus-daemon
+if [ -x /usr/local/bin/dbus-launch -a -z "${DBUS_SESSION_BUS_ADDRESS}" ]; then
+        eval `dbus-launch --sh-syntax --exit-with-x11`
+fi
+
+# dunst notification system
+mkdir -p "${XDG_DATA_HOME:-$HOME/.local/share}/dbus-1/services"
+ln -sf \
+    "/usr/local/share/dbus-1/services/org.knopwob.dunst.service" \
+    "${XDG_DATA_HOME:-$HOME/.local/share}/dbus-1/services/org.freedesktop.Notifications.service"
+
+# Start a session bus instance of dbus-daemon
+if [ -x /usr/local/bin/dbus-launch -a -z "${DBUS_SESSION_BUS_ADDRESS}" ]; then
+        eval `dbus-launch --sh-syntax --exit-with-x11`
+fi
+
 # Restore wallpaper image upon resolution change
 if ! pgrep -x xeventbind; then
         xeventbind resolution cwm-session &
 fi
 
 # Statusbar
+dbar -k
 BG="#eee8d5"
 FG="#073642"
 FN="DejaVu Sans Mono:size=9"
-
-pkill -x slstatus
-xs=0
-for act_geom in $(xrandr -q |
-               grep -w connected |
-               grep -Eo "[0-9]+x[0-9]+\+[0-9]+\+[0-9]+"); do
+for act_geom in $(
+    xrandr -q |
+    grep -w connected |
+    grep -Eo "[0-9]+x[0-9]+\+[0-9]+\+[0-9]+")
+do
         xs="$(($xs + 1))"
-        slstatus -s |
-        dzen2 -title-name dbar \
-              -geometry +0+1 -h 16 \
-              -bg "$BG" -fg "$FG" -fn "$FN" \
-              -e "" -ta r -xs "$xs" &
+        dbar -m cpu_mem -m load -m sd0 -m trunk0 -m mixer -m batt -m time -- \
+            -bg "$BG" -fg "$FG" -fn "$FN" -e "" -ta r -xs "$xs" &
 done
 
 # System tray and tray apps
 sleep 2
 pkill -x stalonetray; stalonetray &
+# pkill -f vol-tray; vol-tray &
+/usr/local/libexec/tray-app/sound -i &
 
-pkill -f radiotray; radiotray &
-
-pkill -f vol-tray; vol-tray &
-
-sed -i "s/mainwindow_xoffset = 10000/mainwindow_xoffset = 0/" \
-    ~/.config/gsimplecal/config
-pkill -f cal-tray; cal-tray &
+# sed -i "s/mainwindow_xoffset = 10000/mainwindow_xoffset = 0/" \
+#     ~/.config/gsimplecal/config
+# pkill -f cal-tray; cal-tray &
 
 # Set root window background & wallpaper
 xsetroot -solid rgb:58/6E/75
