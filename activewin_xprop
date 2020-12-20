@@ -11,4 +11,4 @@ WIN_ID="$(xprop -root _NET_ACTIVE_WINDOW |
         awk '{print $NF}')"
 
 xterm -title "Window's properties" \
-    -e "xprop -id $WIN_ID | ${PAGER}"
+    -e "xprop -notype -id $WIN_ID | ${PAGER}"
