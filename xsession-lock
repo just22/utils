@@ -11,6 +11,12 @@
 # No output msgs, please
 exec >/dev/null 2>&1
 
+# If Xfce4 is running, use xflock4
+if pgrep -x xfce4-session; then
+        xflock4
+        exit 0
+fi
+
 # Restart xautolock
 pkill -u $USER xautolock
 xautolock -detectsleep -time 10 -locker slock &
@@ -22,4 +28,6 @@ setxkbmap it
 xautolock -locknow
 
 # Force LVDS-only display layout
-~/.screenlayout/lvds-only.sh
+dmenu-xrandr LVDS
+
+exit 0
