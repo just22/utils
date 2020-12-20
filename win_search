@@ -59,11 +59,7 @@ win() {
                         /^WM_NAME/              {t = ""; for(i = 3; i <= NF; ++i) t = (t $i " ")}
 
                         /^_NET_WM_DESKTOP/      {if (tagmode) {
-                                                        if ($3 == 512) {
-                                                            tag = "h"
-                                                        } else {
-                                                            d = tag2desk($3);
-                                                        }
+                                                        d = tag2desk($3);
                                                  } else {
                                                         d = "(" $3 + d_inc ")"
                                                  }
