@@ -23,7 +23,7 @@ if [ "$1" == -g ]; then
                         "Poweroff"      "Shut down the computer"        off \
                 2>/tmp/$USER.$$.checklist
 
-        [ $? -eq 0 ] && CHOICE=`cat /tmp/$USER.$$.checklist`
+        [ $? -eq 0 ] && CHOICE=`cat /tmp/$USER.$$.checklist 2>/dev/null`
         rm -f /tmp/$USER.$$.checklist
 else
         MENU_ITEMS="Logout\nSuspend\nHibernate\nReboot\nPoweroff"
@@ -43,7 +43,7 @@ Logout)
         elif pgrep -x cwm; then
                 pkill -x cwm
         elif pgrep -x xfwm4; then
-                xfce4-session-logout --logout --fast
+                xfce4-session-logout --fast --logout
         elif pgrep -x openbox; then
                 openbox --exit
         else
