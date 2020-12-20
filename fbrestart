@@ -3,22 +3,26 @@
 # ----------------------------------------------------------------------
 #  $Id$
 #
-#  Restart fluxbox and apps (typically after a screen resolution change)
+#  Restart fluxbox session
 # ----------------------------------------------------------------------
 
 # Clean up statusbar
 pkill -x bbpager
 pkill -x space_dapp
-#pcmanfm --desktop-off
+dbar -k
+# pcmanfm --desktop-off
 
 fluxbox-remote Restart
 
 sleep 2
 space_dapp $((($(screen-width) - 1))) 17 &
-dbar -geometry +0+1 -xs "${xs:-1}" &
+sleep 1; dbar -- -geometry +0+1 -expand left -dock -xs "${xs:-1}" &
 sleep 1; bbpager &
 
+# Set the root window background & wallpaper
+# fbsetroot -gradient Vertical -from rgb:07/36/42 -to rgb:58/6E/75
 nitrogen --restore || fbsetbg -l
 
-#pcmanfm --desktop &
+# (sleep 1; dbus-launch pcmanfm-qt --desktop) &
 
+exit 0
