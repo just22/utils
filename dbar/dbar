@@ -12,71 +12,115 @@
 #  Dependencies: unbuffer(1) (OpenBSD package: expect)
 # ----------------------------------------------------------------------
 
-# dzen2 customization
-BG="#eee8d5"
-FG="#073642"
-FN="DejaVu Sans Mono:size=9"
+set -e
+set -o pipefail
 
-# Use -d option to print module outputs to stderr
-if [ "$1" == "-d" ]; then
-        DEBUG=1
-        shift
+npipe=/tmp/$USER.dbar_pipe
+
+trap "fuser -k $npipe 2>/dev/null; rm $npipe" HUP INT KILL TERM PIPE
+
+err() {
+        echo "$1" >&2
+        return 1
+}
+
+CONFDIR=~/.config/dbar
+
+# Command line non-positional arguments parsing
+while getopts ":hc:dm:x-" arg; do
+        case "$arg" in
+        h)
+                echo "Usage: ${0##*/} [-h] | [-d] [-m string ...] [-x] -- [dzen2 opt ...]"
+                echo "  -c path    Configuration dir (defaults to ~/.config/dbar)"
+                echo "  -d:        Debug mode (print module output to stderr)"
+                echo "  -m string: Display output from module dbar_mod_<string>"
+                echo "  -x:        Change xroot name (else, pipe output through dzen2)"
+                exit 0
+                ;;
+        c)
+                CONFDIR="$OPTARG"
+                ;;
+        d)
+                DEBUG=1
+                ;;
+        m)
+                layout="$layout $OPTARG"
+                ;;
+        x)
+                XROOTN=1
+                ;;
+        -)
+                # Remaining positional arguments are for dzen2...
+                break
+                ;;
+        :)
+                err "${0##*/}: Option -$OPTARG requires an argument"
+                ;;
+        \?)
+                err "${0##*/}: Unknown option: -$OPTARG"
+        esac
+done
+shift $(($OPTIND - 1))
+
+if [ "$XROOTN" == 1 ]; then
+    set -- cat
+else
+    set -- dzen2 -title-name dbar \
+                 -bg "#eee8d5" -fg "#073642" \
+                 -fn "DejaVu Sans Mono:size=9" \
+                 -p -e "" "$@"
 fi
 
 # The status bar layout
-layout='cpu_mem load sd0 trunk0 batt'
+layout=${layout:-cpu_mem load sd0 trunk0 mixer batt}
 
-# Clean up
-if [ -f /tmp/"${USER}".dbar_pid ]; then
-        opid="$(cat /tmp/"${USER}".dbar_pid)"
-        pkill -P "$opid"
-
+if ! cd ${CONFDIR} 2>/dev/null; then
+        err "$CONFDIR not found"
 fi
-rm /tmp/"${USER}".dbar_pipe 2>/dev/null
 
-if ! cd ~/.config/dbar 2>/dev/null; then
-    echo "~/.config/dbar module dir doesn't exists" >&2
-    exit 1
+# Clean-up (just in case other instances of dbar are running)
+if fuser -k $npipe >/dev/null 2>&1; then
+        pkill -KILL -fl "/bin/sh ./dbar_mod_" >/dev/null 2>&1
+        rm $npipe
 fi
 
 # Make a pipe to multiplex inputs from the module scripts
-if ! mkfifo /tmp/"${USER}".dbar_pipe 2>/dev/null; then
-    echo "Cannot create /tmp/${USER}.dbar_pipe" >&2
-    exit 1
+if ! mkfifo $npipe 2>/dev/null; then
+        err "Cannot create $npipe"
 fi
 
-# Just in case there are orphan mods still running...
-pkill -P 1 -fl dbar_mod_
-
-echo "Running ${0##*/} with PID $$"
-echo "$$" > /tmp/"${USER}".dbar_pid
-
-# Start modules, piping them to dbar_pipe
+# Start modules, piping them to named pipe
 for mod in $layout; do
         unbuffer dbar_mod_$mod |
-        unbuffer -p sed "s/^/MODULE $mod /g" > /tmp/"${USER}".dbar_pipe &
+        unbuffer -p sed "s/^/MODULE $mod /g" > $npipe &
 done
 
 # This is a bad hack!!! Some WMs don't manage dock apps properly
 # Note: xprop is unable to set multiple fields for a property...
-(sleep 1;
- xprop -name dbar -f _NET_WM_STATE 32a \
-     -set _NET_WM_STATE '_NET_WM_STATE_SKIP_PAGER') &
+[ "$XROOTN" != 1 ] &&
+    (sleep 1;
+     xprop -name dbar -f _NET_WM_STATE 32a \
+         -set _NET_WM_STATE '_NET_WM_STATE_SKIP_PAGER') &
 
 # Main loop
 # A simple associative array (curr_s) keeps track of the last string
 # returned by every module script.
 # The output of print_status_bar is simply the concatenation of all the
 # strings. Output from awk is piped into dzen2.
-awk -v DEBUG="$DEBUG" -v layout_string="$layout" '
+awk -v DEBUG="$DEBUG" -v XROOTN="$XROOTN" -v layout_string="$layout" '
         function print_status_bar() {
+                l=""
                 for (i = 1; i <= mod_no; i++) {
                         s = curr_s[mod_list[i]];
                         sub(/\r/, "", s);
-                        printf(" %s ", s);
+                        l = l s " ";
                 }
-                printf("\n");
-                fflush();
+                if (XROOTN == 1) {
+                        system("xsetroot -name ""\""l"\"");
+                } else {
+                        printf("%s\n", l);
+                        fflush();
+                }
         }
         BEGIN {
                 mod_no = split(layout_string, mod_list, " ");
@@ -86,9 +130,4 @@ awk -v DEBUG="$DEBUG" -v layout_string="$layout" '
                 curr_s[$2]=substr($0, length($1 $2) + 3, length($0));
                 print_status_bar();
         }
-' < /tmp/"${USER}".dbar_pipe |
-dzen2 -title-name dbar \
-      -bg "$BG" -fg "$FG" -fn "$FN" \
-      -p -e "" -expand left -dock \
-      "$@"
-
+' < $npipe | "$@" >/dev/null
