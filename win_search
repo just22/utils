@@ -14,7 +14,8 @@ exec 2>/dev/null
 _usage() {
         echo "${0##*/} -h | [-z] [wmctrl opt]"
         echo "-h: This message"
-        echo "-z: Desktop numbering starts from zero"
+        echo "-z: Desktop id sequence starts from zero"
+        echo "-t: Use tags instead of desktops (a-la-dwm)"
 }
 
 if [ "$1" == -h ]; then
@@ -22,6 +23,9 @@ if [ "$1" == -h ]; then
         exit 0
 elif [ "$1" == -z ]; then
         d_inc=1
+        shift
+elif [ "$1" == -t ]; then
+        tagmode=1
         shift
 fi
 
@@ -32,15 +36,43 @@ win() {
         for win_id in $win_l; do
                 [ "$win_id" == "$win_a" ] && tag="*" || tag=" "
                 xprop -id "$win_id" |
-                awk -v d_inc="${d_inc:-0}" -v id="$win_id" -v tag="$tag" '
+                awk -v d_inc="${d_inc:-0}" \
+                    -v tagmode="$tagmode" \
+                    -v id="$win_id" \
+                    -v tag="$tag" '
+                        function tag2desk(t) {
+                            i = 0
+                            while(t) {
+                                i++
+                                b = t % 2
+                                if (b) {d = d i " "}
+                                t = int(t / 2)
+                            }
+                            return(d)
+                        }
                         /^_NET_WM_WINDOW_TYPE/  {if (match($0, "DOCK|DESKTOP")) {exit}}
+
                         /window state/          {if (match($0, "Iconic")) {tag = "h"}}
+
                         /^WM_CLASS/             {if (match($0, "FvwmButtons")) {exit} {c = $4}}
+
                         /^WM_NAME/              {t = ""; for(i = 3; i <= NF; ++i) t = (t $i " ")}
-                        /^_NET_WM_DESKTOP/      {d = "(" $3 + d_inc ")"}
+
+                        /^_NET_WM_DESKTOP/      {if (tagmode) {
+                                                        if ($3 == 512) {
+                                                            tag = "h"
+                                                        } else {
+                                                            d = tag2desk($3);
+                                                        }
+                                                 } else {
+                                                        d = "(" $3 + d_inc ")"
+                                                 }
+                                                }
+
                         /^CUST_WM_LABEL/        {split($3, l, /"/)}
+
                         END                     {if (c != "" && t != "")
-                                                        printf("%9.9s %s %s %-15s %-20.20s %s\n",
+                                                        printf("%9.9s %9s %s %-15s %-20.20s %s\n",
                                                              id, d, tag, "[" l[2] "]",
                                                              substr(c, 2, length(c) - 2),
                                                              substr(t, 2, length(t) - 3))
