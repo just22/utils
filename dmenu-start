@@ -1,0 +1,140 @@
+#!/bin/sh
+
+# ----------------------------------------------------------------------
+#  $Id$
+#
+#  Very basic start menu
+# ----------------------------------------------------------------------
+
+root() {
+	dmenu-cust -p Menu: -i -l 20 <<- EOT
+		Terminal Emulator
+		Web Browser
+		E-Mail Client
+		Filemanager
+		Text Editor
+		-------------------
+		Run...
+		-------------------
+		Display Settings...
+		Keyboard Layout...
+		Removable Devices
+		-------------------
+		Desktop...
+		Play URL in Clip
+		Screenshot...
+		Timer...
+		-------------------
+		Exit Session
+	EOT
+}
+
+display() {
+	dmenu-cust -p Display: -i -l 20 <<- EOT
+		□ LVDS
+		□ HDMI
+		□ VGA
+		-------------------
+		‖ LVDS - HDMI
+		‖ HDMI - LVDS
+		‖ LVDS - VGA
+		‖ VGA - LVDS
+		‖ HDMI - VGA
+		‖ VGA - HDMI
+		-------------------
+		= LVDS - HDMI
+		= HDMI - LVDS
+		= LVDS - VGA
+		= VGA - LVDS
+		= HDMI - VGA
+		= VGA - HDMI
+		-------------------
+		Custom
+	EOT
+}
+
+kbd() {
+	dmenu-cust -p Keyboard: -i -l 20 <<- EOT
+		Italian
+		English-US
+	EOT
+}
+
+desktop() {
+	dmenu-cust -p Desktop: -i -l 20 <<- EOT
+		Open Desktop Folder
+		-------------------
+		Documents
+		Downloads
+		Music
+		Pictures
+		Videos
+		-------------------
+		Background
+	EOT
+}
+
+screenshot() {
+	dmenu-cust -p Screenshot: -i -l 20 <<- EOT
+		Whole Desktop
+		Select Window/Area
+	EOT
+}
+
+# main {
+	case "$(root)" in
+		Terminal*)    x-terminal-emulator ;;
+		Web*)         x-web-browser ;;
+		E-Mail*)      x-email-client ;;
+		Filemanager*) x-filemanager ;;
+		Text*)        x-text-editor ;;
+		Run*)         dmenu_run-cust -p Run: ;;
+		Display*)
+			case $(display) in
+			*HDMI*LVDS) dmenu-xrandr HDMI-LVDS ;;
+			*VGA*LVDS)  dmenu-xrandr VGA-LVDS ;;
+			*HDMI*LVDS) dmenu-xrandr HDMI+LVDS ;;
+			*VGA*LVDS)  dmenu-xrandr VGA+LVDS ;;
+			*LVDS)      dmenu-xrandr LVDS ;;
+			*LVDS*HDMI) dmenu-xrandr LVDS-HDMI ;;
+			*VGA*HDMI)  dmenu-xrandr VGA-HDMI ;;
+			*LVDS*HDMI) dmenu-xrandr LVDS+HDMI ;;
+			*VGA*HDMI)  dmenu-xrandr VGA+HDMI ;;
+			*HDMI)      dmenu-xrandr HDMI ;;
+			*LVDS*VGA)  dmenu-xrandr LVDS-VGA ;;
+			*HDMI*VGA)  dmenu-xrandr HDMI-VGA ;;
+			*LVDS*VGA)  dmenu-xrandr LVDS+VGA ;;
+			*HDMI*VGA)  dmenu-xrandr HDMI+VGA ;;
+			*VGA)       dmenu-xrandr VGA ;;
+			*Custom)    dmenu-xrandr Custom ;;
+			esac
+			;;
+		Keyboard*)
+			case $(kbd) in
+			Italian)    setxkbmap it ;;
+			English-US) setxkbmap us ;;
+			esac
+			;;
+		Removable*)   x-terminal-emulator -T "Removables" -e amount-wrapper ;;
+		Desktop*)
+			case $(desktop) in
+			Open*)       x-filemanager ~/Desktop ;;
+                        Documents)   x-filemanager ~/Documents ;;
+                        Downloads)   x-filemanager ~/Downloads ;;
+                        Music)       x-filemanager ~/nfs/music ;;
+                        Pictures)    geeqie ~/nfs/photos ;;
+                        Videos)      x-filemanager ~/nfs/videos ;;
+			Background*) nitrogen ~/Pictures/wallpapers ;;
+			esac
+			;;
+		Play*)        play-url -p ;;
+		Screenshot*)
+			case $(screenshot) in
+			Whole*)  screenshot desktop ;;
+			Select*) screenshot ;;
+			esac
+			;;
+		Timer*)       dmenu-timer ;;
+		Exit*)        x-session-logout -g ;;
+	esac
+# }

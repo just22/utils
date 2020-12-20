@@ -1,0 +1,34 @@
+#!/bin/sh
+
+# ----------------------------------------------------------------------
+#  $Id$
+#
+#  Send input files/dirs by e-mail (as attachments)
+# ----------------------------------------------------------------------
+
+set -e
+
+gsub() {
+        s="$1"; p="$2"; v="$3"
+        while [ "${s#*$p}" != "$s" ]; do
+                s="${s%%$p*}$v${s#*$p}"
+        done
+        echo "$s"
+}
+
+for arg in "$@"; do
+        if [ -d "$arg" ]; then
+                dir_found=
+                pdir="${arg%/*}"
+                break
+        fi
+done
+
+if [ -n "${dir_found+set}" ]; then
+        f=/tmp/tarball.tar.gz
+        tar czvf $f -C "$pdir" $(gsub "$*" "$pdir/")
+else
+        f=\'$(echo $@ | sed "s/ /,/g")\'
+fi
+
+thunderbird -compose "attachment=$f"
