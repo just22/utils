@@ -6,7 +6,13 @@
 #  Date/time module for dbar
 # ----------------------------------------------------------------------
 
+
+# Print time and wait for next HH:MM...
+echo "$(date "+%a %d %b, %H:%M");"
+sleep $((60 - $(date "+%S")))
+
+#...and now, reprint time one time a minute
 while : ; do
-        date "+%a %d %b (WK %V) - %H:%M"
-        sleep 10
+        echo "$(date "+%a %d %b, %H:%M");"
+        sleep 60
 done
