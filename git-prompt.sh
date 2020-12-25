@@ -219,21 +219,21 @@ __git_ps1_show_upstream ()
 		"") # no upstream
 			p="" ;;
 		"0	0") # equal to upstream
-			p=" u=" ;;
+			p="u=" ;;
 		"0	"*) # ahead of upstream
-			p=" u+${count#0	}" ;;
+			p="u+${count#0	}" ;;
 		*"	0") # behind upstream
-			p=" u-${count%	0}" ;;
+			p="u-${count%	0}" ;;
 		*)	    # diverged from upstream
-			p=" u+${count#*	}-${count%	*}" ;;
+			p="u+${count#*	}-${count%	*}" ;;
 		esac
 		if [[ -n "$count" && -n "$name" ]]; then
 			__git_ps1_upstream_name=$(git rev-parse \
 				--abbrev-ref "$upstream" 2>/dev/null)
 			if [ $pcmode = yes ] && [ $ps1_expanded = yes ]; then
-				p="$p \${__git_ps1_upstream_name}"
+				p="$p(\${__git_ps1_upstream_name})"
 			else
-				p="$p ${__git_ps1_upstream_name}"
+				p="$p(${__git_ps1_upstream_name})"
 				# not needed anymore; keep user's
 				# environment clean
 				unset __git_ps1_upstream_name
@@ -569,7 +569,7 @@ __git_ps1 ()
 	fi
 
 	local f="$h$w$i$s$u"
-	local gitstring="$c$b${f:+$z$f}${sparse}$r$p"
+	local gitstring="$c$b${f:+$z$f}${sparse}$r${p:+$z$p}"
 
 	if [ $pcmode = yes ]; then
 		if [ "${__git_printf_supports_v-}" != yes ]; then
