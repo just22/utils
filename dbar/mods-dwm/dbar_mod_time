@@ -6,13 +6,14 @@
 #  Date/time module for dbar
 # ----------------------------------------------------------------------
 
+exec 2>/dev/null
 
-# Print time and wait for next HH:MM...
-echo "$(date "+%a %d %b, %H:%M")"
-sleep $((60 - $(date "+%S")))
-
-#...and now, reprint time one time a minute
+# Note: 'at' exec will correctly sync messages even after a resume
 while : ; do
-        echo "$(date "+%a %d %b, %H:%M")"
-        sleep 60
+        date "+%a %d %b, %H:%M"
+        SHELL=/bin/sh at +1min <<- EOT
+		pkill -P $$ sleep
+	EOT
+        sleep 61 & # It will never be reached!
+        wait
 done
