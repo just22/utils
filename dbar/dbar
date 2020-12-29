@@ -3,11 +3,10 @@
 # ----------------------------------------------------------------------
 #  $Id$
 #
-#  This is a simple module-based dzen2 starusbar.
-#  Modules (just programs of any kind) push their changes to dzen2 when
-#  a change occurs, triggering a redraw.
-#  To add your own module, write a script that produces output for dzen2
-#  and put it in ~/.config/dbar directory.
+#  This is a simple module-based text-only starusbar.
+#  Modules (just programs of any kind) push their changes to stdout when
+#  a change occurs, triggering a redraw. A module is simply a script
+#  that produces output (it must be placed in ~/.config/dbar directory).
 #
 #  Dependencies: unbuffer(1) (OpenBSD package: expect)
 # ----------------------------------------------------------------------
@@ -30,11 +29,11 @@ CONFDIR=~/.config/dbar
 while getopts ":hc:dm:x-" arg; do
         case "$arg" in
         h)
-                echo "Usage: ${0##*/} [-h] | [-d] [-m string ...] [-x] -- [dzen2 opt ...]"
+                echo "Usage: ${0##*/} [-h] | [-d] [-m string ...] [-x]"
                 echo "  -c path    Configuration dir (defaults to ~/.config/dbar)"
                 echo "  -d:        Debug mode (print module output to stderr)"
                 echo "  -m string: Display output from module dbar_mod_<string>"
-                echo "  -x:        Change xroot name (else, pipe output through dzen2)"
+                echo "  -x:        Change xroot name (else, print to stdout)"
                 exit 0
                 ;;
         c)
@@ -49,10 +48,6 @@ while getopts ":hc:dm:x-" arg; do
         x)
                 XROOTN=1
                 ;;
-        -)
-                # Remaining positional arguments are for dzen2...
-                break
-                ;;
         :)
                 err "${0##*/}: Option -$OPTARG requires an argument"
                 ;;
@@ -60,19 +55,9 @@ while getopts ":hc:dm:x-" arg; do
                 err "${0##*/}: Unknown option: -$OPTARG"
         esac
 done
-shift $(($OPTIND - 1))
-
-if [ "$XROOTN" == 1 ]; then
-    set -- cat
-else
-    set -- dzen2 -title-name dbar \
-                 -bg "#eee8d5" -fg "#073642" \
-                 -fn "DejaVu Sans Mono:size=9" \
-                 -p -e "" "$@"
-fi
 
 # The status bar layout
-layout=${layout:-cpu_mem load sd0 trunk0 mixer batt}
+layout=${layout:-"cpu_mem load sd0 trunk0 mixer batt"}
 
 if ! cd ${CONFDIR} 2>/dev/null; then
         err "$CONFDIR not found"
@@ -95,18 +80,11 @@ for mod in $layout; do
         unbuffer -p sed "s/^/MODULE $mod /g" > $npipe &
 done
 
-# This is a bad hack!!! Some WMs don't manage dock apps properly
-# Note: xprop is unable to set multiple fields for a property...
-[ "$XROOTN" != 1 ] &&
-    (sleep 1;
-     xprop -name dbar -f _NET_WM_STATE 32a \
-         -set _NET_WM_STATE '_NET_WM_STATE_SKIP_PAGER') &
-
 # Main loop
 # A simple associative array (curr_s) keeps track of the last string
 # returned by every module script.
 # The output of print_status_bar is simply the concatenation of all the
-# strings. Output from awk is piped into dzen2.
+# strings.
 awk -v DEBUG="$DEBUG" -v XROOTN="$XROOTN" -v layout_string="$layout" '
         function print_status_bar() {
                 l=""
@@ -126,8 +104,11 @@ awk -v DEBUG="$DEBUG" -v XROOTN="$XROOTN" -v layout_string="$layout" '
                 mod_no = split(layout_string, mod_list, " ");
         }
         /^MODULE/ {
-                if (DEBUG == 1) { print $0 > ("/dev/stderr") }
-                curr_s[$2]=substr($0, length($1 $2) + 3, length($0));
-                print_status_bar();
+                if (DEBUG == 1) {
+                        print $0 > ("/dev/stderr")
+                } else {
+                        curr_s[$2]=substr($0, length($1 $2) + 3, length($0));
+                        print_status_bar();
+                }
         }
-' < $npipe | "$@" >/dev/null
+' < $npipe

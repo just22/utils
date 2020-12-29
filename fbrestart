@@ -9,20 +9,28 @@
 # Clean up statusbar
 pkill -x bbpager
 pkill -x space_dapp
-dbar -k
-# pcmanfm --desktop-off
 
 fluxbox-remote Restart
 
-sleep 2
+# Statusbar
 space_dapp $((($(screen-width) - 1))) 17 &
-sleep 1; dbar -- -geometry +0+1 -expand left -dock -xs "${xs:-1}" &
-sleep 1; bbpager &
+
+sleep 1;
+dbar | dzen2 -title-name dbar \
+             -bg "#eee8d5" -fg "#073642" -fn "DejaVu Sans Mono:size=9" \
+             -p -e "" -geometry +0+1 -expand left -dock -xs "${xs:-1}" &
+
+# This is a bad hack!!! Fluxbox doesn't manage dock apps properly
+# Note: xprop is unable to set multiple fields for a property...
+sleep 2;
+xprop -name dbar -f _NET_WM_STATE 32a \
+      -set _NET_WM_STATE '_NET_WM_STATE_SKIP_PAGER' &
+
+sleep 1;
+bbpager &
 
 # Set the root window background & wallpaper
 # fbsetroot -gradient Vertical -from rgb:07/36/42 -to rgb:58/6E/75
 nitrogen --restore || fbsetbg -l
-
-# (sleep 1; dbus-launch pcmanfm-qt --desktop) &
 
 exit 0
