@@ -12,7 +12,7 @@
 exec 2>/dev/null
 
 _usage() {
-        echo "${0##*/} -h | [-z] [wmctrl opt]"
+        echo "${0##*/} -h | [-z | -t] [wmctrl opt ...]"
         echo "-h: This message"
         echo "-z: Desktop id sequence starts from zero"
         echo "-t: Use tags instead of desktops (a-la-dwm)"
@@ -30,9 +30,9 @@ elif [ "$1" == -t ]; then
 fi
 
 win() {
-        win_l="$(xprop -root _NET_CLIENT_LIST | egrep -o "0x[0-9a-fA-F]+")"
-        win_c="$(echo $win_l | wc -w)"
-        win_a=$(xprop -root _NET_ACTIVE_WINDOW | awk -F' ' '{ print $NF }')
+        prop="$(xprop -root _NET_CLIENT_LIST)"; win_l="${prop##*# }"
+        prop="$(xprop -root _NET_ACTIVE_WINDOW)"; win_a=${prop##*# }
+        local IFS=", "
         for win_id in $win_l; do
                 [ "$win_id" == "$win_a" ] && tag="*" || tag=" "
                 xprop -id "$win_id" |
@@ -74,9 +74,9 @@ win() {
                                                              substr(t, 2, length(t) - 3))
                                                 }'
 
-        done | sort -k2,2nr |
-        dmenu-cust -p Win: -i -l "$win_c" | awk '{print $1}'
+        done | sort -k2,2nr | dmenu-cust -p Win: -i -l 25
 }
 
-wmctrl -i ${1--a} "$(win)"
+wid="$(win)"
+[ -n "$wid" ] && wmctrl -i ${1--a} "${wid%% *}"
 
