@@ -8,9 +8,6 @@
 #  Dependencies: dmenu, wmctrl
 # ----------------------------------------------------------------------
 
-# No error msg, please!
-exec 2>/dev/null
-
 _usage() {
         echo "${0##*/} -h | [-z | -t] [wmctrl opt ...]"
         echo "-h: This message"
@@ -30,15 +27,22 @@ elif [ "$1" == -t ]; then
 fi
 
 win() {
-        prop="$(xprop -root _NET_CLIENT_LIST)"; win_l="${prop##*# }"
-        prop="$(xprop -root _NET_ACTIVE_WINDOW)"; win_a=${prop##*# }
-        local IFS=", "
-        for win_id in $win_l; do
-                [ "$win_id" == "$win_a" ] && tag="*" || tag=" "
-                xprop -id "$win_id" |
+        while IFS='' read line; do
+                [ -z $last ] &&
+                    w_lst="${line##*# }" ||
+                    w_act="${line##*# }"
+                last=1
+        done <<- EOT
+		$(xprop -root _NET_CLIENT_LIST _NET_ACTIVE_WINDOW)
+	EOT
+
+        IFS=", "
+        for w_id in $w_lst; do
+                [ "$w_id" == "$w_act" ] && tag="*" || tag=" "
+                xprop -id "$w_id" |
                 awk -v d_inc="${d_inc:-0}" \
                     -v tagmode="$tagmode" \
-                    -v id="$win_id" \
+                    -v id="$w_id" \
                     -v tag="$tag" '
                         function tag2desk(t) {
                             i = 0
@@ -74,9 +78,14 @@ win() {
                                                              substr(t, 2, length(t) - 3))
                                                 }'
 
-        done | sort -k2,2nr | dmenu-cust -p Win: -i -l 25
+        done | dmenu-cust -p Win: -i -l 25
 }
 
-wid="$(win)"
-[ -n "$wid" ] && wmctrl -i ${1--a} "${wid%% *}"
+# main() {
+        w_sel="$(win)"
+        if [ -n "$w_sel" ]; then
+                w_sel="${w_sel#"${w_sel%%[![:space:]]*}"}"
+                wmctrl -i "${@--a}" "${w_sel%% *}"
+        fi
+# }
 
