@@ -75,7 +75,7 @@ desktop() {
 }
 
 screenshot() {
-	dmenu-cust -p Screenshot: -i -l 20 <<- EOT
+	dmenu-cust -p Screenshot: -i -l 25 <<- EOT
 		Whole Desktop
 		Select Window/Area
 	EOT
