@@ -26,6 +26,20 @@ elif [ "$1" == -t ]; then
         shift
 fi
 
+tag2desk() {
+        local tag=$1
+        local i=0
+        local desk=""
+        local r
+        while [ $tag -ne 0 ]; do
+                let "i = i + 1"
+                let "r = tag % 2"
+                [ $r -ne 0 ] && desk="${desk}${i} "
+                let "tag = tag / 2"
+        done
+        echo $desk
+}
+
 win() {
         while IFS='' read line; do
                 [ -z $last ] &&
@@ -39,44 +53,43 @@ win() {
         IFS=", "
         for w_id in $w_lst; do
                 [ "$w_id" == "$w_act" ] && tag="*" || tag=" "
-                xprop -id "$w_id" |
-                awk -v d_inc="${d_inc:-0}" \
-                    -v tagmode="$tagmode" \
-                    -v id="$w_id" \
-                    -v tag="$tag" '
-                        function tag2desk(t) {
-                            i = 0
-                            while(t) {
-                                i++
-                                b = t % 2
-                                if (b) {d = d i " "}
-                                t = int(t / 2)
-                            }
-                            return(d)
-                        }
-                        /^_NET_WM_WINDOW_TYPE/  {if (match($0, "DOCK|DESKTOP")) {exit}}
+                class=""; name=""; desk=""; label=""
 
-                        /window state/          {if (match($0, "Iconic")) {tag = "h"}}
+                while IFS='' read line; do
+                        case "$line" in
+                        _NET_WM_WINDOW_TYPE*DOCK*|_NET_WM_WINDOW_TYPE*DESKTOP*)
+                                continue 2
+                                ;;
+                        *window\ state*Iconic*)
+                                tag="h"
+                                ;;
+                        WM_CLASS*)
+                                class="${line##*, }"
+                                class="${class#\"}"; class="${class%\"}"
+                                ;;
+                        WM_NAME*)
+                                name="${line##*= }"
+                                ;;
+                        _NET_WM_DESKTOP*)
+                                if [ $tagmode -eq 1 ]; then
+                                        desk="$(tag2desk "${line##*= }")"
+                                else
+                                        let "desk = ${line##*= } + d_inc"
+                                fi
+                                ;;
+                        CUST_WM_LABEL*)
+                                label=${line##*= }
+                                label="${label#\"}"; label="${label%\"}"
+                        esac
 
-                        /^WM_CLASS/             {if (match($0, "FvwmButtons")) {exit} {c = $4}}
+                done <<- EOT
+			$(xprop -id "$w_id")
+		EOT
 
-                        /^WM_NAME/              {t = ""; for(i = 3; i <= NF; ++i) t = (t $i " ")}
-
-                        /^_NET_WM_DESKTOP/      {if (tagmode) {
-                                                        d = tag2desk($3);
-                                                 } else {
-                                                        d = "(" $3 + d_inc ")"
-                                                 }
-                                                }
-
-                        /^CUST_WM_LABEL/        {split($3, l, /"/)}
-
-                        END                     {if (c != "" && t != "")
-                                                        printf("%9.9s %9s %s %-15s %-20.20s %s\n",
-                                                             id, d, tag, "[" l[2] "]",
-                                                             substr(c, 2, length(c) - 2),
-                                                             substr(t, 2, length(t) - 3))
-                                                }'
+                if [ -n "$class" -a -n "$name" ]; then
+                        printf "%9.9s %9s %s %-15s %-20.20s %s\n" \
+                        "$w_id" "$desk" "$tag" "[$label]" "$class" "$name"
+                fi
 
         done | dmenu-cust -p Win: -i -l 25
 }
@@ -88,4 +101,3 @@ win() {
                 wmctrl -i "${@--a}" "${w_sel%% *}"
         fi
 # }
-
