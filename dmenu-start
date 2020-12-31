@@ -11,7 +11,8 @@ menu() {
 	local prompt="${2-Run:}"
 	sel=$(
 		while IFS='' read line; do
-			echo "$line" | tr -s "\t" | cut -f 1
+                        # Mind: \t is not defined in POSIX regex...
+			echo "${line%%"	"*}"
 		done <<- EOT | dmenu-cust -i -p "$prompt" -l 20
 			$entries
 		EOT
@@ -65,16 +66,6 @@ display() {
 	menu "$entries" "Display:"
 }
 
-kbd() {
-	local entries=$(
-		cat <<- EOT
-			Italian		setxkbmap -layout it,us -option grp:shift_caps_toggle -option caps:menu
-			English-US	setxkbmap -layout us,it -option grp:shift_caps_toggle -option caps:menu
-		EOT
-	)
-	menu "$entries" "Kbd Layout:"
-}
-
 desktop() {
 	local entries=$(
 		cat <<- EOT
@@ -115,7 +106,7 @@ screenshot() {
 			Run...			dmenu_run-cust -p Run:
 			-------------------
 			Display Settings...	display
-			Keyboard Layout...	kbd
+			Keyboard Layout...	dmenu-kbd
 			Removable Devices	x-terminal-emulator -T "Removables" -e amount-wrapper
 			-------------------
 			Desktop...		desktop

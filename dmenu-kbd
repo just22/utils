@@ -6,15 +6,12 @@
 #  Keyboard layout switcher
 # ----------------------------------------------------------------------
 
-# No output msgs, please
-exec >/dev/null 2>&1
-
-MENU_ITEMS="\
-us\n\
-it"
-
 cl="$(setxkbmap -query | grep layout)"
-nl="$(echo -e $MENU_ITEMS | dmenu-cust -p "Keyboard [${cl##* }]:" "$@")"
+nl="$(
+        dmenu-cust -p "Kbd Layout [${cl##* }]:" <<- EOT
+		it
+		us
+	EOT
+)"
 
 [ -n "$nl" ] && setxkbmap "$nl"
-
