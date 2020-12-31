@@ -7,7 +7,7 @@
 # ----------------------------------------------------------------------
 
 # Screen locker
-xautolock -time 10 -locker slock &
+xautolock -detectsleep -time 10 -locker lock-screen &
 
 # Start a session bus instance of dbus-daemon
 if [ -x /usr/local/bin/dbus-launch -a -z "${DBUS_SESSION_BUS_ADDRESS}" ]; then

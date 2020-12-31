@@ -3,7 +3,7 @@
 # ----------------------------------------------------------------------
 #  $Id$
 #
-#  twm session manager
+#  ctwm session manager
 # ----------------------------------------------------------------------
 
 if [ "$1" != "-r" ]; then
@@ -20,7 +20,7 @@ if [ "$1" != "-r" ]; then
         fi
 
         # Screen locker
-        xautolock -time 10 -locker slock &
+        xautolock -detectsleep -time 10 -locker lock-screen &
 
         # Process monitor
         xterm -title "Process monitor" -e top &

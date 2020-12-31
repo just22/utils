@@ -19,10 +19,10 @@ fi
 
 # Restart xautolock
 pkill -u $USER xautolock
-xautolock -detectsleep -time 10 -locker slock &
+xautolock -detectsleep -time 10 -locker lock-screen &
 
 # Reset keyboard layout
-setxkbmap it
+setxkbmap -layout it,us -option grp:shift_caps_toggle -option caps:menu
 
 # Lock the screen
 xautolock -locknow

@@ -21,7 +21,7 @@ run() {
                 xautolock -restart
                 ;;
         Launch)
-                xautolock -detectsleep -time 10 -locker slock
+                xautolock -detectsleep -time 10 -locker lock-screen &
                 ;;
         Exit)
                 xautolock -exit
