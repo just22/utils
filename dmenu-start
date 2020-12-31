@@ -14,6 +14,7 @@ root() {
 		Filemanager
 		Text Editor
 		-------------------
+		Common Apps...
 		Run...
 		-------------------
 		Display Settings...
@@ -26,6 +27,16 @@ root() {
 		Timer...
 		-------------------
 		Exit Session
+	EOT
+}
+
+apps() {
+	dmenu-cust -p Run: -i -l 20 <<- EOT
+		Archiver
+		Calculator
+		GIMP
+		Image Viewer
+		Office Suite
 	EOT
 }
 
@@ -88,6 +99,15 @@ screenshot() {
 		E-Mail*)      x-email-client ;;
 		Filemanager*) x-filemanager ;;
 		Text*)        x-text-editor ;;
+		Common*)
+			case $(apps) in
+			Archiver)   xarchiver ;;
+			Calculator) gnome-calculator ;;
+			GIMP)       gimp ;;
+			Image*)     geeqie ~/Pictures ;;
+			Office*)    libreoffice ;;
+			esac
+			;;
 		Run*)         dmenu_run-cust -p Run: ;;
 		Display*)
 			case $(display) in
@@ -119,11 +139,11 @@ screenshot() {
 		Desktop*)
 			case $(desktop) in
 			Open*)       x-filemanager ~/Desktop ;;
-                        Documents)   x-filemanager ~/Documents ;;
-                        Downloads)   x-filemanager ~/Downloads ;;
-                        Music)       x-filemanager ~/nfs/music ;;
-                        Pictures)    geeqie ~/nfs/photos ;;
-                        Videos)      x-filemanager ~/nfs/videos ;;
+			Documents)   x-filemanager ~/Documents ;;
+			Downloads)   x-filemanager ~/Downloads ;;
+			Music)       x-filemanager ~/nfs/music ;;
+			Pictures)    geeqie ~/nfs/photos ;;
+			Videos)      x-filemanager ~/nfs/videos ;;
 			Background*) nitrogen ~/Pictures/wallpapers ;;
 			esac
 			;;
