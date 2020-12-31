@@ -36,7 +36,7 @@ while read -p line; do
         esac
 done
 
-[ -z "$VGA" ] && [ -z "$HDMI" ] && [ -z "$DP" ] && [ "$1" != LVDS] &&
+[ -z "$VGA" ] && [ -z "$HDMI" ] && [ -z "$DP" ] && [ "$1" != LVDS ] &&
     err "No dual monitor configuration available"
 
 [ -n "$1" ] &&
