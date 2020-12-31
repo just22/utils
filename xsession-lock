@@ -22,7 +22,7 @@ pkill -u $USER xautolock
 xautolock -detectsleep -time 10 -locker lock-screen &
 
 # Reset keyboard layout
-setxkbmap -layout it,us -option grp:shift_caps_toggle -option caps:menu
+setxkbmap -layout it
 
 # Lock the screen
 xautolock -locknow
