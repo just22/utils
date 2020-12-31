@@ -6,155 +6,125 @@
 #  Very basic start menu
 # ----------------------------------------------------------------------
 
-root() {
-	dmenu-cust -p Menu: -i -l 20 <<- EOT
-		Terminal Emulator
-		Web Browser
-		E-Mail Client
-		Filemanager
-		Text Editor
-		-------------------
-		Common Apps...
-		Run...
-		-------------------
-		Display Settings...
-		Keyboard Layout...
-		Removable Devices
-		-------------------
-		Desktop...
-		Play URL in Clip
-		Screenshot...
-		Timer...
-		-------------------
-		Exit Session
+menu() {
+	local entries="$1"
+	local prompt="${2-Run:}"
+	sel=$(
+		while IFS='' read line; do
+			echo "$line" | tr -s "\t" | cut -f 1
+		done <<- EOT | dmenu-cust -i -p "$prompt" -l 20
+			$entries
+		EOT
+	)
+	[ -z "$sel" ] && return
+	while IFS='' read line; do
+		[ "${line##"${sel}"}" != "$line" ] && exec ${line##"$sel"}
+	done <<- EOT
+		$entries
 	EOT
+
 }
 
 apps() {
-	dmenu-cust -p Run: -i -l 20 <<- EOT
-		Archiver
-		Calculator
-		GIMP
-		Image Viewer
-		Office Suite
-	EOT
+	local entries=$(
+		cat <<- EOT
+			Archiver	xarchiver
+			Calculator	gnome-calculator
+			The GIMP	gimp
+			Image Viewer	geeqie ${HOME}/Pictures
+			Office Suite	libreoffice
+		EOT
+	)
+	menu "$entries"
 }
 
 display() {
-	dmenu-cust -p Display: -i -l 20 <<- EOT
-		□ LVDS
-		□ HDMI
-		□ VGA
-		-------------------
-		‖ LVDS - HDMI
-		‖ HDMI - LVDS
-		‖ LVDS - VGA
-		‖ VGA - LVDS
-		‖ HDMI - VGA
-		‖ VGA - HDMI
-		-------------------
-		= LVDS - HDMI
-		= HDMI - LVDS
-		= LVDS - VGA
-		= VGA - LVDS
-		= HDMI - VGA
-		= VGA - HDMI
-		-------------------
-		Custom
-	EOT
+	local entries=$(
+		cat <<- EOT
+			□ LVDS		dmenu-xrandr LVDS
+			□ HDMI		dmenu-xrandr HDMI
+			□ VGA		dmenu-xrandr VGA
+			-------------------
+			‖ LVDS - HDMI	dmenu-xrandr LVDS-HDMI
+			‖ HDMI - LVDS	dmenu-xrandr HDMI-LVDS
+			‖ LVDS - VGA	dmenu-xrandr LVDS-VGA
+			‖ VGA - LVDS	dmenu-xrandr VGA-LVDS
+			‖ HDMI - VGA	dmenu-xrandr HDMI-VGA
+			‖ VGA - HDMI	dmenu-xrandr VGA-HDMI
+			-------------------
+			= LVDS - HDMI	dmenu-xrandr LVDS+HDMI
+			= HDMI - LVDS	dmenu-xrandr HDMI+LVDS
+			= LVDS - VGA	dmenu-xrandr LVDS+VGA
+			= VGA - LVDS	dmenu-xrandr VGA+LVDS
+			= HDMI - VGA	dmenu-xrandr HDMI+VGA
+			= VGA - HDMI	dmenu-xrandr VGA+HDMI
+			-------------------
+			Custom
+		EOT
+	)
+	menu "$entries" "Display:"
 }
 
 kbd() {
-	dmenu-cust -p Keyboard: -i -l 20 <<- EOT
-		Italian
-		English-US
-	EOT
+	local entries=$(
+		cat <<- EOT
+			Italian		setxkbmap -layout it,us -option grp:shift_caps_toggle -option caps:menu
+			English-US	setxkbmap -layout us,it -option grp:shift_caps_toggle -option caps:menu
+		EOT
+	)
+	menu "$entries" "Kbd Layout:"
 }
 
 desktop() {
-	dmenu-cust -p Desktop: -i -l 20 <<- EOT
-		Open Desktop Folder
-		-------------------
-		Documents
-		Downloads
-		Music
-		Pictures
-		Videos
-		-------------------
-		Background
-	EOT
+	local entries=$(
+		cat <<- EOT
+			Open Desktop Folder	x-filemanager ${HOME}/Desktop
+			-------------------
+			Documents		x-filemanager ${HOME}/Documents
+			Downloads		x-filemanager ${HOME}/Downloads
+			Music			x-filemanager ${HOME}/nfs/music
+			Pictures		geeqie ${HOME}/nfs/photos
+			Videos			x-filemanager ${HOME}/nfs/videos
+			-------------------
+			Background		nitrogen ${HOME}/Pictures/wallpapers
+		EOT
+	)
+	menu "$entries" "Desktop:"
 }
 
 screenshot() {
-	dmenu-cust -p Screenshot: -i -l 25 <<- EOT
-		Whole Desktop
-		Select Window/Area
-	EOT
+	local entries=$(
+		cat <<- EOT
+			Whole Desktop		screenshot desktop
+			Select Window/Area	screenshot
+		EOT
+	)
+	menu "$entries" "Screenshot:"
 }
 
 # main {
-	case "$(root)" in
-		Terminal*)    x-terminal-emulator ;;
-		Web*)         x-web-browser ;;
-		E-Mail*)      x-email-client ;;
-		Filemanager*) x-filemanager ;;
-		Text*)        x-text-editor ;;
-		Common*)
-			case $(apps) in
-			Archiver)   xarchiver ;;
-			Calculator) gnome-calculator ;;
-			GIMP)       gimp ;;
-			Image*)     geeqie ~/Pictures ;;
-			Office*)    libreoffice ;;
-			esac
-			;;
-		Run*)         dmenu_run-cust -p Run: ;;
-		Display*)
-			case $(display) in
-			*HDMI*LVDS) dmenu-xrandr HDMI-LVDS ;;
-			*VGA*LVDS)  dmenu-xrandr VGA-LVDS ;;
-			*HDMI*LVDS) dmenu-xrandr HDMI+LVDS ;;
-			*VGA*LVDS)  dmenu-xrandr VGA+LVDS ;;
-			*LVDS)      dmenu-xrandr LVDS ;;
-			*LVDS*HDMI) dmenu-xrandr LVDS-HDMI ;;
-			*VGA*HDMI)  dmenu-xrandr VGA-HDMI ;;
-			*LVDS*HDMI) dmenu-xrandr LVDS+HDMI ;;
-			*VGA*HDMI)  dmenu-xrandr VGA+HDMI ;;
-			*HDMI)      dmenu-xrandr HDMI ;;
-			*LVDS*VGA)  dmenu-xrandr LVDS-VGA ;;
-			*HDMI*VGA)  dmenu-xrandr HDMI-VGA ;;
-			*LVDS*VGA)  dmenu-xrandr LVDS+VGA ;;
-			*HDMI*VGA)  dmenu-xrandr HDMI+VGA ;;
-			*VGA)       dmenu-xrandr VGA ;;
-			*Custom)    dmenu-xrandr Custom ;;
-			esac
-			;;
-		Keyboard*)
-			case $(kbd) in
-			Italian)    setxkbmap it ;;
-			English-US) setxkbmap us ;;
-			esac
-			;;
-		Removable*)   x-terminal-emulator -T "Removables" -e amount-wrapper ;;
-		Desktop*)
-			case $(desktop) in
-			Open*)       x-filemanager ~/Desktop ;;
-			Documents)   x-filemanager ~/Documents ;;
-			Downloads)   x-filemanager ~/Downloads ;;
-			Music)       x-filemanager ~/nfs/music ;;
-			Pictures)    geeqie ~/nfs/photos ;;
-			Videos)      x-filemanager ~/nfs/videos ;;
-			Background*) nitrogen ~/Pictures/wallpapers ;;
-			esac
-			;;
-		Play*)        play-url -p ;;
-		Screenshot*)
-			case $(screenshot) in
-			Whole*)  screenshot desktop ;;
-			Select*) screenshot ;;
-			esac
-			;;
-		Timer*)       dmenu-timer ;;
-		Exit*)        x-session-logout -g ;;
-	esac
+	entries=$(
+		cat <<- EOT
+			Terminal Emulator	x-terminal-emulator
+			Web Browser		x-web-browser
+			E-Mail Client		x-email-client
+			Filemanager		x-filemanager
+			Text Editor		x-text-editor
+			-------------------
+			Common Apps...		apps
+			Run...			dmenu_run-cust -p Run:
+			-------------------
+			Display Settings...	display
+			Keyboard Layout...	kbd
+			Removable Devices	x-terminal-emulator -T "Removables" -e amount-wrapper
+			-------------------
+			Desktop...		desktop
+			Play URL in Clip	play-url -p
+			Screenshot...		screenshot
+			Timer...		dmenu-timer
+			-------------------
+			Exit Session		x-session-logout
+		EOT
+	)
+	menu "$entries"
 # }
