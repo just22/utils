@@ -36,12 +36,21 @@ while read -p line; do
         esac
 done
 
-[ -z "$VGA" ] && [ -z "$HDMI" ] && [ -z "$DP" ] && [ "$1" != LVDS ] &&
+[ -z "$VGA" ] && [ -z "$HDMI" ] && [ -z "$DP" ] && [ "$1" != LVDS] &&
     err "No dual monitor configuration available"
 
 [ -n "$1" ] &&
-    cmd="$1" ||
-    cmd="$(echo -e $MENU_ITEMS | dmenu-cust -p "Screen Layout:" "$@")"
+        cmd="$1" ||
+        cmd="$(
+                dmenu-cust -p "Display:" <<- EOT
+			$(
+				for f in ~/.screenlayout/*; do
+					f="${f##*/}"; echo "${f%%.*}"
+				done
+			)
+			Custom
+		EOT
+        )"
 
 case "$cmd" in
 Custom)
