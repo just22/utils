@@ -13,7 +13,7 @@ menu() {
 		while IFS='' read line; do
                         # Mind: \t is not defined in POSIX regex...
 			echo "${line%%"	"*}"
-		done <<- EOT | dmenu-cust -i -p "$prompt" -l 20
+		done <<- EOT | dmenu-cust -i -p "$prompt" -l 25
 			$entries
 		EOT
 	)
@@ -23,7 +23,6 @@ menu() {
 	done <<- EOT
 		$entries
 	EOT
-
 }
 
 apps() {
@@ -60,7 +59,7 @@ display() {
 			= HDMI - VGA	dmenu-xrandr HDMI+VGA
 			= VGA - HDMI	dmenu-xrandr VGA+HDMI
 			-------------------
-			Custom
+			Custom		arandr
 		EOT
 	)
 	menu "$entries" "Display:"
@@ -97,7 +96,7 @@ screenshot() {
 	entries=$(
 		cat <<- EOT
 			Terminal Emulator	x-terminal-emulator
-			Web Browser		x-web-browser
+			Web Browser		xdg-open https://www.atlantide.mooo.com
 			E-Mail Client		x-email-client
 			Filemanager		x-filemanager
 			Text Editor		x-text-editor
