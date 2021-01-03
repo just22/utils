@@ -71,7 +71,7 @@ win() {
                                 name="${line##*= }"
                                 ;;
                         _NET_WM_DESKTOP*)
-                                if [ $tagmode -eq 1 ]; then
+                                if [ "$tagmode" -eq 1 ]; then
                                         desk="$(tag2desk "${line##*= }")"
                                 else
                                         let "desk = ${line##*= } + d_inc"
