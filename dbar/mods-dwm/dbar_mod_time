@@ -11,7 +11,7 @@ exec 2>/dev/null
 # Note: 'at' exec will correctly sync messages even after a resume
 while : ; do
         date "+%a %d %b, %H:%M"
-        SHELL=/bin/sh at +1min <<- EOT
+        SHELL=/bin/sh at now+1min <<- EOT
 		pkill -P $$ sleep
 	EOT
         sleep 61 & # It will never be reached!
