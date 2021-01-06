@@ -8,10 +8,19 @@
 
 exec 2>/dev/null
 
-# Note: 'at' exec will correctly sync messages even after a resume
+# First interval b/w 2 timestamps must be defined by a sleep(1), to
+# give time to at(1) jobs scheduled by (no more active) time modules
+# to expire (not clear why 2 simultanous jobs are not executed at the
+# same time...)
+date "+%a %d %b, %H:%M"
+let "ti = 60 - $(date "+%S")"
+sleep $ti
+
+# From now on, at(1) is used to correctly sync timestamps even after
+# a resume
 while : ; do
         date "+%a %d %b, %H:%M"
-        SHELL=/bin/sh at now+1min <<- EOT
+        SHELL=/bin/sh at now + 1 minute <<- EOT
 		pkill -P $$ sleep
 	EOT
         sleep 61 & # It will never be reached!
