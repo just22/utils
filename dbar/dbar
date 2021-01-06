@@ -77,7 +77,7 @@ fi
 # Start modules, piping them to named pipe
 for mod in $layout; do
         unbuffer dbar_mod_$mod |
-        unbuffer -p sed "s/^/MODULE $mod /g" > $npipe &
+        unbuffer -p sed "s/^/MODULE $mod /" > $npipe &
 done
 
 # Main loop
