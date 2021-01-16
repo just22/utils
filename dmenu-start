@@ -13,7 +13,7 @@ menu() {
 		while IFS='' read line; do
                         # Mind: \t is not defined in POSIX regex...
 			echo "${line%%"	"*}"
-		done <<- EOT | dmenu-cust -i -p "$prompt" -l 25
+		done <<- EOT | dmenu -p "$prompt" -l 25
 			$entries
 		EOT
 	)
@@ -102,7 +102,7 @@ screenshot() {
 			Text Editor		x-text-editor
 			-------------------
 			Common Apps...		apps
-			Run...			dmenu_run-cust -p Run:
+			Run...			dmenu_run -p Run:
 			-------------------
 			Display Settings...	display
 			Keyboard Layout...	dmenu-kbd

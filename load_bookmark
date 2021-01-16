@@ -9,7 +9,7 @@
 
 BOOKMARK_FILE="${HOME}/.surf/bookmarks"
 
-BM="$(cat "$BOOKMARK_FILE" | cut -d " " -f 2- | dmenu-cust -i -l 10)"
+BM="$(cat "$BOOKMARK_FILE" | cut -d " " -f 2- | dmenu -l 10)"
 [ -n "$BM" ] && grep -F "$BM" "$BOOKMARK_FILE" | awk -F ", " '{print $1}'
 
 exit 0

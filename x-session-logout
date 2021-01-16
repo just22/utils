@@ -28,7 +28,7 @@ if [ "$1" == -g ]; then
 else
         MENU_ITEMS="Logout\nSuspend\nHibernate\nReboot\nPoweroff"
         CHOICE="$(echo -e $MENU_ITEMS |
-                  dmenu-cust -p "Exit Session:" "$@")"
+                  dmenu -p "Exit Session:" "$@")"
 fi
 
 case "$CHOICE" in

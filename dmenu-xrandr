@@ -42,7 +42,7 @@ done
 [ -n "$1" ] &&
         cmd="$1" ||
         cmd="$(
-                dmenu-cust -p "Display:" <<- EOT
+                dmenu -p "Display:" <<- EOT
 			$(
 				for f in ~/.screenlayout/*; do
 					f="${f##*/}"; echo "${f%%.*}"

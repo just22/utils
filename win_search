@@ -91,7 +91,7 @@ win() {
                         "$w_id" "$desk" "$tag" "[$label]" "$class" "$name"
                 fi
 
-        done | dmenu-cust -p Win: -i -l 25
+        done | dmenu -p Win: -l 25
 }
 
 # main() {

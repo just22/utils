@@ -13,7 +13,7 @@ OPWD="$PWD"
 NODE="$PWD"
 while :; do
         NODE="$(([ "$PWD" == "$OPWD" ] && cat "$LATEST"; echo ".."; ls -AF1) |
-                dmenu-cust -p $(echo "$PWD" | tr " " _) -i -l 20)" || exit
+                dmenu -p $(echo "$PWD" | tr " " _) -l 20)" || exit
         NODE="$(echo $NODE | sed "s/[/@*=|]$//")"
         [ ! -d "$NODE" ] && break || cd "$NODE"
 done

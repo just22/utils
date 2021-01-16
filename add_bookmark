@@ -23,7 +23,7 @@ URI="$(xprop -id "$1" _SURF_URI |
                 awk -F " = " '{print $2}' |
                 tr -d \")"
 
-NEW_BM=$(echo "$URI, $TITLE, " | dmenu-cust -l 1)
+NEW_BM=$(echo "$URI, $TITLE, " | dmenu -l 1)
 if [ -n "$NEW_BM" ]; then
         grep -v -F "$(echo "$NEW_BM" | cut -d "," -f 1), " "${BOOKMARK_FILE}" \
                 >"${BOOKMARK_FILE}.tmp"

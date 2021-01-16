@@ -8,7 +8,7 @@
 
 cl="$(setxkbmap -query | grep layout)"
 nl="$(
-        dmenu-cust -p "Kbd Layout [${cl##* }]:" <<- EOT
+        dmenu -p "Kbd Layout [${cl##* }]:" <<- EOT
 		it
 		us
 	EOT

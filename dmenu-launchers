@@ -24,7 +24,7 @@ Timer\n\
 Screenshot\n\
 Quit"
 
-sel="$(echo -e $MENU_ITEMS | dmenu-cust -i -p Menu: "$@")"
+sel="$(echo -e $MENU_ITEMS | dmenu -p Menu: "$@")"
 case "$sel" in
 Term)           x-terminal-emulator ;;
 FileManager)    x-filemanager ;;

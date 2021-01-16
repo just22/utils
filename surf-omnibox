@@ -14,7 +14,7 @@ HIST_MAXLINE="100"
 
 # Query string input
 XCLIP="$(xclip -o)"
-QUERY="$(([ -n "$XCLIP" ] && echo "$XCLIP"; cat "$HIST_FILE") | dmenu-cust -i -l 10)"
+QUERY="$(([ -n "$XCLIP" ] && echo "$XCLIP"; cat "$HIST_FILE") | dmenu -l 10)"
 [ -z "$QUERY" ] && exit 0
 
 ENGINE_ID=$(echo "$QUERY" | awk '{print $NF}')

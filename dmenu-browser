@@ -12,4 +12,4 @@ chrome\n\
 surf-launcher"
 
 echo -e $MENU_ITEMS |
-    dmenu-cust -p "Network browser:" "$@" | ${SHELL:-/bin/sh}
+    dmenu -p "Network browser:" "$@" | ${SHELL:-/bin/sh}

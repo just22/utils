@@ -1,0 +1,34 @@
+#!/bin/sh
+
+# ----------------------------------------------------------------------
+#  $Id$
+#
+#  dmenu launcher with custom default settings
+# ----------------------------------------------------------------------
+
+if [ -x /usr/local/bin/dmenu ]; then
+        DMENU=/usr/local/bin/dmenu
+elif [ -x /usr/bin/dmenu ]; then
+        DMENU=/usr/bin/dmenu
+elif [ -x ~/bin/dmenu ]; then
+        DMENU=~/bin/dmenu
+else
+        >&2 echo "dmenu executable not found"
+        exit 1
+fi
+
+if [ -f ~/.dmenurc ]; then
+        . ~/.dmenurc
+        [ -n "$L" ]   && set -- -l  "$L"  "$@"
+        [ -n "$P" ]   && set -- -p  "$P"  "$@"
+        [ -n "$M" ]   && set -- -m  "$M"  "$@"
+        [ -n "$W" ]   && set -- -w  "$W"  "$@"
+        [ -n "$FN" ]  && set -- -fn "$FN" "$@"
+        [ -n "$NB" ]  && set -- -nb "$NB" "$@"
+        [ -n "$NF" ]  && set -- -nf "$NF" "$@"
+        [ -n "$SB" ]  && set -- -sb "$SB" "$@"
+        [ -n "$SF" ]  && set -- -sf "$SF" "$@"
+        [ -n "$OPT" ] && set -- $OPT "$@"
+fi
+
+$DMENU "$@"

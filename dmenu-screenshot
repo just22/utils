@@ -14,6 +14,6 @@ Whole Desktop\n\
 Selected Window/Area"
 
 [ "$(echo -e $MENU_ITEMS |
-     dmenu-cust -p Screenshot: -i "$@")" == "Whole Desktop" ] && ARG="desktop"
+     dmenu -p Screenshot: "$@")" == "Whole Desktop" ] && ARG="desktop"
 
 screenshot $ARG

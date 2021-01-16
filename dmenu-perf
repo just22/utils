@@ -14,6 +14,6 @@ auto\n\
 high"
 
 POL=$(echo -e $MENU_ITEMS |
-    dmenu-cust -p "PerfPolicy [$(sysctl -n hw.perfpolicy)]:" -i "$@")
+    dmenu -p "PerfPolicy [$(sysctl -n hw.perfpolicy)]:" "$@")
 
 [ -n "$POL" ] && /usr/bin/doas /sbin/sysctl hw.perfpolicy="$POL"

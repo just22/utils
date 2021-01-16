@@ -17,7 +17,7 @@ label="$(xprop -id "$winId" CUST_WM_LABEL |
          grep -Ev "not found|no such atom" |
          cut -d \" -f 2)"
 
-sel="$(echo "/remove/" | dmenu-cust -p "Label (${label:-none}):")"
+sel="$(echo "/remove/" | dmenu -p "Label (${label:-none}):")"
 
 if [ -n "$sel" ]; then
         [ "$sel" == "/remove/" ] &&

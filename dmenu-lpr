@@ -28,7 +28,7 @@ draft-color\n\
 normal-color\n\
 hq-color"
 
-q="${1-$(echo -e $MENU_ITEMS | dmenu-cust -p "Print to lpr:" -i "$@")}"
+q="${1-$(echo -e $MENU_ITEMS | dmenu -p "Print to lpr:" "$@")}"
 
 if [ -n "$q" ]; then
         f="$(find /tmp -maxdepth 1 -type f -name "*.pdf" -user $USER -print0 |

@@ -184,7 +184,7 @@ set CURR_MENU $ROOT_MENU
 set LEAF 0
 
 while {! $LEAF} {
-        set SEL [exec echo [join [dict keys $CURR_MENU] "\n"] | dmenu-cust -p $MENU_NAME: -i -l 20]
+        set SEL [exec echo [join [dict keys $CURR_MENU] "\n"] | dmenu -p $MENU_NAME: -l 20]
         if {[string match *... $SEL]} {
                 set MENU_NAME [string trimright $SEL "..."]
                 if {[string match "SearchItem" $MENU_NAME]} {

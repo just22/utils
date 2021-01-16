@@ -16,7 +16,7 @@ Lock Screen\n\
 Restart\n\
 Settings"
 
-case "$(echo -e $MENU_ITEMS | dmenu-cust -p XScreensaver: -i "$@")" in
+case "$(echo -e $MENU_ITEMS | dmenu -p XScreensaver: "$@")" in
 Enable)
         xscreensaver
         ;;
