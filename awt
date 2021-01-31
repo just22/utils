@@ -1,0 +1,378 @@
+#!/bin/sh
+
+# ----------------------------------------------------------------------
+#  $Id$
+#
+#  AWT - A window tale, (semi)automatic window arrangement "a-la-dwm"
+# ----------------------------------------------------------------------
+
+set -e
+export PATH=/usr/local/bin:/usr/bin:/usr/X11R6/bin:/bin
+
+usage() {
+        >&2 echo "Usage: ${0##*/} [-h] | [-d] [-o] [-g <gap>]"
+        >&2 echo "       -d:       Debug mode (messages displayed on stderr)"
+        >&2 echo "       -h:       This help message"
+        >&2 echo "       -g <gap>: Gap b/w windows (default: 2px)"
+        >&2 echo "       -b:       Bottom stack (default is right)"
+        return 1
+}
+
+err() {
+        [ -n "$1" ] && >&2 echo "${0##*/}: $1"
+        return ${2:-1}
+}
+
+debugvar() {
+        >&2 eval "echo DEBUG: $1 = \${$1}"
+}
+
+gsub() {
+        s="$1"; p="$2"; v="$3"
+        while [ "${s#*"$p"}" != "$s" ]; do
+                s="${s%%"$p"*}$v${s#*"$p"}"
+        done
+        echo "$s"
+}
+
+get_clients() {
+        CLIENTS="$(wmctrl -l -G -x)"
+}
+
+get_root_props() {
+        # Get focused window's Id
+        #
+        while read line; do
+                case "$line" in
+                *_NET_ACTIVE_WINDOW*)
+                        FWIN_ID="${line##*#}"
+                        FWIN_ID="${FWIN_ID%%,*}"
+                        ;;
+                *_NET_DESKTOP_GEOMETRY*)
+                        IFS="," read DT_XDIM DT_YDIM <<- EOT
+				$(echo ${line##*=})
+			EOT
+                        ;;
+                *_NET_WORKAREA*)
+                        IFS="," read WA_X0 WA_Y0 WA_XDIM WA_YDIM discard <<- EOT
+				$(echo ${line##*=})
+			EOT
+                esac
+        done <<- EOT
+		$(xprop -root _NET_ACTIVE_WINDOW \
+			      _NET_DESKTOP_GEOMETRY \
+			      _NET_WORKAREA)
+	EOT
+
+        if [ -n "$DEBUG" ]; then
+                >&2 echo DEBUG: Function: get_root_props
+                debugvar FWIN_ID
+                debugvar DT_XDIM
+                debugvar DT_YDIM
+                debugvar WA_X0
+                debugvar WA_Y0
+                debugvar WA_XDIM
+                debugvar WA_YDIM
+                >&2 echo DEBUG: ----------------------------------------
+                >&2 echo DEBUG:
+        fi
+}
+
+get_monitors() {
+
+        [ -n "$DEBUG" ] && >&2 echo DEBUG: Function: get_monitors
+
+        while read line; do
+                case "$line" in
+                *\ connected\ *)
+                        tmp="${line##"${line% *x*+*+*} "}"
+                        g=${tmp%% *}
+                        echo "$g"
+                        [ -n "$DEBUG" ] && >&2 echo DEBUG: $g
+
+                        # Get primary monitor origin
+                        # (return (0,0) in case no primary monitor is set)
+                        # FIXME: What if no monitor is in (0,0)?
+                        if [ "${line#*primary}" != "$line" ]; then
+                                tmp="${g#*+}"
+                                PMON_X0="${tmp%%+*}"
+                                PMON_Y0="${tmp##*+}"
+                        fi
+                        ;;
+
+                # RandR v1.0|1.1: Extend not supported
+                # (just report the output geometry with +0+0 origin)
+                \**)
+                        # Field no. 2 is xorig
+                        tmp="${s#* }"
+                        xorig="${tmp%% *}"
+
+                        # Field no. 4 is yorig
+                        tmp=${tmp#* }
+                        tmp=${tmp#* }
+                        yorig="${tmp%% *}"
+
+                        echo "${xorig}x${yorig}+0+0"
+                        [ -n "$DEBUG" ] && >&2 echo DEBUG: ${xorig}x${yorig}+0+0
+                esac
+
+        done <<- EOT
+		$(xrandr -q)
+	EOT
+
+        if [ -n "$DEBUG" ]; then
+                debugvar PMON_X0
+                debugvar PMON_Y0
+                >&2 echo DEBUG: ----------------------------------------
+                >&2 echo DEBUG:
+        fi
+}
+
+get_fwin_props() {
+        while IFS='' read line; do
+                read win_id win_ws win_x0 win_y0 discard <<- EOT
+			$line
+		EOT
+                if [ $((win_id)) -eq $((FWIN_ID)) ]; then
+                        FWS=$win_ws
+                        while read geom; do
+                                xdim=${geom%%x*}; geom=${geom##*x}
+                                ydim=${geom%%+*}; geom=${geom#*+}
+                                x0=${geom%%+*}
+                                y0=${geom##*+}
+                                if [ $x0 -le $win_x0 -a $win_x0 -le $((x0 + xdim)) -a \
+                                     $y0 -le $win_y0 -a $win_y0 -le $((y0 + ydim)) ]
+                                then
+                                        FMON_XDIM=$xdim
+                                        FMON_YDIM=$ydim
+                                        FMON_X0=$x0
+                                        FMON_Y0=$y0
+                                        break
+                                fi
+                        done <<- EOT
+				$(get_monitors)
+			EOT
+                        break
+                fi
+        done <<- EOT
+		$CLIENTS
+	EOT
+        if [ -n "$DEBUG" ]; then
+                >&2 echo DEBUG: Function: get_fwin_props
+                debugvar FWS
+                debugvar FMON_XDIM
+                debugvar FMON_YDIM
+                debugvar FMON_X0
+                debugvar FMON_Y0
+                >&2 echo DEBUG: ----------------------------------------
+                >&2 echo DEBUG:
+        fi
+}
+
+get_client_props() {
+        local state frame
+        while read line; do
+                case "$line" in
+                *window\ state*)
+                        state=${line##* }
+                        ;;
+                _NET_FRAME_EXTENTS*)
+                        frame="$(gsub "${line##*= }" "," "")"
+                esac
+        done <<- EOT
+		$(xprop -id "$1" WM_STATE _NET_FRAME_EXTENTS)
+	EOT
+
+        echo -n "$state "
+
+        # For non-EWMH, just return a sane default
+        echo "${frame:-2 2 20 2}"
+}
+
+get_vis_unfocused_clients() {
+
+        [ -n "$DEBUG" ] && >&2 echo DEBUG: Function: get_vis_unfocused_clients
+
+        while IFS='' read line; do
+                read win_id win_ws win_x0 win_y0 win_class discard <<- EOT
+			$line
+		EOT
+
+                # If this is the active client, discard
+                [ $((win_id)) -eq $((FWIN_ID)) ] && continue
+
+                # If not on current workspace, discard
+                [ $win_ws -eq $FWS ] || continue
+
+                # If not on focused monitor, discard
+                [ $FMON_X0 -le $win_x0 -a $win_x0 -le $((FMON_X0 + FMON_XDIM)) -a \
+                  $FMON_Y0 -le $win_y0 -a $win_y0 -le $((FMON_Y0 + FMON_YDIM)) ] || continue
+
+                # Discard this class?
+                # TODO
+
+                # Query client's state and frame extents
+                read win_state frame_l frame_r frame_t frame_b <<- EOT
+			$(get_client_props $win_id)
+		EOT
+
+                # If not visible, discard
+                [ "$win_state" == Normal ] || continue
+
+                # Client is visible and not active: print property line
+                echo $win_id $frame_l $frame_r $frame_t $frame_b
+
+                if [ -n "$DEBUG" ]; then
+                        debugvar win_id
+                        debugvar frame_l
+                        debugvar frame_r
+                        debugvar frame_t
+                        debugvar frame_b
+                fi
+
+        done <<- EOT
+		$CLIENTS
+	EOT
+
+        if [ -n "$DEBUG" ]; then
+                >&2 echo DEBUG: ----------------------------------------
+                >&2 echo DEBUG:
+        fi
+}
+
+get_mon_actarea() {
+        # Get the active area of the monitor
+        # (i.e. geometry, excluded docks, panels, ...)
+        #
+        # Practical assumption: if there are panels/docks, they are all
+        # on the "primary" monitor (or the one in (0,0) if no "primary"
+        # attribute is defined)
+        #
+        if [ $FMON_X0 -eq $PMON_X0 -a $FMON_Y0 -eq $PMON_Y0 ]; then
+                if pgrep -x fluxbox > /dev/null 2>&1; then
+                        act_x0=$(($FMON_X0 + $WA_X0))
+                        act_y0=$(($FMON_Y0 + $WA_Y0))
+                        act_xdim=$(($FMON_XDIM - ($DT_XDIM - $WA_XDIM)))
+                        act_ydim=$(($FMON_YDIM - ($DT_YDIM - $WA_YDIM)))
+                else
+                        [ $FMON_X0 -ge $WA_X0 ] &&  act_x0=$FMON_X0 || act_x0=$WA_X0
+                        [ $FMON_Y0 -ge $WA_Y0 ] &&  act_y0=$FMON_Y0 || act_y0=$WA_Y0
+                        [ $FMON_XDIM -le $WA_XDIM ] &&  act_xdim=$FMON_XDIM || act_xdim=$WA_XDIM
+                        [ $FMON_YDIM -le $WA_YDIM ] &&  act_ydim=$FMON_YDIM || act_ydim=$WA_YDIM
+                fi
+        else
+                act_xdim=$FMON_XDIM
+                act_ydim=$FMON_YDIM
+                act_x0=$FMON_X0
+                act_y0=$FMON_Y0
+        fi
+
+        if [ -n "$DEBUG" ]; then
+                >&2 echo DEBUG: Function: get_mon_actarea
+                debugvar act_xdim
+                debugvar act_ydim
+                debugvar act_x0
+                debugvar act_y0
+                >&2 echo DEBUG: ----------------------------------------
+                >&2 echo DEBUG:
+        fi
+}
+
+# main() {
+
+        # Variable init
+        GAP=2; PMON_X0=0; PMON_Y0=0
+
+        while getopts ":dg:hb" arg; do
+                case "$arg" in
+                 d) DEBUG=1 ;;
+                 g) GAP="$OPTARG" ;;
+                 h) usage ;;
+                 b) MODE=b ;;
+                 :) err "Option -$OPTARG requires an argument" ;;
+                \?) err "Unknown option: -$OPTARG"
+                esac
+        done
+
+        get_clients
+        get_root_props
+        get_fwin_props
+        get_mon_actarea
+
+        owins="$(get_vis_unfocused_clients)"
+
+        # How many visible unfocused clients?
+        owin_no=0
+        while read line; do
+                owin_no=$((owin_no + 1))
+        done <<- EOT
+		"$owins"
+	EOT
+
+        [ -z "$owins" ] && err "Less than 2 visible windows"
+
+        case "$MODE" in
+        b) # Horizontal tiling
+                # Focused window
+                read win_state frame_l frame_r frame_t frame_b <<- EOT
+			$(get_client_props $FWIN_ID)
+		EOT
+                win_x0=$act_x0
+                win_y0=$act_y0
+                win_xdim=$(($act_xdim - $frame_r - $frame_l - $GAP / 2))
+                win_ydim=$(($act_ydim / 2 - $frame_t - $frame_b - $GAP / 2))
+                wmctrl -i -r $FWIN_ID -e 0,$win_x0,$win_y0,$win_xdim,$win_ydim
+
+                # Other windows
+                win_y0=$(($act_y0 + $act_ydim / 2 + $GAP / 2))
+                win_cnt=0
+                while read line; do
+                        read win_id frame_l frame_r frame_t frame_b <<- EOT
+				$line
+			EOT
+                        win_xdim=$((($act_xdim - \
+                                     $GAP * ($owin_no - 1) - \
+                                     ($frame_l + $frame_r) * $owin_no) / $owin_no))
+                        win_ydim=$(($act_ydim / 2 - $frame_t - $frame_b - $GAP / 2))
+                        win_cnt=$(($win_cnt + 1))
+                        win_x0=$(($act_x0 + ($win_xdim + $frame_l + $frame_r + $GAP) * ($win_cnt - 1)))
+                        wmctrl -i -r $win_id -b remove,maximized_horz,maximized_vert
+                        wmctrl -i -r $win_id -e 0,$win_x0,$win_y0,$win_xdim,$win_ydim
+                done <<- EOT
+			$owins
+		EOT
+                ;;
+
+        *) # Vertical tiling
+                # Focused window
+                read win_state frame_l frame_r frame_t frame_b <<- EOT
+			$(get_client_props $FWIN_ID)
+		EOT
+                win_x0=$act_x0
+                win_y0=$act_y0
+                win_xdim=$(($act_xdim / 2 - $frame_r - $frame_l - $GAP / 2))
+                win_ydim=$(($act_ydim - $frame_t - $frame_b - $GAP / 2))
+                wmctrl -i -r $FWIN_ID -e 0,$win_x0,$win_y0,$win_xdim,$win_ydim
+
+                # Other windows
+                win_x0=$(($act_x0 + $act_xdim / 2 + $GAP / 2))
+                win_cnt=0
+                while read line; do
+                        read win_id frame_l frame_r frame_t frame_b <<- EOT
+				$line
+			EOT
+                        win_xdim=$(($act_xdim / 2 - $frame_l - $frame_r - $GAP / 2))
+                        win_ydim=$((($act_ydim - \
+                                     $GAP * ($owin_no - 1) - \
+                                     ($frame_t + $frame_b) * $owin_no) / $owin_no))
+
+                        win_cnt=$(($win_cnt + 1))
+                        win_y0=$(($act_y0 + ($win_ydim + $frame_t + $frame_b + $GAP) * ($win_cnt - 1)))
+                        wmctrl -i -r $win_id -b remove,maximized_horz,maximized_vert
+                        wmctrl -i -r $win_id -e 0,$win_x0,$win_y0,$win_xdim,$win_ydim
+                done <<- EOT
+			$owins
+		EOT
+        esac
+
+# }
