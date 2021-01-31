@@ -9,6 +9,7 @@
 # Clean up statusbar
 pkill -x bbpager
 pkill -x space_dapp
+pkill -x dzen2
 
 fluxbox-remote Restart
 
