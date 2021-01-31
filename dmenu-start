@@ -82,6 +82,16 @@ desktop() {
 	menu "$entries" "Desktop:"
 }
 
+smb() {
+	local entries=$(
+		cat <<- EOT
+			Mount All		smb-mount
+			Unmount All		smb-mount -u
+		EOT
+	)
+	menu "$entries" "SMB Shares:"
+}
+
 screenshot() {
 	local entries=$(
 		cat <<- EOT
@@ -106,7 +116,9 @@ screenshot() {
 			-------------------
 			Display Settings...	display
 			Keyboard Layout...	dmenu-kbd
+			-------------------
 			Removable Devices	x-terminal-emulator -T "Removables" -e amount-wrapper
+			Samba Shares...		smb
 			-------------------
 			Desktop...		desktop
 			Play URL in Clip	play-url -p
