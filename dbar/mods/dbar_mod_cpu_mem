@@ -15,6 +15,6 @@ awk '
                 fre_exp = index("KMG", substr($4, length($4)));
                 fre_mnt = substr($4, 1, length($4) - 1);
                 fre = fre_mnt * 10^(fre_exp * 3);
-                printf("[CPU:%3d%%]  [Mem:%3d%%]\n", 100 - $NF, 100 * avm / (avm + fre));
+                printf("[P:%3d%%]  [M:%3d%%]\n", 100 - $NF, 100 * avm / (avm + fre));
         }
 '

@@ -37,6 +37,6 @@ while : ; do
                 bl="$AC"
                 warnd=0
         fi
-        printf "[Batt: %s%% (%s)]\n" "$bp" "$bl"
+        printf "[B:%3d%% (%s)]\n" "$bp" "$bl"
         sleep 15
 done

@@ -7,7 +7,7 @@
 # ----------------------------------------------------------------------
 
 while : ; do
-        printf "[Vol:%3s%%]\n" \
+        printf "[V:%3s%%]\n" \
             "$(bc -e "100 * $(sndioctl -n output.level) / 1" -e quit)"
         sleep 5
 done

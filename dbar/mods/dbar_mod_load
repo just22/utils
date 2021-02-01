@@ -8,7 +8,7 @@
 
 while : ; do
         l="$(uptime | egrep -o "[0-9.]+, [0-9.]+, [0-9.]+$")"
-        printf "[Load: %.2f(1m) %.2f(5m) %.2f(15m)]\n" \
+        printf "[L: %.2f(1m) %.2f(5m) %.2f(15m)]\n" \
                "$(echo "$l" | cut -d, -f1)" \
                "$(echo "$l" | cut -d, -f2)" \
                "$(echo "$l" | cut -d, -f3)"
