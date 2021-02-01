@@ -321,7 +321,8 @@ get_mon_actarea() {
                 win_y0=$act_y0
                 win_xdim=$(($act_xdim - $frame_r - $frame_l - $GAP / 2))
                 win_ydim=$(($act_ydim / 2 - $frame_t - $frame_b - $GAP / 2))
-                wmctrl -i -r $FWIN_ID -e 0,$win_x0,$win_y0,$win_xdim,$win_ydim
+                wmctrl -i -r $FWIN_ID \
+                    -e 0,$win_x0,$win_y0,$win_xdim,$win_ydim
 
                 # Other windows
                 win_y0=$(($act_y0 + $act_ydim / 2 + $GAP / 2))
@@ -336,8 +337,9 @@ get_mon_actarea() {
                         win_ydim=$(($act_ydim / 2 - $frame_t - $frame_b - $GAP / 2))
                         win_cnt=$(($win_cnt + 1))
                         win_x0=$(($act_x0 + ($win_xdim + $frame_l + $frame_r + $GAP) * ($win_cnt - 1)))
-                        wmctrl -i -r $win_id -b remove,maximized_horz,maximized_vert
-                        wmctrl -i -r $win_id -e 0,$win_x0,$win_y0,$win_xdim,$win_ydim
+                        wmctrl -i -r $win_id \
+                            -b remove,maximized_horz,maximized_vert \
+                            -e 0,$win_x0,$win_y0,$win_xdim,$win_ydim
                 done <<- EOT
 			$owins
 		EOT
@@ -352,7 +354,8 @@ get_mon_actarea() {
                 win_y0=$act_y0
                 win_xdim=$(($act_xdim / 2 - $frame_r - $frame_l - $GAP / 2))
                 win_ydim=$(($act_ydim - $frame_t - $frame_b - $GAP / 2))
-                wmctrl -i -r $FWIN_ID -e 0,$win_x0,$win_y0,$win_xdim,$win_ydim
+                wmctrl -i -r $FWIN_ID \
+                    -e 0,$win_x0,$win_y0,$win_xdim,$win_ydim
 
                 # Other windows
                 win_x0=$(($act_x0 + $act_xdim / 2 + $GAP / 2))
@@ -368,8 +371,9 @@ get_mon_actarea() {
 
                         win_cnt=$(($win_cnt + 1))
                         win_y0=$(($act_y0 + ($win_ydim + $frame_t + $frame_b + $GAP) * ($win_cnt - 1)))
-                        wmctrl -i -r $win_id -b remove,maximized_horz,maximized_vert
-                        wmctrl -i -r $win_id -e 0,$win_x0,$win_y0,$win_xdim,$win_ydim
+                        wmctrl -i -r $win_id \
+                            -b remove,maximized_horz,maximized_vert \
+                            -e 0,$win_x0,$win_y0,$win_xdim,$win_ydim
                 done <<- EOT
 			$owins
 		EOT
