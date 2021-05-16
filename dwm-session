@@ -27,7 +27,7 @@ fi
 xsetroot -solid rgb:58/6E/75
 
 # Statusbar
-dbar -c ~/.config/dbar-dwm -x -m cpu_mem -m sd0 -m trunk0 -m batt -m time &
+dbar -c ~/.config/dbar -x -m cpu_mem -m sd0 -m trunk0 -m batt -m time &
 
 # Site specific init file
 [ -f ~/.dwm-session-init ] && . ~/.dwm-session-init
