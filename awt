@@ -317,10 +317,27 @@ get_mon_actarea() {
                 read win_state frame_l frame_r frame_t frame_b <<- EOT
 			$(get_client_props $FWIN_ID)
 		EOT
-                win_x0=$act_x0
-                win_y0=$act_y0
+
+                if [ -n "$DEBUG" ]; then 
+                        >&2 echo DEBUG: Function: Horizontal tiling
+                fi
+
+                win_x0="$(gsub "$act_x0" " " "")"
+                win_y0="$(gsub "$act_y0" " " "")"
                 win_xdim=$(($act_xdim - $frame_r - $frame_l - $GAP / 2))
                 win_ydim=$(($act_ydim / 2 - $frame_t - $frame_b - $GAP / 2))
+
+                if [ -n "$DEBUG" ]; then
+                        debugvar FWIN_ID
+                        debugvar win_x0
+                        debugvar win_y0
+                        debugvar win_xdim
+                        debugvar win_ydim
+                        >&2 echo DEBUG: Cmd: wmctrl -i -r $FWIN_ID \
+                                                 -e 0,$win_x0,$win_y0,$win_xdim,$win_ydim
+                        >&2 echo DEBUG:
+                fi
+
                 wmctrl -i -r $FWIN_ID \
                     -e 0,$win_x0,$win_y0,$win_xdim,$win_ydim
 
@@ -337,12 +354,30 @@ get_mon_actarea() {
                         win_ydim=$(($act_ydim / 2 - $frame_t - $frame_b - $GAP / 2))
                         win_cnt=$(($win_cnt + 1))
                         win_x0=$(($act_x0 + ($win_xdim + $frame_l + $frame_r + $GAP) * ($win_cnt - 1)))
+
+                        if [ -n "$DEBUG" ]; then
+                                debugvar win_id
+                                debugvar win_x0
+                                debugvar win_y0
+                                debugvar win_xdim
+                                debugvar win_ydim
+                                >&2 echo DEBUG: Cmd: wmctrl -i -r $win_id \
+                                                         -b remove,maximized_horz,maximized_vert \
+                                                         -e 0,$win_x0,$win_y0,$win_xdim,$win_ydim
+                                >&2 echo DEBUG:
+                        fi
+
                         wmctrl -i -r $win_id \
                             -b remove,maximized_horz,maximized_vert \
                             -e 0,$win_x0,$win_y0,$win_xdim,$win_ydim
                 done <<- EOT
 			$owins
 		EOT
+
+                if [ -n "$DEBUG" ]; then
+                        >&2 echo DEBUG: ----------------------------------------
+                        >&2 echo DEBUG:
+                fi
                 ;;
 
         *) # Vertical tiling
@@ -350,10 +385,27 @@ get_mon_actarea() {
                 read win_state frame_l frame_r frame_t frame_b <<- EOT
 			$(get_client_props $FWIN_ID)
 		EOT
-                win_x0=$act_x0
-                win_y0=$act_y0
+
+                if [ -n "$DEBUG" ]; then
+                        >&2 echo DEBUG: Function: Vertical tiling
+                fi
+
+                win_x0="$(gsub "$act_x0" " " "")"
+                win_y0="$(gsub "$act_y0" " " "")"
                 win_xdim=$(($act_xdim / 2 - $frame_r - $frame_l - $GAP / 2))
                 win_ydim=$(($act_ydim - $frame_t - $frame_b - $GAP / 2))
+
+                if [ -n "$DEBUG" ]; then
+                        debugvar FWIN_ID
+                        debugvar win_x0
+                        debugvar win_y0
+                        debugvar win_xdim
+                        debugvar win_ydim
+                        >&2 echo DEBUG: Cmd: wmctrl -i -r $FWIN_ID \
+                                                 -e 0,$win_x0,$win_y0,$win_xdim,$win_ydim
+                        >&2 echo DEBUG:
+                fi
+
                 wmctrl -i -r $FWIN_ID \
                     -e 0,$win_x0,$win_y0,$win_xdim,$win_ydim
 
@@ -371,12 +423,30 @@ get_mon_actarea() {
 
                         win_cnt=$(($win_cnt + 1))
                         win_y0=$(($act_y0 + ($win_ydim + $frame_t + $frame_b + $GAP) * ($win_cnt - 1)))
+
+                        if [ -n "$DEBUG" ]; then
+                                debugvar win_id
+                                debugvar win_x0
+                                debugvar win_y0
+                                debugvar win_xdim
+                                debugvar win_ydim
+                                >&2 echo DEBUG: wmctrl -i -r $win_id \
+                                                    -b remove,maximized_horz,maximized_vert \
+                                                    -e 0,$win_x0,$win_y0,$win_xdim,$win_ydim
+                                >&2 echo DEBUG:
+                        fi
+
                         wmctrl -i -r $win_id \
                             -b remove,maximized_horz,maximized_vert \
                             -e 0,$win_x0,$win_y0,$win_xdim,$win_ydim
                 done <<- EOT
 			$owins
 		EOT
+
+                if [ -n "$DEBUG" ]; then
+                        >&2 echo DEBUG: ----------------------------------------
+                        >&2 echo DEBUG:
+                fi
         esac
 
 # }
