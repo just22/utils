@@ -14,16 +14,17 @@ pkill -x dzen2
 fluxbox-remote Restart
 
 # Statusbar
-space_dapp $((($(screen-width) - 1))) 17 &
-
-sleep 1;
 dbar | dzen2 -title-name dbar \
              -bg "#eee8d5" -fg "#073642" -fn "DejaVu Sans Mono:size=9" \
-             -p -e "" -geometry +0+1 -expand left -dock -xs "${xs:-1}" &
+             -p -e "" -geometry $(($(screen-width) - 1))x17+0+1 \
+             -expand left -dock -xs "${xs:-1}" &
+
+sleep 1;
+space_dapp $((($(screen-width) - 1))) 17 &
 
 # This is a bad hack!!! Fluxbox doesn't manage dock apps properly
 # Note: xprop is unable to set multiple fields for a property...
-sleep 2;
+sleep 1;
 xprop -name dbar -f _NET_WM_STATE 32a \
       -set _NET_WM_STATE '_NET_WM_STATE_SKIP_PAGER' &
 
