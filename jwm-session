@@ -1,0 +1,41 @@
+#!/bin/sh
+
+# ----------------------------------------------------------------------
+#  $Id$
+#
+#  jwm session manager
+# ----------------------------------------------------------------------
+
+# Screen locker
+xautolock -detectsleep -time 10 -locker lock-screen &
+
+# dunst notification system
+mkdir -p "${XDG_DATA_HOME:-$HOME/.local/share}/dbus-1/services"
+ln -sf \
+    "/usr/local/share/dbus-1/services/org.knopwob.dunst.service" \
+    "${XDG_DATA_HOME:-$HOME/.local/share}/dbus-1/services/org.freedesktop.Notifications.service"
+
+# Start a session bus instance of dbus-daemon
+if [ -x /usr/local/bin/dbus-launch -a -z "${DBUS_SESSION_BUS_ADDRESS}" ]; then
+        eval `dbus-launch --sh-syntax --exit-with-x11`
+fi
+
+# System log
+xkill -id $(xwininfo -name xconsole |
+            egrep -o "Window id: 0x[0-9a-fA-F]+" |
+            cut -d: -f2)
+xterm -title "System log" -e "tail -f /var/log/messages" &
+
+(sleep 1
+ wmctrl -r "System log" -t 6
+ wmctrl -r "System log" -b add,maximized_horz,maximized_vert)&
+
+# Compositor manager
+#xcompmgr &
+
+# Site specific init file
+[ -f ~/.jwm-session-local ] && . ~/.jwm-session-local
+
+# Start jwm and log errors in ~/.jwm.log
+mv ~/.jwm.log{,.old}
+exec jwm > ~/.jwm.log 2>&1
