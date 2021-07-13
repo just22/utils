@@ -3,7 +3,7 @@
 # ----------------------------------------------------------------------
 #  $Id$
 #
-#  AWT - A window tale, (semi)automatic window arrangement "a-la-dwm"
+#  AWT - A Windows Tale, (semi)automatic window arrangement "a-la-dwm"
 # ----------------------------------------------------------------------
 
 set -e
@@ -362,13 +362,15 @@ get_mon_actarea() {
                                 debugvar win_xdim
                                 debugvar win_ydim
                                 >&2 echo DEBUG: Cmd: wmctrl -i -r $win_id \
-                                                         -b remove,maximized_horz,maximized_vert \
+                                                         -b remove,maximized_horz,maximized_vert
+                                >&2 echo DEBUG: Cmd: wmctrl -i -r $win_id \
                                                          -e 0,$win_x0,$win_y0,$win_xdim,$win_ydim
                                 >&2 echo DEBUG:
                         fi
 
                         wmctrl -i -r $win_id \
-                            -b remove,maximized_horz,maximized_vert \
+                            -b remove,maximized_horz,maximized_vert
+                        wmctrl -i -r $win_id \
                             -e 0,$win_x0,$win_y0,$win_xdim,$win_ydim
                 done <<- EOT
 			$owins
@@ -430,14 +432,16 @@ get_mon_actarea() {
                                 debugvar win_y0
                                 debugvar win_xdim
                                 debugvar win_ydim
-                                >&2 echo DEBUG: wmctrl -i -r $win_id \
-                                                    -b remove,maximized_horz,maximized_vert \
-                                                    -e 0,$win_x0,$win_y0,$win_xdim,$win_ydim
+                                >&2 echo DEBUG: Cmd: wmctrl -i -r $win_id \
+                                                         -b remove,maximized_horz,maximized_vert
+                                >&2 echo DEBUG: Cmd: wmctrl -i -r $win_id \
+                                                         -e 0,$win_x0,$win_y0,$win_xdim,$win_ydim
                                 >&2 echo DEBUG:
                         fi
 
                         wmctrl -i -r $win_id \
-                            -b remove,maximized_horz,maximized_vert \
+                            -b remove,maximized_horz,maximized_vert
+                        wmctrl -i -r $win_id \
                             -e 0,$win_x0,$win_y0,$win_xdim,$win_ydim
                 done <<- EOT
 			$owins
