@@ -7,7 +7,7 @@
 # ----------------------------------------------------------------------
 
 set -e
-export PATH=/usr/local/bin:/usr/bin:/usr/X11R6/bin:/bin
+export PATH=${HOME}/bin:/usr/local/bin:/usr/bin:/usr/X11R6/bin:/bin
 
 usage() {
         >&2 echo "Usage: ${0##*/} [-h] | [-d] [-o] [-g <gap>]"
@@ -49,12 +49,12 @@ get_root_props() {
                         FWIN_ID="${FWIN_ID%%,*}"
                         ;;
                 *_NET_DESKTOP_GEOMETRY*)
-                        IFS="," read DT_XDIM DT_YDIM <<- EOT
+                        IFS=", " read DT_XDIM DT_YDIM <<- EOT
 				$(echo ${line##*=})
 			EOT
                         ;;
                 *_NET_WORKAREA*)
-                        IFS="," read WA_X0 WA_Y0 WA_XDIM WA_YDIM discard <<- EOT
+                        IFS=", " read WA_X0 WA_Y0 WA_XDIM WA_YDIM discard <<- EOT
 				$(echo ${line##*=})
 			EOT
                 esac
@@ -104,12 +104,11 @@ get_monitors() {
                 # (just report the output geometry with +0+0 origin)
                 \**)
                         # Field no. 2 is xorig
-                        tmp="${s#* }"
-                        xorig="${tmp%% *}"
+                        tmp="${line#* }"
+                        xorig="${tmp%% x *}"
 
                         # Field no. 4 is yorig
-                        tmp=${tmp#* }
-                        tmp=${tmp#* }
+                        tmp=${tmp#* x }
                         yorig="${tmp%% *}"
 
                         echo "${xorig}x${yorig}+0+0"
