@@ -3,11 +3,8 @@
 # ----------------------------------------------------------------------
 #  $Id$
 #
-#  dwm session manager
+#  jwm session manager
 # ----------------------------------------------------------------------
-
-# Fix problems with JDK assuming a reparenting window manager
-wmname LG3D 2>/dev/null
 
 # Screen locker
 xautolock -detectsleep -time 10 -locker lock-screen &
@@ -23,22 +20,22 @@ if [ -x /usr/local/bin/dbus-launch -a -z "${DBUS_SESSION_BUS_ADDRESS}" ]; then
         eval `dbus-launch --sh-syntax --exit-with-x11`
 fi
 
-# Set root window background
-xsetroot -solid rgb:58/6E/75
+# System log
+xkill -id $(xwininfo -name xconsole |
+            egrep -o "Window id: 0x[0-9a-fA-F]+" |
+            cut -d: -f2)
+xterm -title "System log" -e "tail -f /var/log/messages" &
 
-# Statusbar
-dbar -c ~/.config/dbar -x -m cpu_mem -m sd0 -m trunk0 -m batt -m time &
+(sleep 1
+ wmctrl -r "System log" -t 6
+ wmctrl -r "System log" -b add,maximized_horz,maximized_vert)&
+
+# Compositor manager
+#xcompmgr &
 
 # Site specific init file
-[ -f ~/.dwm-session-init ] && . ~/.dwm-session-init
+[ -f ~/.jwm-session-local ] && . ~/.jwm-session-local
 
-while :
-do
-        # Site specific startup file
-        [ -f ~/.dwm-session-startup ] && . ~/.dwm-session-startup
-
-        # Start dwm and log errors in ~/.dwm.log
-        mv ~/.dwm.log{,.old}
-        dwm 2> ~/.dwm.log || exit
-done
-
+# Start jwm and log errors in ~/.jwm.log
+mv ~/.jwm.log{,.old}
+exec jwm > ~/.jwm.log 2>&1

@@ -1,0 +1,11 @@
+#!/bin/sh
+
+# ----------------------------------------------------------------------
+#  $Id$
+#
+#  Toggle ~/Desktop filemanager window
+# ----------------------------------------------------------------------
+
+if ! pkill -fl .*ROX-Filer ${HOME}/Desktop; then
+        rox -d ${HOME}/Desktop
+fi

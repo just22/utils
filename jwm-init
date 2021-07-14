@@ -1,0 +1,18 @@
+#!/bin/sh
+
+# ----------------------------------------------------------------------
+#  $Id$
+#
+#  jwm initialization
+# ----------------------------------------------------------------------
+
+# Note: This script should be launched from within JWM as startup
+#       or restart command.
+
+# Set wallpaper
+nitrogen --restore
+
+# Statusbar
+dbar | dzen2 -title-name dbar \
+             -bg "#93a1a1" -fg "#073642" -fn "DejaVu Sans Mono:size=9" \
+             -p -e "" -expand left -xs "${xs:-1}" -dock &

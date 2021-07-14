@@ -24,7 +24,7 @@ get_tmux_win_id() {
 search_pane() {
         tmux list-panes -s -a \
             -F '#{session_name} / #{window_index}:#{window_name} / #{pane_index}:#{pane_title}' |
-                dmenu -p Pane: -l 5
+        dmenu -p Pane: -l 25
 }
 
 SELECTED_ITEM=$(search_pane)
@@ -42,5 +42,6 @@ then
 
         tmux select-window -t "${SESSION_NAME}":"${WIN_INDEX}"
         tmux select-pane -t "${SESSION_NAME}":"${WIN_INDEX}"."${PANE_INDEX}"
-        wmctrl -i -a "$(get_tmux_win_id "\[tmux ${SESSION_NAME}:${WIN_INDEX}.${PANE_INDEX}\]")"
+        wmctrl -i -a "$(get_tmux_win_id "\[tmux ${SESSION_NAME}:${WIN_INDEX}.${PANE_INDEX}\]")" ||
+                x-terminal-emulator -e "tmux attach-session -t $SESSION_NAME"
 fi

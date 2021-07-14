@@ -1,0 +1,19 @@
+#!/bin/sh
+
+# ----------------------------------------------------------------------
+#  $Id$
+#
+#  Show reminders for a specific date
+# ----------------------------------------------------------------------
+
+remind ~/.reminders "$1" |
+    xmessage -buttons "Close":0,"TkRemind":2 -file -
+
+# Edit ~/.reminders
+[ "$?" -eq 2 ] && if ! wmctrl -x -R Tkremind; then tkremind -m & fi
+
+# Close gsimplecal if open
+if pgrep gsimplecal; then
+        gsimplecal
+fi
+

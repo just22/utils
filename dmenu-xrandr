@@ -6,12 +6,18 @@
 #  Change display settings using dmenu
 # ----------------------------------------------------------------------
 
+restart_wm() {
+        if pgrep -x fluxbox; then
+                fbrestart
+        fi
+}
+
 err() {
         echo "$1" |
         xmessage -title "dmenu-xrandr" \
             -buttons "Close":0,"Reset Display":2 -file -
 
-        [ "$?" -eq 2 ] && xrandr --auto
+        [ "$?" -eq 2 ] && xrandr --auto && restart_wm
         exit 1
 }
 
@@ -54,7 +60,7 @@ done
 
 case "$cmd" in
 Custom)
-        arandr
+        exec arandr
         ;;
 
 *LVDS*|*VGA*|*HDMI*|*DP*)
@@ -101,12 +107,8 @@ Custom)
         ;;
 
 *)
-        ~/.screenlayout/${cmd}.sh
+        ~/.screenlayout/${cmd}.sh || exit 0
 esac
 
-# Restart WM
-if pgrep -x fluxbox; then
-        fbrestart
-fi
+restart_wm
 
-exit 0

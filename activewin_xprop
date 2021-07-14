@@ -10,5 +10,6 @@ WIN_ID="$(xprop -root _NET_ACTIVE_WINDOW |
         cut -d"," -f1 |
         awk '{print $NF}')"
 
-xterm -title "Window's properties" \
+x-terminal-emulator \
+    -T "Window's properties" \
     -e "xprop -notype -id $WIN_ID | ${PAGER}"
