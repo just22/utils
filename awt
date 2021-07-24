@@ -175,13 +175,21 @@ get_client_props() {
                 case "$line" in
                 *window\ state*)
                         state=${line##* }
+                        # In some WM (e.g. Xfwm4), frame extents may vary
+                        # when window is maximized
+                        if [ "$state" == Normal ]; then
+                                wmctrl -i -r $1 \
+                                    -b remove,maximized_horz,maximized_vert
+                        fi
+                        break
                         ;;
-                _NET_FRAME_EXTENTS*)
-                        frame="$(gsub "${line##*= }" "," "")"
                 esac
         done <<- EOT
-		$(xprop -id "$1" WM_STATE _NET_FRAME_EXTENTS)
+		$(xprop -id "$1" WM_STATE)
 	EOT
+
+        line="$(xprop -id "$1" WM_STATE _NET_FRAME_EXTENTS)"
+        frame="$(gsub "${line##*= }" "," "")"
 
         echo -n "$state "
 
@@ -318,16 +326,13 @@ get_mon_actarea() {
 			$(get_client_props $FWIN_ID)
 		EOT
 
-                if [ -n "$DEBUG" ]; then 
-                        >&2 echo DEBUG: Function: Horizontal tiling
-                fi
-
                 win_x0="$(gsub "$act_x0" " " "")"
                 win_y0="$(gsub "$act_y0" " " "")"
                 win_xdim=$(($act_xdim - $frame_r - $frame_l - $GAP / 2))
                 win_ydim=$(($act_ydim / 2 - $frame_t - $frame_b - $GAP / 2))
 
                 if [ -n "$DEBUG" ]; then
+                        >&2 echo DEBUG: Function: Horizontal tiling
                         debugvar FWIN_ID
                         debugvar win_x0
                         debugvar win_y0
@@ -337,7 +342,6 @@ get_mon_actarea() {
                                                  -e 0,$win_x0,$win_y0,$win_xdim,$win_ydim
                         >&2 echo DEBUG:
                 fi
-
                 wmctrl -i -r $FWIN_ID \
                     -e 0,$win_x0,$win_y0,$win_xdim,$win_ydim
 
@@ -348,6 +352,7 @@ get_mon_actarea() {
                         read win_id frame_l frame_r frame_t frame_b <<- EOT
 				$line
 			EOT
+
                         win_xdim=$((($act_xdim - \
                                      $GAP * ($owin_no - 1) - \
                                      ($frame_l + $frame_r) * $owin_no) / $owin_no))
@@ -362,16 +367,12 @@ get_mon_actarea() {
                                 debugvar win_xdim
                                 debugvar win_ydim
                                 >&2 echo DEBUG: Cmd: wmctrl -i -r $win_id \
-                                                         -b remove,maximized_horz,maximized_vert
-                                >&2 echo DEBUG: Cmd: wmctrl -i -r $win_id \
                                                          -e 0,$win_x0,$win_y0,$win_xdim,$win_ydim
                                 >&2 echo DEBUG:
                         fi
-
-                        wmctrl -i -r $win_id \
-                            -b remove,maximized_horz,maximized_vert
                         wmctrl -i -r $win_id \
                             -e 0,$win_x0,$win_y0,$win_xdim,$win_ydim
+
                 done <<- EOT
 			$owins
 		EOT
@@ -388,16 +389,13 @@ get_mon_actarea() {
 			$(get_client_props $FWIN_ID)
 		EOT
 
-                if [ -n "$DEBUG" ]; then
-                        >&2 echo DEBUG: Function: Vertical tiling
-                fi
-
                 win_x0="$(gsub "$act_x0" " " "")"
                 win_y0="$(gsub "$act_y0" " " "")"
                 win_xdim=$(($act_xdim / 2 - $frame_r - $frame_l - $GAP / 2))
                 win_ydim=$(($act_ydim - $frame_t - $frame_b - $GAP / 2))
 
                 if [ -n "$DEBUG" ]; then
+                        >&2 echo DEBUG: Function: Vertical tiling
                         debugvar FWIN_ID
                         debugvar win_x0
                         debugvar win_y0
@@ -407,7 +405,6 @@ get_mon_actarea() {
                                                  -e 0,$win_x0,$win_y0,$win_xdim,$win_ydim
                         >&2 echo DEBUG:
                 fi
-
                 wmctrl -i -r $FWIN_ID \
                     -e 0,$win_x0,$win_y0,$win_xdim,$win_ydim
 
@@ -418,6 +415,7 @@ get_mon_actarea() {
                         read win_id frame_l frame_r frame_t frame_b <<- EOT
 				$line
 			EOT
+
                         win_xdim=$(($act_xdim / 2 - $frame_l - $frame_r - $GAP / 2))
                         win_ydim=$((($act_ydim - \
                                      $GAP * ($owin_no - 1) - \
@@ -433,16 +431,12 @@ get_mon_actarea() {
                                 debugvar win_xdim
                                 debugvar win_ydim
                                 >&2 echo DEBUG: Cmd: wmctrl -i -r $win_id \
-                                                         -b remove,maximized_horz,maximized_vert
-                                >&2 echo DEBUG: Cmd: wmctrl -i -r $win_id \
                                                          -e 0,$win_x0,$win_y0,$win_xdim,$win_ydim
                                 >&2 echo DEBUG:
                         fi
-
-                        wmctrl -i -r $win_id \
-                            -b remove,maximized_horz,maximized_vert
                         wmctrl -i -r $win_id \
                             -e 0,$win_x0,$win_y0,$win_xdim,$win_ydim
+
                 done <<- EOT
 			$owins
 		EOT
