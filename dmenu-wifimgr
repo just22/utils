@@ -1,0 +1,89 @@
+#!/bin/sh
+
+# ----------------------------------------------------------------------
+#  $Id:$
+#
+#  WiFi manager for OpenBSD
+# ----------------------------------------------------------------------
+
+# ----------------------------------------------------------------------------
+# Copyright 2021 Alessandro De Laurenzis
+#
+# Redistribution and use in source and binary forms, with or without
+# modification, are permitted provided that the following conditions are met:
+#
+# 1. Redistributions of source code must retain the above copyright notice,
+# this list of conditions and the following disclaimer.
+#
+# 2. Redistributions in binary form must reproduce the above copyright notice,
+# this list of conditions and the following disclaimer in the documentation
+# and/or other materials provided with the distribution.
+#
+# THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS"
+# AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE
+# IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE
+# ARE DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT HOLDER OR CONTRIBUTORS BE
+# LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR
+# CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF
+# SUBSTITUTE GOODS OR SERVICES; LOSS OF USE, DATA, OR PROFITS; OR BUSINESS
+# INTERRUPTION) HOWEVER CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN
+# CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE)
+# ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE
+# POSSIBILITY OF SUCH DAMAGE.
+# ----------------------------------------------------------------------------
+
+set -e
+
+# Exit now if dmenu is already running
+if pgrep dmenu; then exit; fi
+
+usage() { cat 1>&2 <<- __USAGE__
+	usage: ${0##*/} -h | -i interface
+	__USAGE__
+        return 1
+}
+
+err() {
+        [ -n "$1" ] && echo "${0##*/}: $1"
+        return ${2:-1}
+}
+
+list_nwids() {
+        while read line; do
+                case "${line}" in
+                nwid*)
+                        tmp=${line#* }
+                        case "$tmp" in
+                        \"*)
+                                tmp2=${tmp%\"*}
+                                echo ${tmp2#\"}
+                                ;;
+                        *)
+                                echo ${tmp%"${tmp#* }"}
+                        esac
+                        ;;
+                *)
+                        continue
+                esac
+        done <<- EOT
+		$(ifconfig $IF scan)
+	EOT
+}
+
+while getopts ":hi:" arg; do
+        case "$arg" in
+         i) IF="$OPTARG" ;;
+         h) usage ;;
+         :) err "Option -$OPTARG requires an argument" ;;
+        \?) err "Unknown option: -$OPTARG"
+        esac
+done
+[ -z "$IF" ] && err "Please provide a valid interface"
+
+nwid="$(list_nwids | dmenu -p nwid: -l 15)"
+passwd="$(dmenu -p "Password for \"$nwid\" (echo enabled):" <&-)"
+doas ifconfig $IF nwid "$nwid" wpakey "$passwd"
+doas sh /etc/netstart trunk0
+
+exit
+
