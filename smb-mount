@@ -10,6 +10,20 @@ _usage() {
         echo "Usage: ${0##*/} [-u]"
 }
 
+dmsg() {
+        if gdbus call --session --dest org.freedesktop.DBus \
+                      --object-path /org/freedesktop/Dbus \
+                      --method org.freedesktop.DBus.ListNames
+        then
+                notify-send "smb-mount" "$(echo "$1")"
+        else
+                echo "$1"|
+                xmessage -title "smb-mount" \
+                         -buttons "OK":0 \
+                         -file - >/dev/null 2>&1
+        fi
+}
+
 if [ $# -ge 1 ] && [ "$1" != -u ]; then
         _usage
         exit 1
@@ -19,11 +33,15 @@ if [ "$1" != -u ]; then
         doas usmb -c ~/.usmb.conf datavol01
         doas usmb -c ~/.usmb.conf sys_backup
         doas usmb -c ~/.usmb.conf homes
-        x-filemanager ~/smb &
+        x-filemanager ~/smb/egeo &
 else
-        doas usmb -c ~/.usmb.conf -u datavol01
-        doas usmb -c ~/.usmb.conf -u sys_backup
-        doas usmb -c ~/.usmb.conf -u homes
+        if doas usmb -c ~/.usmb.conf -u datavol01 &&
+           doas usmb -c ~/.usmb.conf -u sys_backup &&
+           doas usmb -c ~/.usmb.conf -u homes
+        then
+                dmsg "All SMB shares unmounted"
+        else
+                exit 1
+        fi
 fi
 
-exit 0
