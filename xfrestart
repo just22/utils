@@ -7,10 +7,7 @@
 # ----------------------------------------------------------------------
 
 # Statusbar
-dbar -k
-dbar -- -expand left -xs 1 -dock &
-
-# Sound tray app
-pkill -x sound
-/usr/local/libexec/tray-app/sound -i &
-
+pkill dzen2
+dbar | dzen2 -title-name dbar \
+             -bg "#eee8d5" -fg "#073642" -fn "DejaVu Sans Mono:size=9" \
+             -p -e "" -expand left -dock -xs 1 &
