@@ -15,28 +15,35 @@ ln -sf \
 # Gnome keyring could be launched also enabling GNOME services, but
 # xfce4_session would launch it with ssh component, which interferes
 # with LibreSSH's ssh_agent
-gnome-keyring-daemon --replace --daemonize --components=pkcs11,secrets,gpg
+#gnome-keyring-daemon --replace --daemonize --components=pkcs11,secrets,gpg
+
+# xidle daemon (corner locking virtually disabled, no timeout,
+# activated by SIGUSR1)
+if ! pgrep -u $UID -x xidle >/dev/null 2>&1; then
+        xidle -delay 86400 -program /usr/local/bin/xflock4 &
+fi
 
 # Process monitor
-xterm -title "Process monitor" -e top &
-
-# System statistics
-xterm -title "System stats" -e systat &
-
-# System log
-sleep 1
 xkill -id $(xwininfo -name xconsole |
             egrep -o "Window id: 0x[0-9a-fA-F]+" |
             cut -d: -f2) 2>/dev/null
-xterm -title "System log" -e "tail -f /var/log/messages" &
+x-terminal-emulator -e 'tmux attach-session -t "sysmon" -d ||
+    tmux new-session -s "sysmon" " \
+        tail -f /var/log/messages" \; \
+        split-window systat \; \
+        split-window -h top \; \
+        set-option set-titles-string "System monitor" \; \
+        rename-window "Messages/systat/top"' &
 
-# Move system monitors to appropriate workspace
-sleep 1
-wmctrl -r "Process monitor" -t 6
-wmctrl -r "System stats" -t 6
-wmctrl -r "System log" -t 6
+# Move system monitor to appropriate workspace
+sleep 1 ;
+wmctrl -F -r "System monitor" -t 6
+wmctrl -F -r "System monitor" -b add,maximized_horz,maximized_vert
 
 # Status bar
-dbar -k
-dbar -- -expand left -xs 1 -dock &
+dbar | dzen2 -title-name dbar \
+             -bg "#eee8d5" -fg "#073642" -fn "DejaVu Sans Mono:size=9" \
+             -p -e "" -expand left -dock -xs 1 &
 
+# Hide the X11 mouse cursor while typing
+xbanish -m ne &
