@@ -43,5 +43,5 @@ then
         tmux select-window -t "${SESSION_NAME}":"${WIN_INDEX}"
         tmux select-pane -t "${SESSION_NAME}":"${WIN_INDEX}"."${PANE_INDEX}"
         wmctrl -i -a "$(get_tmux_win_id "\[tmux ${SESSION_NAME}:${WIN_INDEX}.${PANE_INDEX}\]")" ||
-                x-terminal-emulator -e "tmux attach-session -t $SESSION_NAME"
+                x-terminal-emulator -e "tmux attach-session -t $SESSION_NAME -d"
 fi
