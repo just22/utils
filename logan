@@ -167,7 +167,7 @@ match() {
                                 gsub(/[[:space:]]+/, " ");
                         } else
                                 code = "N/A";
-                        if (length($0) > cols) $0 = substr($0, 1, (cols - 3)) "...";
+                        if (length($0) > (cols - 1)) $0 = substr($0, 1, (cols - 4)) "...";
                         printf "%-15s %s\n", code, $0
                 }' "$logFile" 2>/dev/null)
         m_sorted="$(csort "$m")"
