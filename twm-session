@@ -6,6 +6,12 @@
 #  twm session manager
 # ----------------------------------------------------------------------
 
+# xidle daemon (corner locking virtually disabled, no timeout,
+# activated by SIGUSR1)
+if ! pgrep -u $UID -x xidle >/dev/null 2>&1; then
+        xidle -delay 86400 -program ${HOME}/bin/xsession-lock &
+fi
+
 # Screen locker
 xautolock -detectsleep -time 10 -locker lock-screen &
 
