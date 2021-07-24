@@ -41,6 +41,7 @@ wmctrl -F -r "System monitor" -t 6
 wmctrl -F -r "System monitor" -b add,maximized_horz,maximized_vert
 
 # Status bar
+pkill dzen2
 dbar | dzen2 -title-name dbar \
              -bg "#eee8d5" -fg "#073642" -fn "DejaVu Sans Mono:size=9" \
              -p -e "" -expand left -dock -xs 1 &

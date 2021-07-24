@@ -33,7 +33,7 @@ fi
 
 case "$CHOICE" in
 Logout)
-        dbar -k
+        pkill dzen2
         if pgrep -x dwm; then
                 pkill -x dwm
         elif pgrep -x fluxbox; then
