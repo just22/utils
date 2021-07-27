@@ -4,6 +4,7 @@
 #  $Id$
 #
 #  AWT - A Windows Tale, (semi)automatic window arrangement "a-la-dwm"
+#  Depends on: wmctrl
 # ----------------------------------------------------------------------
 
 set -e
