@@ -10,7 +10,7 @@ set -e
 export PATH=${HOME}/bin:/usr/local/bin:/usr/bin:/usr/X11R6/bin:/bin
 
 usage() {
-        >&2 echo "Usage: ${0##*/} [-h] | [-d] [-o] [-g <gap>]"
+        >&2 echo "Usage: ${0##*/} -h | [-d] [-o] [-g <gap>]"
         >&2 echo "       -d:       Debug mode (messages displayed on stderr)"
         >&2 echo "       -h:       This help message"
         >&2 echo "       -g <gap>: Gap b/w windows (default: 2px)"
