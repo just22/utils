@@ -19,7 +19,7 @@ if [ "$1" == -g ]; then
                         "Logout"        "Exit from current X session"   off \
                         "Suspend"       "Suspend to RAM"                off \
                         "Hibernate"     "Suspend to disk"               ON  \
-                        "Reboot"        "Reboot the system"             off \
+                        "Reboot"        "Restart the system"            off \
                         "Poweroff"      "Shut down the computer"        off \
                 2>/tmp/$USER.$$.checklist
 
