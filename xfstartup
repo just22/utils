@@ -36,7 +36,7 @@ x-terminal-emulator -e 'tmux attach-session -t "sysmon" -d ||
         rename-window "Messages/systat/top"' &
 
 # Move system monitor to appropriate workspace
-sleep 1 ;
+sleep 2 ;
 wmctrl -F -r "System monitor" -t 6
 wmctrl -F -r "System monitor" -b add,maximized_horz,maximized_vert
 
@@ -45,6 +45,3 @@ pkill dzen2
 dbar | dzen2 -title-name dbar \
              -bg "#eee8d5" -fg "#073642" -fn "DejaVu Sans Mono:size=9" \
              -p -e "" -expand left -dock -xs 1 &
-
-# Hide the X11 mouse cursor while typing
-xbanish -m ne &
