@@ -35,7 +35,7 @@
 set -e
 
 # Exit now if dmenu is already running
-if pgrep dmenu; then exit; fi
+if pgrep -u $USER -x dmenu; then exit; fi
 
 usage() { cat 1>&2 <<- __USAGE__
 	usage: ${0##*/} -h | -i interface

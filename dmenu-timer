@@ -10,7 +10,7 @@
 exec >/dev/null 2>&1
 
 # Exit now if dmenu is already running
-if pgrep dmenu; then exit; fi
+if pgrep -u $USER -x dmenu; then exit; fi
 
 MENU_ITEMS="\
 +5min\n\
