@@ -9,10 +9,7 @@
 
 wmsg() {
         apm -m -v |
-        xmessage -title "Low battery" \
-                 -center \
-                 -buttons "OK":0 \
-                 -file - &
+        xmessage -title "Low battery" -center -buttons "OK":0 -file - &
 }
 
 warnd=0

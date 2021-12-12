@@ -14,9 +14,8 @@ dmsg() {
                 notify-send "Timer" "$(echo "$1")"
         else
                 echo "$1"|
-                xmessage -title "Timer" \
-                    -buttons "OK":0 \
-                    -file - >/dev/null 2>&1
+                xmessage -title "Timer" -center -buttons "OK":0 -file - \
+                    >/dev/null 2>&1
         fi
 }
 

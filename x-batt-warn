@@ -8,9 +8,7 @@
 
 show_msg() {
         apm -m -v |
-        xmessage -title "Low battery" \
-                 -buttons "OK":0 \
-                 -file - &
+        xmessage -title "Low battery" -center -buttons "OK":0 -file - &
 }
 
 trap "show_msg" USR1

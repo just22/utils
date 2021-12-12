@@ -18,9 +18,8 @@ dmsg() {
                 notify-send "smb-mount" "$(echo "$1")"
         else
                 echo "$1"|
-                xmessage -title "smb-mount" \
-                         -buttons "OK":0 \
-                         -file - >/dev/null 2>&1
+                xmessage -title "smb-mount" -center -buttons "OK":0 -file - \
+                    >/dev/null 2>&1
         fi
 }
 

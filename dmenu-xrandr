@@ -14,8 +14,7 @@ restart_wm() {
 
 err() {
         echo "$1" |
-        xmessage -title "dmenu-xrandr" \
-            -buttons "Close":0,"Reset Display":2 -file -
+        xmessage -title "dmenu-xrandr" -center -buttons "Close":0,"Reset Display":2 -file -
 
         [ "$?" -eq 2 ] && xrandr --auto && restart_wm
         exit 1

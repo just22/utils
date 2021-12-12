@@ -40,7 +40,7 @@ today_untimed () {
                 ;;
         *)
                 echo "$REMINDERS" |
-                xmessage -title "Today's reminders" -buttons "OK":0 -file -
+                xmessage -title "Today's reminders" -center -buttons "OK":0 -file -
         esac
 }
 

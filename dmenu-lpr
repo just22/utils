@@ -14,9 +14,7 @@ wmsg() {
                 notify-send "Print to lpr" "$1"
         else
                 echo -e "$1" |
-                xmessage -title "Print to lpr" \
-                         -buttons "OK":0 \
-                         -file - &
+                xmessage -title "Print to lpr" -center -buttons "OK":0 -file - &
         fi
 }
 
