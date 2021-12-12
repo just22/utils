@@ -66,14 +66,23 @@ set_terminal_cs() {
         read b00 b01 b02 b03 b04 b05 b06 b07 b08 b09 b0A b0B b0C b0D b0E b0F <<- EOT
 		$(awk '/^#define/ {print $NF}' $xres_file | xargs)
 	EOT
+        mkdir -p $(dirname $rc_file) 2>/dev/null
+        [ -e $rc_file ] &&
         sed -i "s/^\(ColorCursor=\)\(.*\)/\1$b05/;\
                 s/^\(ColorBoldUseDefault=\)\(.*\)/\1FALSE/;\
                 s/^\(ColorBold=\)\(.*\)/\1$b08/;\
                 s/^\(ColorForeground=\)\(.*\)/\1$b05/;\
                 s/^\(ColorBackground=\)\(.*\)/\1$b00/;\
                 s/^\(ColorPalette=\)\(.*\)/\1$b00;$b08;$b0B;$b0A;$b0D;$b0E;$b0C;$b05;$b03;$b08;$b0B;$b0A;$b0D;$b0E;$b0C;$b07/" \
-            $rc_file
-
+            $rc_file ||
+        cat > $rc_file <<- EOT
+		ColorCursor=$b05
+		ColorBoldUseDefault=FALSE
+		ColorBold=$b08
+		ColorForeground=$b05
+		ColorBackground=$b00
+		ColorPalette=$b00;$b08;$b0B;$b0A;$b0D;$b0E;$b0C;$b05;$b03;$b08;$b0B;$b0A;$b0D;$b0E;$b0C;$b07
+	EOT
 }
 
 # ----------------------------------------------------------------------
