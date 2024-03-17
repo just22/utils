@@ -1,11 +1,11 @@
-# just22's utils
+# Command-line utilities for Unix-like systems
 
-This is my utils repository, a collection of small utilities I use on a daily
-basis. Most of them are shell or TCL scripts, but there could be some
+This is a collection of small utilities I use on a daily basis.
+Most of them are shell or TCL scripts, but there could be some
 Perl/whatever code I copied who-knows-from-where.
 
-My main concern here is portability; I use different Unix-like OSs: RedHat
-Enterprise Linux at work, mostly OpenBSD and some Linux flavors at home;
+My main intent here is _portability_; I use different Unix-like OSs: RedHat
+Enterprise Linux at work, MacOS, OpenBSD and some Linux flavors at home;
 of course, I like my apps behaving coherently wherever I run them.
 
 
