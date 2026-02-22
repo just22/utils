@@ -1,0 +1,37 @@
+#!/usr/bin/env bash
+
+# ----------------------------------------------------------------------
+#  $Id$
+#
+#  subcmd - Execute command on a file making substitutions on its path
+#
+#  Usage examples:
+#  ln -s ~/utils/subcmd ~/bin/subcp
+#  alias usrcp='subcp $2 $USER $1'
+#  alias cfgcp='subcp $2 $CONFIG $1'
+#  [...]
+#  usrcp other_user ./my_file
+# ----------------------------------------------------------------------
+
+if [ ! $(( $# % 2 )) ]; then
+    echo "Usage: $0 <path> <str> <sub> ..."
+    exit 1
+fi
+
+nit=$(($# / 2))
+src="$(readlink -f $1)"
+tgt="$1"
+shift
+
+for ((i = 1; i <= $nit; i++)); do
+    src="${src/$1/$2}"
+    shift 2
+done
+
+case "$0" in
+    subcp)   cp "$src" "$tgt" ;;
+    subvim)  vim "$src" ;;
+    subdiff) vimdiff "$src" "$tgt" ;;
+    *)       ;;
+esac
+
