@@ -1,0 +1,40 @@
+#!/bin/sh
+
+# ----------------------------------------------------------------------
+#  $Id$
+#
+#  catppuccin-init - Shell script to setup catppuccin color themes
+# ----------------------------------------------------------------------
+
+[ -e ~/.catppuccin ] || mkdir ~/.catppuccin
+
+cd ~/.catppuccin
+
+# XResources
+[ -d ./xresources ] &&
+        (cd ./xresources && git pull) ||
+        git clone https://github.com/catppuccin/xresources.git
+
+[ -L ./catppuccin.Xresources ] && rm -f ./catppuccin.Xresources
+ln -s ./xresources/themes/frappe.Xresources ./catppuccin.Xresources
+
+# Fzf
+[ -d ./fzf ] &&
+        (cd ./fzf && git pull) ||
+        git clone https://github.com/catppuccin/fzf.git
+
+[ -L ./catppuccin_fzf.sh ] && rm -f ./catppuccin_fzf.sh
+ln -s ./fzf/themes/catppuccin-fzf-frappe.sh ./catppuccin_fzf.sh
+
+# vim
+[ -d ./vim ] &&
+        (cd ./vim && git pull) ||
+        git clone https://github.com/catppuccin/vim.git
+
+[ -L ./catppuccin.vim ] && rm -f ./catppuccin.vim
+ln -s ./vim/colors/catppuccin_frappe.vim ./catppuccin.vim
+if [ -d ~/.vim/colors ]; then
+        [ -L ~/.vim/colors/catppuccin.vim ] && rm -f ~/.vim/colors/catppuccin.vim
+        ln -s ~/.catppuccin/catppuccin.vim ~/.vim/colors
+fi
+

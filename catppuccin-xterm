@@ -1,0 +1,65 @@
+#!/bin/sh
+
+# ----------------------------------------------------------------------
+#  $Id$
+#
+#  catppuccin-xterm - Shell script to automatically update xterm colors
+# ----------------------------------------------------------------------
+
+send_esc_seq() {
+        esc_seq="$1"
+
+        # Wrap escape sequence when within a TMUX session
+        [ -n "$TMUX" ] && esc_seq="${DCS}tmux;${ESC}${esc_seq}${ESC}\\"
+
+        echo -ne "${esc_seq}"
+}
+
+send_osc() {
+        Ps="$1"
+        Pt="$2"
+        osc="${OSC}${Ps};${Pt}${BEL}"
+        send_esc_seq "$osc"
+}
+
+ESC="\033"
+BEL="\007"
+
+# C1 (8-bit) control characters
+DCS="${ESC}P"   # Device Control String
+OSC="${ESC}]"   # Operating System Command
+
+change_color() {
+        case $1 in
+        color*)
+                send_osc 4 "${1#color};$2" ;;
+        foreground)
+                send_osc 10 "$2"
+                send_osc 17 "$2" ;;     # Highlight color
+        background)
+                send_osc 11 "$2" ;;
+        cursorColor)
+                send_osc 12 "$2" ;;
+        esac
+}
+
+update_colors() {
+        change_color "background" "$(xrdb -query | grep "^\*background:" | awk '{print $2}')"
+        change_color "foreground" "$(xrdb -query | grep "^\*foreground:" | awk '{print $2}')"
+        for i in $(seq 0 15); do
+                change_color "color$i" "$(xrdb -query | grep "^\*color$i:" | awk '{print $2}')"
+        done
+}
+
+# Change theme when USR1 signal is received
+trap update_colors USR1
+
+# Set colorscheme for all apps on launch
+update_colors
+
+# Main loop - Just wait, and exit when launching shell exits
+while ps -p $PPID >/dev/null 2>&1; do
+        sleep 15 &
+        wait $!
+done
+

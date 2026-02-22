@@ -1,0 +1,47 @@
+#!/bin/sh
+
+case ${0##*/} in
+        latte|light)
+                GHOSTTY_THEME="Catppuccin Latte"
+                THEME="latte"
+                ;;
+        frappe|dark)
+                GHOSTTY_THEME="Catppuccin Frappe"
+                THEME="frappe"
+                ;;
+        macchiato)
+                GHOSTTY_THEME="Catppuccin Macchiato"
+                THEME="macchiato"
+                ;;
+        mocha)
+                GHOSTTY_THEME="Catppuccin Mocha"
+                THEME="mocha"
+                ;;
+        *) exit 1 ;;
+esac
+
+# Ghostty
+GHOSTTY_CFG=~/.config/ghostty/config
+if [ $(uname -s) == Darwin -a -n "$GHOSTTY_BIN_DIR" ]; then
+        sed -i "" -e "s/\(theme *=\)\(.*\)$/\1 $GHOSTTY_THEME/" $GHOSTTY_CFG
+        osascript -so \
+            -e 'tell application "Ghostty" to activate' \
+            -e 'tell application "System Events" to keystroke "," using {command down, shift down}'
+fi
+
+# Xterm
+rm -f ~/.catppuccin/catppuccin.Xresources
+ln -s ~/.catppuccin/xresources/themes/${THEME}.Xresources ~/.catppuccin/catppuccin.Xresources
+xrdb -merge ~/.catppuccin/catppuccin.Xresources
+pkill -USR1 -f "/bin/sh .*/catppuccin-xterm"
+
+# Vim
+rm -f ~/.catppuccin/catppuccin.vim
+ln -s ~/.catppuccin/vim/colors/catppuccin_${THEME}.vim ~/.catppuccin/catppuccin.vim
+pkill -USR1 -x vim
+pkill -USR1 -x Vim
+
+# Fzf
+rm -f ~/.catppuccin/catppuccin_fzf.sh
+ln -s ~/.catppuccin/fzf/themes/catppuccin-fzf-${THEME}.sh ~/.catppuccin/catppuccin_fzf.sh
+
