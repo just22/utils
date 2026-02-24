@@ -3,8 +3,16 @@
 # ----------------------------------------------------------------------
 #  $Id$
 #
-#  catppuccin-xterm - Shell script to automatically update xterm colors
+#  catppuccin-term - Shell script to automatically update
+#  terminal colors
 # ----------------------------------------------------------------------
+
+if [ $# -ne 1 ]; then
+    echo "Usage: ${0##*/} <pid>"
+    exit 1
+fi
+
+ppid="$1"
 
 send_esc_seq() {
         esc_seq="$1"
@@ -35,7 +43,7 @@ change_color() {
                 send_osc 4 "${1#color};$2" ;;
         foreground)
                 send_osc 10 "$2"
-                send_osc 17 "$2" ;;     # Highlight color
+                send_osc 17 "$2" ;; # Highlight color
         background)
                 send_osc 11 "$2" ;;
         cursorColor)
@@ -44,8 +52,9 @@ change_color() {
 }
 
 update_colors() {
-        change_color "background" "$(xrdb -query | grep "^\*background:" | awk '{print $2}')"
-        change_color "foreground" "$(xrdb -query | grep "^\*foreground:" | awk '{print $2}')"
+        change_color "background"  "$(xrdb -query | grep "^\*background:"  | awk '{print $2}')"
+        change_color "foreground"  "$(xrdb -query | grep "^\*foreground:"  | awk '{print $2}')"
+        change_color "cursorColor" "$(xrdb -query | grep "^\*cursorColor:" | awk '{print $2}')"
         for i in $(seq 0 15); do
                 change_color "color$i" "$(xrdb -query | grep "^\*color$i:" | awk '{print $2}')"
         done
@@ -58,7 +67,7 @@ trap update_colors USR1
 update_colors
 
 # Main loop - Just wait, and exit when launching shell exits
-while ps -p $PPID >/dev/null 2>&1; do
+while ps -p $ppid >/dev/null 2>&1; do
         sleep 15 &
         wait $!
 done
