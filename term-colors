@@ -3,8 +3,7 @@
 # ----------------------------------------------------------------------
 #  $Id$
 #
-#  catppuccin-term - Shell script to automatically update
-#  terminal colors
+#  term-colors - Shell script to automatically update terminal colors
 # ----------------------------------------------------------------------
 
 if [ $# -ne 1 ]; then
@@ -20,7 +19,7 @@ send_esc_seq() {
         # Wrap escape sequence when within a TMUX session
         [ -n "$TMUX" ] && esc_seq="${DCS}tmux;${ESC}${esc_seq}${ESC}\\"
 
-        echo -ne "${esc_seq}"
+        printf "${esc_seq}"
 }
 
 send_osc() {
