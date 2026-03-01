@@ -20,34 +20,70 @@ case ${0##*/} in
         *) exit 1 ;;
 esac
 
-# Ghostty
-GHOSTTY_CFG=~/.config/ghostty/config
-if [ $(uname -s) == Darwin -a -n "$GHOSTTY_BIN_DIR" ]; then
-        sed -i "" -e "s/\(theme *=\)\(.*\)$/\1 $GHOSTTY_THEME/" $GHOSTTY_CFG
-        osascript -so \
-            -e 'tell application "Ghostty" to activate' \
-            -e 'tell application "System Events" to keystroke "," using {command down, shift down}'
-fi
-
-# Xterm
+# Colors are picked up from ~/.Xresources
 rm -f ~/.catppuccin/catppuccin.Xresources
 cp ~/.catppuccin/xresources/themes/${THEME}.Xresources ~/.catppuccin/catppuccin.Xresources
 sed -i -e "s/^\*/xterm*/" ~/.catppuccin/catppuccin.Xresources
-xrdb -merge ~/.catppuccin/catppuccin.Xresources
-pkill -USR1 -f "/bin/sh .*/catppuccin-term" > /dev/null 2>&1
 
-# Xfce4-terminal
-cp -f ~/.catppuccin/xfce4-terminal/themes/catppuccin-${THEME}.theme \
-    ~/.catppuccin/catppuccin.xfce4-terminal >/dev/null 2>&1
-sed -i -e "/^\[Scheme\]/d;/Name=/d" ~/.catppuccin/catppuccin.xfce4-terminal
-sed -i -e "/Color/d" ~/.config/xfce4/terminal/terminalrc
-cat ~/.catppuccin/catppuccin.xfce4-terminal >> ~/.config/xfce4/terminal/terminalrc
+
+# XTerm
+if command -v xrdb -version &>/dev/null; then
+        xrdb -merge ~/.catppuccin/catppuccin.Xresources
+fi
+
+# iTerm2
+if [ -n "$TERM_SESSION_ID" ]; then
+    ln -sf ~/.catppuccin/iterm/colors/catppuccin-$THEME.itermcolors ~/.catppuccin/catppuccin.itermcolors
+    # WIP
+fi
+
+# Ghostty
+if [ -n "$GHOSTTY_BIN_DIR" ]; then
+    GHOSTTY_CFG=~/.config/ghostty/config
+    sed -i -e "s/\(theme *=\)\(.*\)$/\1 $GHOSTTY_THEME/" "$GHOSTTY_CFG"
+    if [ $(uname -s) == Darwin -a -n "$GHOSTTY_BIN_DIR" ]; then
+        osascript -so \
+          -e 'tell application "Ghostty" to activate' \
+          -e 'tell application "System Events" to keystroke "," using {command down, shift down}'
+    fi
+fi
+
+# Xfce Terminal
+if [ -d ~/.config/xfce4/terminal ]; then
+    cp -f ~/.catppuccin/xfce4-terminal/themes/catppuccin-${THEME}.theme \
+      ~/.catppuccin/catppuccin.xfce4-terminal >/dev/null 2>&1
+
+    sed -i -e "/^\[Scheme\]/d;/Name=/d" ~/.catppuccin/catppuccin.xfce4-terminal
+    sed -i -e "/Color/d" ~/.config/xfce4/terminal/terminalrc
+    cat ~/.catppuccin/catppuccin.xfce4-terminal >> ~/.config/xfce4/terminal/terminalrc
+fi
 
 # kitty
-ln -sf ~/.catppuccin/kitty/themes/$THEME.conf ~/.catppuccin/catppuccin_kitty.conf
-sed -i -e "/include.*catppuccin_kitty.conf/d" ~/.config/kitty/kitty.conf
-echo "include ~/.catppuccin/catppuccin_kitty.conf" >> ~/.config/kitty/kitty.conf
-pkill -USR1 kitty
+if [ -d ~/.config/kitty ]; then
+    ln -sf ~/.catppuccin/kitty/themes/$THEME.conf ~/.catppuccin/catppuccin_kitty.conf
+    sed -i -e "/include.*catppuccin_kitty.conf/d" ~/.config/kitty/kitty.conf
+    echo "include ~/.catppuccin/catppuccin_kitty.conf" >> ~/.config/kitty/kitty.conf
+    pkill -USR1 kitty
+fi
+
+# Valid for any terminal emulator
+pkill -USR1 -f "/bin/sh .*/term-colors" > /dev/null 2>&1
+
+# tmux
+[ -d ~/.tmux/plugins/catppuccin ] || mkdir -p ~/.tmux/plugins/catppuccin
+sed -n -e "s/-ogq/-ug/; s/ \".*\"$//p" ~/.catppuccin/tmux/themes/catppuccin_frappe_tmux.conf \
+    > ~/.catppuccin/catppuccin_tmux_clearopt.conf
+echo "set -ug @catppuccin_status_session_icon_fg" \
+    >> ~/.catppuccin/catppuccin_tmux_clearopt.conf
+echo "set -ug @catppuccin_status_session_text_fg" \
+    >> ~/.catppuccin/catppuccin_tmux_clearopt.conf
+sed -n -e "/thm_/s/-ogq/-gq/p" ~/.catppuccin/tmux/catppuccin_options_tmux.conf \
+    > ~/.catppuccin/catppuccin_tmux_refreshopt.conf
+echo "set -gq @catppuccin_flavor \"$THEME\"" > ~/.catppuccin/catppuccin_tmux.conf
+echo "source ~/.catppuccin/catppuccin_tmux_clearopt.conf" >> ~/.catppuccin/catppuccin_tmux.conf
+echo "run ~/.catppuccin/tmux/catppuccin.tmux" >> ~/.catppuccin/catppuccin_tmux.conf
+echo "source ~/.catppuccin/catppuccin_tmux_refreshopt.conf" >> ~/.catppuccin/catppuccin_tmux.conf
+tmux source ~/.tmux.conf
 
 # Vim
 rm -f ~/.catppuccin/catppuccin.vim
@@ -63,4 +99,5 @@ pkill -USR1 -x Vim > /dev/null 2>&1
 # Fzf
 rm -f ~/.catppuccin/catppuccin_fzf.sh
 ln -s ~/.catppuccin/fzf/themes/catppuccin-fzf-${THEME}.sh ~/.catppuccin/catppuccin_fzf.sh
+pkill -USR1 -f "/bin/sh .*/catppuccin-fzf" > /dev/null 2>&1
 
