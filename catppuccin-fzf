@@ -1,0 +1,31 @@
+#!/bin/sh
+
+# ----------------------------------------------------------------------
+#  $Id$
+#
+#  catppuccin-fzf - Shell script to automatically update fzf colors
+# ----------------------------------------------------------------------
+
+if [ $# -ne 1 ]; then
+    echo "Usage: ${0##*/} <pid>"
+    exit 1
+fi
+
+ppid="$1"
+
+update_colors() {
+    source ~/.catppuccin/catppuccin_fzf.sh
+}
+
+# Change theme when USR1 signal is received
+trap update_colors USR1
+
+# Set colorscheme for all apps on launch
+update_colors
+
+# Main loop - Just wait, and exit when launching shell exits
+while ps -p $ppid >/dev/null 2>&1; do
+        sleep 15 &
+        wait $!
+done
+
