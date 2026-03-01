@@ -52,11 +52,11 @@ change_color() {
 }
 
 update_colors() {
-        change_color "background"  "$(xrdb -query | grep "^\*background:"  | awk '{print $2}')"
-        change_color "foreground"  "$(xrdb -query | grep "^\*foreground:"  | awk '{print $2}')"
-        change_color "cursorColor" "$(xrdb -query | grep "^\*cursorColor:" | awk '{print $2}')"
+        change_color "background"  "$(xrdb -query | grep "^xterm\*background:"  | awk '{print $2}')"
+        change_color "foreground"  "$(xrdb -query | grep "^xterm\*foreground:"  | awk '{print $2}')"
+        change_color "cursorColor" "$(xrdb -query | grep "^xterm\*cursorColor:" | awk '{print $2}')"
         for i in $(seq 0 15); do
-                change_color "color$i" "$(xrdb -query | grep "^\*color$i:" | awk '{print $2}')"
+                change_color "color$i" "$(xrdb -query | grep "^xterm\*color$i:" | awk '{print $2}')"
         done
 }
 

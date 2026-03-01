@@ -1,19 +1,19 @@
 #!/bin/sh
 
 case ${0##*/} in
-        latte|light)
+        catppuccin-latte|light)
                 GHOSTTY_THEME="Catppuccin Latte"
                 THEME="latte"
                 ;;
-        frappe|dark)
+        catppuccin-frappe|dark)
                 GHOSTTY_THEME="Catppuccin Frappe"
                 THEME="frappe"
                 ;;
-        macchiato)
+        catppuccin-macchiato)
                 GHOSTTY_THEME="Catppuccin Macchiato"
                 THEME="macchiato"
                 ;;
-        mocha)
+        catppuccin-mocha)
                 GHOSTTY_THEME="Catppuccin Mocha"
                 THEME="mocha"
                 ;;
@@ -31,15 +31,34 @@ fi
 
 # Xterm
 rm -f ~/.catppuccin/catppuccin.Xresources
-ln -s ~/.catppuccin/xresources/themes/${THEME}.Xresources ~/.catppuccin/catppuccin.Xresources
+cp ~/.catppuccin/xresources/themes/${THEME}.Xresources ~/.catppuccin/catppuccin.Xresources
+sed -i -e "s/^\*/xterm*/" ~/.catppuccin/catppuccin.Xresources
 xrdb -merge ~/.catppuccin/catppuccin.Xresources
-pkill -USR1 -f "/bin/sh .*/catppuccin-xterm"
+pkill -USR1 -f "/bin/sh .*/catppuccin-term" > /dev/null 2>&1
+
+# Xfce4-terminal
+cp -f ~/.catppuccin/xfce4-terminal/themes/catppuccin-${THEME}.theme \
+    ~/.catppuccin/catppuccin.xfce4-terminal >/dev/null 2>&1
+sed -i -e "/^\[Scheme\]/d;/Name=/d" ~/.catppuccin/catppuccin.xfce4-terminal
+sed -i -e "/Color/d" ~/.config/xfce4/terminal/terminalrc
+cat ~/.catppuccin/catppuccin.xfce4-terminal >> ~/.config/xfce4/terminal/terminalrc
+
+# kitty
+ln -sf ~/.catppuccin/kitty/themes/$THEME.conf ~/.catppuccin/catppuccin_kitty.conf
+sed -i -e "/include.*catppuccin_kitty.conf/d" ~/.config/kitty/kitty.conf
+echo "include ~/.catppuccin/catppuccin_kitty.conf" >> ~/.config/kitty/kitty.conf
+pkill -USR1 kitty
 
 # Vim
 rm -f ~/.catppuccin/catppuccin.vim
 ln -s ~/.catppuccin/vim/colors/catppuccin_${THEME}.vim ~/.catppuccin/catppuccin.vim
-pkill -USR1 -x vim
-pkill -USR1 -x Vim
+
+[ -d ~/.vim/colors ] || mkdir -p ~/.vim/colors
+rm -f ~/.vim/colors/catppuccin.vim
+ln -s ~/.catppuccin/catppuccin.vim ~/.vim/colors
+
+pkill -USR1 -x vim > /dev/null 2>&1
+pkill -USR1 -x Vim > /dev/null 2>&1
 
 # Fzf
 rm -f ~/.catppuccin/catppuccin_fzf.sh

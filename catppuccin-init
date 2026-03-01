@@ -15,26 +15,26 @@ cd ~/.catppuccin
         (cd ./xresources && git pull) ||
         git clone https://github.com/catppuccin/xresources.git
 
-[ -L ./catppuccin.Xresources ] && rm -f ./catppuccin.Xresources
-ln -s ./xresources/themes/frappe.Xresources ./catppuccin.Xresources
+# Xfce4-terminal
+[ -d ./xfce4-terminal ] &&
+        (cd ./xfce4-terminal && git pull) ||
+        git clone https://github.com/catppuccin/xfce4-terminal.git
 
-# Fzf
-[ -d ./fzf ] &&
-        (cd ./fzf && git pull) ||
-        git clone https://github.com/catppuccin/fzf.git
-
-[ -L ./catppuccin_fzf.sh ] && rm -f ./catppuccin_fzf.sh
-ln -s ./fzf/themes/catppuccin-fzf-frappe.sh ./catppuccin_fzf.sh
+# kitty
+[ -d ./kitty ] &&
+        (cd ./kitty && git pull) ||
+        git clone https://github.com/catppuccin/kitty.git
 
 # vim
 [ -d ./vim ] &&
         (cd ./vim && git pull) ||
         git clone https://github.com/catppuccin/vim.git
 
-[ -L ./catppuccin.vim ] && rm -f ./catppuccin.vim
-ln -s ./vim/colors/catppuccin_frappe.vim ./catppuccin.vim
-if [ -d ~/.vim/colors ]; then
-        [ -L ~/.vim/colors/catppuccin.vim ] && rm -f ~/.vim/colors/catppuccin.vim
-        ln -s ~/.catppuccin/catppuccin.vim ~/.vim/colors
-fi
+# Fzf
+[ -d ./fzf ] &&
+        (cd ./fzf && git pull) ||
+        git clone https://github.com/catppuccin/fzf.git
+
+# Set default colorscheme
+catppuccin-frappe
 
