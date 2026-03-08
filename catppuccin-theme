@@ -1,5 +1,11 @@
 #!/bin/sh
 
+# ----------------------------------------------------------------------
+#  $Id$
+#
+#  catppuccin-theme - Shell script to change catppuccin theme flavor
+# ----------------------------------------------------------------------
+
 case ${0##*/} in
         catppuccin-latte|light)
                 GHOSTTY_THEME="Catppuccin Latte"
@@ -71,18 +77,15 @@ pkill -USR1 -f "/bin/sh .*/term-colors" > /dev/null 2>&1
 
 # tmux
 [ -d ~/.tmux/plugins/catppuccin ] || mkdir -p ~/.tmux/plugins/catppuccin
-sed -n -e "s/-ogq/-ug/; s/ \".*\"$//p" ~/.catppuccin/tmux/themes/catppuccin_frappe_tmux.conf \
+tmux show -g | grep -E "^@catppuccin_|^@thm_" |
+    sed "s/[[:blank:]].*//; s/^/set-option -ug /" \
     > ~/.catppuccin/catppuccin_tmux_clearopt.conf
-echo "set -ug @catppuccin_status_session_icon_fg" \
-    >> ~/.catppuccin/catppuccin_tmux_clearopt.conf
-echo "set -ug @catppuccin_status_session_text_fg" \
-    >> ~/.catppuccin/catppuccin_tmux_clearopt.conf
-sed -n -e "/thm_/s/-ogq/-gq/p" ~/.catppuccin/tmux/catppuccin_options_tmux.conf \
-    > ~/.catppuccin/catppuccin_tmux_refreshopt.conf
-echo "set -gq @catppuccin_flavor \"$THEME\"" > ~/.catppuccin/catppuccin_tmux.conf
-echo "source ~/.catppuccin/catppuccin_tmux_clearopt.conf" >> ~/.catppuccin/catppuccin_tmux.conf
+echo "source ~/.catppuccin/catppuccin_tmux_clearopt.conf" > ~/.catppuccin/catppuccin_tmux.conf
+echo "set -gq @catppuccin_flavor \"$THEME\"" >> ~/.catppuccin/catppuccin_tmux.conf
+[ -e ~/.tmux/catppuccin_tmux_customopt.conf ] &&
+    echo "source ~/.tmux/catppuccin_tmux_customopt.conf" \
+    >> ~/.catppuccin/catppuccin_tmux.conf
 echo "run ~/.catppuccin/tmux/catppuccin.tmux" >> ~/.catppuccin/catppuccin_tmux.conf
-echo "source ~/.catppuccin/catppuccin_tmux_refreshopt.conf" >> ~/.catppuccin/catppuccin_tmux.conf
 tmux source ~/.tmux.conf
 
 # Vim
